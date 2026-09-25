@@ -36,7 +36,7 @@
 
 - name: Accounting database
   ansible.mysql.mysql_db:
-    name: slurm_slurm_controller_acct_db
+    name: slurm_acct_db
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
 
@@ -45,7 +45,7 @@
     name: slurm
     host: localhost
     password: "{{ slurmdbd_db_password }}"
-    priv: "slurm_slurm_controller_acct_db.*:ALL"
+    priv: "slurm_acct_db.*:ALL"
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
   no_log: true
@@ -145,6 +145,14 @@
     src: /srv/shared
     dest: /shared
     state: link
+
+- name: Exports drop-in directory (Debian 13 doesn't ship it)
+  ansible.builtin.file:
+    path: /etc/exports.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
 
 - name: NFS export to compute nodes
   ansible.builtin.copy:

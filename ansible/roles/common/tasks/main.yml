@@ -1,3 +1,13 @@
+# On a fresh clone, cloud-init is still refreshing apt lists when SSH comes up;
+# apt calls made during that window fail with "No package matching ...".
+# rc 2 = done with recoverable errors: Proxmox's generated user-data uses the
+# deprecated string form of 'user', which cloud-init reports as a DEPRECATED warning.
+- name: Wait for first-boot cloud-init to finish
+  ansible.builtin.command: cloud-init status --wait
+  register: common_cloud_init
+  changed_when: false
+  failed_when: common_cloud_init.rc not in [0, 2]
+
 - name: Hostname matches the inventory name
   ansible.builtin.hostname:
     name: "{{ inventory_hostname }}"

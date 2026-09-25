@@ -25,7 +25,7 @@ scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 
 ## Roadmap
 
-- [ ] **0 — Foundations:** Terraform + Ansible, scoped Proxmox token, template
+- [x] **0 — Foundations:** Terraform + Ansible, scoped Proxmox token, template; destroy → apply → converge → verify proven
 - [ ] **1 — Classic Slurm:** munge, slurmctld/slurmd, slurmdbd accounting, cgroup v2, fake GPU GRES, `burnin` → `batch` node flow, fairshare/QOS, node health checks, maintenance reservations
 - [ ] **5 — Node-triage MCP server (Go):** read-only tools over `sinfo`/`scontrol`/`sacct` (then Kubernetes), a `recommend_action` tool that returns *drain / resume / escalate* with its evidence, write actions behind explicit approval
 - [ ] **2 — kubeadm Kubernetes:** containerd, Cilium, MetalLB, local-path storage, kube-prometheus-stack, node-problem-detector
