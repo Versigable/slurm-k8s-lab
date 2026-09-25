@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lb-pool
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: http://10.0.1.13:8081/agent-dev/slurm-k8s-lab.git
+    targetRevision: main
+    path: gitops/lb-pool
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}

@@ -10,7 +10,9 @@ Everything is code. `terraform destroy && terraform apply && ansible-playbook si
 
 ```
 terraform/   Proxmox VMs (bpg/proxmox), cloned from a Debian 13 cloud-init template
-ansible/     Node configuration: common, munge, Slurm controller/compute
+ansible/     Node configuration: Slurm, and Kubernetes bootstrap (kubeadm, Cilium, Argo CD)
+gitops/      What Argo CD manages on the cluster: LB IP pool, storage, CI runner
+triage/      node-triage MCP server (Go)
 scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 ```
 
@@ -28,6 +30,7 @@ scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 - [x] **0 — Foundations:** Terraform + Ansible, scoped Proxmox token, template; destroy → apply → converge → verify proven
 - [ ] **1 — Classic Slurm:** munge, slurmctld/slurmd, slurmdbd accounting, cgroup v2, fake GPU GRES, `burnin` → `batch` node flow, fairshare/QOS, node health checks, maintenance reservations
 - [~] **5 — Node-triage MCP server (Go):** Slurm side done (4 read-only tools, opt-in guarded writes, tested on 6 captured failure scenarios). Kubernetes side comes after phase 2
+- [x] **GitOps + CI:** Argo CD (app of apps from `gitops/`, pulled from GitLab over the LAN with a read-only deploy token) owns the add-ons after bootstrap; GitLab CI runs on a Kubernetes-executor runner inside the cluster and `main` requires a green pipeline
 - [x] **2 — kubeadm Kubernetes:** v1.36.5 (pinned to Cilium 1.20's tested range, not the newer 1.37), Cilium as kube-proxy replacement + Hubble, Cilium LB-IPAM with L2 announcements on the LAN (`10.0.5.140–149`) instead of MetalLB, local-path storage, `k8s-verify.yml`. Still to add: kube-prometheus-stack, node-problem-detector
 - [ ] **3 — Slinky:** Slurm on Kubernetes; the same jobs run on classic and Slinky, with a comparison write-up
 - [ ] **4 — Failure drills (ongoing):** node death mid-job, drains, health-check failures, munge/clock faults, cordon + PodDisruptionBudgets, cert expiry
@@ -66,6 +69,16 @@ ansible-playbook verify.yml
 ```
 
 For Kubernetes (`enable_k8s = true` in `terraform.tfvars`), `site.yml` also runs kubeadm, joins the workers and installs the add-ons; `ansible-playbook k8s-verify.yml` then proves nodes Ready at the pinned version, no kube-proxy, cluster DNS and ClusterIP through Cilium, a PVC write, and a LoadBalancer IP answering HTTP from off-cluster.
+
+**Kubernetes bootstrap order (fresh cluster):** `site.yml` installs Argo CD, then stops until Argo CD can read the repo. Run the two one-time scripts, then `site.yml` again:
+
+```bash
+scripts/register-argocd-repo.sh   # read-only GitLab deploy token -> Argo CD repository Secret
+scripts/register-runner.sh        # GitLab runner token -> Secret the runner Application uses
+ansible-playbook site.yml         # applies the root Application; Argo CD syncs gitops/
+```
+
+Both scripts pipe tokens from the GitLab API straight into Kubernetes Secrets; nothing lands on disk or in git.
 
 `verify.yml` checks that both computes are idle, a 2-node job runs, `--gres=gpu:fake:2` yields `CUDA_VISIBLE_DEVICES=0,1`, `/shared` is visible from the computes, and `sacct` recorded the jobs.
 

@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# Small single-instance Argo CD for a 3-node lab.
+dex:
+  enabled: false           # local admin only; no SSO in the lab
+notifications:
+  enabled: false
+server:
+  service:
+    type: LoadBalancer     # UI on a LAN IP from the Cilium pool (self-signed TLS)
+configs:
+  cm:
+    # Re-check git every minute; the default is 3.
+    timeout.reconciliation: 60s
