@@ -6,16 +6,19 @@
     group: root
     mode: "0755"
 
-# Operator can update node state (drain/resume) through slurmctld without
-# root or sudo. Only matters when the server runs with -allow-writes.
+# Changing node state (drain/resume) through slurmctld needs Slurm's Admin
+# level. Operator is NOT enough: it covers accounting objects and reservations,
+# and `scontrol update nodename=...` fails with "Invalid user id" (verified on
+# this cluster). Admin is still narrower than sudo/root, and the MCP server only
+# exposes drain and resume, only with -allow-writes.
 - name: Read the triage user's Slurm admin level
   ansible.builtin.command: sacctmgr -n -P show user {{ node_triage_user }} format=adminlevel
   register: node_triage_adminlevel
   changed_when: false
 
-- name: Make the triage user a Slurm Operator
-  ansible.builtin.command: sacctmgr -i modify user {{ node_triage_user }} set adminlevel=Operator
-  when: node_triage_adminlevel.stdout | trim != 'Operator'
+- name: Make the triage user a Slurm Admin
+  ansible.builtin.command: sacctmgr -i modify user {{ node_triage_user }} set adminlevel=Admin
+  when: node_triage_adminlevel.stdout | trim != 'Administrator'
   changed_when: true
 
 - name: Smoke-test the binary

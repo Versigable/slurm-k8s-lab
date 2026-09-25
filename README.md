@@ -71,6 +71,10 @@ ansible-playbook verify.yml
 
 ## node-triage (MCP server)
 
+![Claude Code triaging a lost GPU through node-triage](demo/node-triage-demo.gif)
+
+*Claude Code with only the node-triage tools, on the real lab: a lost GPU is escalated, a resume is refused by the server's hardware guard, and an approved maintenance drain goes through. How it was recorded, and what varies between runs: [`demo/`](demo/README.md).*
+
 `triage/` is a Go MCP server that answers the on-call question *"what should I do with this node?"* for a Slurm cluster.
 
 | Tool | What it does |
@@ -87,8 +91,8 @@ The tests run against **real captures** from this lab. `triage/scripts/capture-s
 
 ```bash
 cd triage && make build && cd ../ansible && ansible-playbook triage.yml   # installs on slurm-ctl
-# MCP client config: run it over SSH, stdio transport
-ssh -T labadmin@10.0.5.130 /usr/local/bin/node-triage
+# Claude Code: read-only server over SSH (add -allow-writes to enable drain/resume)
+claude mcp add --scope user slurm-triage -- ssh -T -o BatchMode=yes -i ~/.ssh/<key> labadmin@10.0.5.130 /usr/local/bin/node-triage
 # offline demo against a captured scenario, no cluster needed
 go run ./cmd/node-triage -fixtures internal/slurm/testdata/gres-missing -tz America/Denver
 ```
