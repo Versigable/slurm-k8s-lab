@@ -1,0 +1,3391 @@
+{
+  "jobs": [
+    {
+      "account": "lab",
+      "comment": {
+        "administrator": "",
+        "job": "",
+        "system": ""
+      },
+      "allocation_nodes": 2,
+      "array": {
+        "job_id": 0,
+        "limits": {
+          "max": {
+            "running": {
+              "tasks": 0
+            }
+          }
+        },
+        "task_id": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "task": ""
+      },
+      "association": {
+        "account": "lab",
+        "cluster": "lab",
+        "partition": "",
+        "user": "labadmin",
+        "id": 6
+      },
+      "block": "",
+      "cluster": "lab",
+      "constraints": "",
+      "container": "",
+      "derived_exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "time": {
+        "elapsed": 0,
+        "eligible": 1790304408,
+        "end": 1790304408,
+        "planned": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "start": 1790304408,
+        "submission": 1790304408,
+        "suspended": 0,
+        "system": {
+          "seconds": 0,
+          "microseconds": 1079
+        },
+        "limit": {
+          "set": false,
+          "infinite": true,
+          "number": 0
+        },
+        "total": {
+          "seconds": 0,
+          "microseconds": 2546
+        },
+        "user": {
+          "seconds": 0,
+          "microseconds": 1467
+        }
+      },
+      "exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "extra": "",
+      "failed_node": "",
+      "flags": [
+        "STARTED_ON_SUBMIT",
+        "START_RECEIVED"
+      ],
+      "group": "labadmin",
+      "het": {
+        "job_id": 0,
+        "job_offset": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "job_id": 1,
+      "name": "hostname",
+      "licenses": "",
+      "mcs": {
+        "label": ""
+      },
+      "nodes": "slurm-c[1-2]",
+      "partition": "batch",
+      "hold": false,
+      "priority": {
+        "set": true,
+        "infinite": false,
+        "number": 1
+      },
+      "qos": "normal",
+      "qosreq": "",
+      "required": {
+        "CPUs": 2,
+        "memory_per_cpu": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "memory_per_node": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "kill_request_user": "",
+      "restart_cnt": 0,
+      "reservation": {
+        "id": 0,
+        "name": ""
+      },
+      "script": "",
+      "stdin_expanded": "",
+      "stdout_expanded": "",
+      "stderr_expanded": "",
+      "stdout": "",
+      "stderr": "",
+      "stdin": "",
+      "state": {
+        "current": [
+          "COMPLETED"
+        ],
+        "reason": "None"
+      },
+      "steps": [
+        {
+          "time": {
+            "elapsed": 0,
+            "end": {
+              "set": true,
+              "infinite": false,
+              "number": 1790304408
+            },
+            "start": {
+              "set": true,
+              "infinite": false,
+              "number": 1790304408
+            },
+            "suspended": 0,
+            "system": {
+              "seconds": 0,
+              "microseconds": 1079
+            },
+            "total": {
+              "seconds": 0,
+              "microseconds": 2546
+            },
+            "user": {
+              "seconds": 0,
+              "microseconds": 1467
+            }
+          },
+          "exit_code": {
+            "status": [
+              "SUCCESS"
+            ],
+            "return_code": {
+              "set": true,
+              "infinite": false,
+              "number": 0
+            },
+            "signal": {
+              "id": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              },
+              "name": ""
+            }
+          },
+          "nodes": {
+            "count": 2,
+            "range": "slurm-c[1-2]",
+            "list": [
+              "slurm-c1",
+              "slurm-c2"
+            ]
+          },
+          "tasks": {
+            "count": 2
+          },
+          "pid": "",
+          "CPU": {
+            "requested_frequency": {
+              "min": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              },
+              "max": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              }
+            },
+            "governor": "Unknown"
+          },
+          "kill_request_user": "",
+          "state": [
+            "COMPLETED"
+          ],
+          "statistics": {
+            "CPU": {
+              "actual_frequency": 4662317429374844928
+            },
+            "energy": {
+              "consumed": {
+                "set": true,
+                "infinite": false,
+                "number": 0
+              }
+            }
+          },
+          "step": {
+            "id": "1.0",
+            "name": "hostname"
+          },
+          "task": {
+            "distribution": "Block"
+          },
+          "tres": {
+            "requested": {
+              "max": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1,
+                  "task": 1,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 565248,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0,
+                  "task": 1,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0,
+                  "task": 1,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0,
+                  "task": 1,
+                  "node": "slurm-c2"
+                }
+              ],
+              "min": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1,
+                  "task": 1,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 524288,
+                  "task": 1,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0,
+                  "task": 1,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0,
+                  "task": 1,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0,
+                  "task": 1,
+                  "node": "slurm-c2"
+                }
+              ],
+              "average": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 544768
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0
+                }
+              ],
+              "total": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 2
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 1089536
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0
+                }
+              ]
+            },
+            "consumed": {
+              "max": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1,
+                  "task": 1,
+                  "node": "slurm-c2"
+                }
+              ],
+              "min": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c2"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1,
+                  "task": 1,
+                  "node": "slurm-c2"
+                }
+              ],
+              "average": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1
+                }
+              ],
+              "total": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 2
+                }
+              ]
+            },
+            "allocated": [
+              {
+                "type": "cpu",
+                "name": "",
+                "id": 1,
+                "count": 2
+              },
+              {
+                "type": "mem",
+                "name": "",
+                "id": 2,
+                "count": 3436
+              },
+              {
+                "type": "node",
+                "name": "",
+                "id": 4,
+                "count": 2
+              }
+            ]
+          }
+        }
+      ],
+      "submit_line": "srun -N2 -p batch hostname",
+      "tres": {
+        "allocated": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 2
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 3436
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 2
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 2
+          }
+        ],
+        "requested": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 2
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 3436
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 2
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 2
+          }
+        ]
+      },
+      "used_gres": "",
+      "user": "labadmin",
+      "wckey": {
+        "wckey": "",
+        "flags": []
+      },
+      "working_directory": "\/home\/labadmin"
+    },
+    {
+      "account": "lab",
+      "comment": {
+        "administrator": "",
+        "job": "",
+        "system": ""
+      },
+      "allocation_nodes": 1,
+      "array": {
+        "job_id": 0,
+        "limits": {
+          "max": {
+            "running": {
+              "tasks": 0
+            }
+          }
+        },
+        "task_id": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "task": ""
+      },
+      "association": {
+        "account": "lab",
+        "cluster": "lab",
+        "partition": "",
+        "user": "labadmin",
+        "id": 6
+      },
+      "block": "",
+      "cluster": "lab",
+      "constraints": "",
+      "container": "",
+      "derived_exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "time": {
+        "elapsed": 0,
+        "eligible": 1790304409,
+        "end": 1790304409,
+        "planned": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "start": 1790304409,
+        "submission": 1790304409,
+        "suspended": 0,
+        "system": {
+          "seconds": 0,
+          "microseconds": 1617
+        },
+        "limit": {
+          "set": false,
+          "infinite": true,
+          "number": 0
+        },
+        "total": {
+          "seconds": 0,
+          "microseconds": 1834
+        },
+        "user": {
+          "seconds": 0,
+          "microseconds": 217
+        }
+      },
+      "exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "extra": "",
+      "failed_node": "",
+      "flags": [
+        "STARTED_ON_SUBMIT",
+        "START_RECEIVED"
+      ],
+      "group": "labadmin",
+      "het": {
+        "job_id": 0,
+        "job_offset": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "job_id": 2,
+      "name": "bash",
+      "licenses": "",
+      "mcs": {
+        "label": ""
+      },
+      "nodes": "slurm-c1",
+      "partition": "batch",
+      "hold": false,
+      "priority": {
+        "set": true,
+        "infinite": false,
+        "number": 1
+      },
+      "qos": "normal",
+      "qosreq": "",
+      "required": {
+        "CPUs": 1,
+        "memory_per_cpu": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "memory_per_node": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "kill_request_user": "",
+      "restart_cnt": 0,
+      "reservation": {
+        "id": 0,
+        "name": ""
+      },
+      "script": "",
+      "stdin_expanded": "",
+      "stdout_expanded": "",
+      "stderr_expanded": "",
+      "stdout": "",
+      "stderr": "",
+      "stdin": "",
+      "state": {
+        "current": [
+          "COMPLETED"
+        ],
+        "reason": "None"
+      },
+      "steps": [
+        {
+          "time": {
+            "elapsed": 0,
+            "end": {
+              "set": true,
+              "infinite": false,
+              "number": 1790304409
+            },
+            "start": {
+              "set": true,
+              "infinite": false,
+              "number": 1790304409
+            },
+            "suspended": 0,
+            "system": {
+              "seconds": 0,
+              "microseconds": 1617
+            },
+            "total": {
+              "seconds": 0,
+              "microseconds": 1834
+            },
+            "user": {
+              "seconds": 0,
+              "microseconds": 217
+            }
+          },
+          "exit_code": {
+            "status": [
+              "SUCCESS"
+            ],
+            "return_code": {
+              "set": true,
+              "infinite": false,
+              "number": 0
+            },
+            "signal": {
+              "id": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              },
+              "name": ""
+            }
+          },
+          "nodes": {
+            "count": 1,
+            "range": "slurm-c1",
+            "list": [
+              "slurm-c1"
+            ]
+          },
+          "tasks": {
+            "count": 1
+          },
+          "pid": "",
+          "CPU": {
+            "requested_frequency": {
+              "min": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              },
+              "max": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              }
+            },
+            "governor": "Unknown"
+          },
+          "kill_request_user": "",
+          "state": [
+            "COMPLETED"
+          ],
+          "statistics": {
+            "CPU": {
+              "actual_frequency": 4659679700979810304
+            },
+            "energy": {
+              "consumed": {
+                "set": true,
+                "infinite": false,
+                "number": 0
+              }
+            }
+          },
+          "step": {
+            "id": "2.0",
+            "name": "bash"
+          },
+          "task": {
+            "distribution": "Block"
+          },
+          "tres": {
+            "requested": {
+              "max": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 606208,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "min": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 606208,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "average": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 606208
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0
+                }
+              ],
+              "total": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 606208
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0
+                }
+              ]
+            },
+            "consumed": {
+              "max": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "min": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "average": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1
+                }
+              ],
+              "total": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1
+                }
+              ]
+            },
+            "allocated": [
+              {
+                "type": "cpu",
+                "name": "",
+                "id": 1,
+                "count": 1
+              },
+              {
+                "type": "mem",
+                "name": "",
+                "id": 2,
+                "count": 1718
+              },
+              {
+                "type": "node",
+                "name": "",
+                "id": 4,
+                "count": 1
+              },
+              {
+                "type": "gres",
+                "name": "gpu",
+                "id": 1001,
+                "count": 2
+              }
+            ]
+          }
+        }
+      ],
+      "submit_line": "srun -N1 --gres=gpu:fake:2 bash -c echo $CUDA_VISIBLE_DEVICES",
+      "tres": {
+        "allocated": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 1
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 1718
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 1
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 1
+          },
+          {
+            "type": "gres",
+            "name": "gpu",
+            "id": 1001,
+            "count": 2
+          }
+        ],
+        "requested": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 1
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 1718
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 1
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 1
+          },
+          {
+            "type": "gres",
+            "name": "gpu",
+            "id": 1001,
+            "count": 2
+          }
+        ]
+      },
+      "used_gres": "",
+      "user": "labadmin",
+      "wckey": {
+        "wckey": "",
+        "flags": []
+      },
+      "working_directory": "\/home\/labadmin"
+    },
+    {
+      "account": "lab",
+      "comment": {
+        "administrator": "",
+        "job": "",
+        "system": ""
+      },
+      "allocation_nodes": 1,
+      "array": {
+        "job_id": 0,
+        "limits": {
+          "max": {
+            "running": {
+              "tasks": 0
+            }
+          }
+        },
+        "task_id": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "task": ""
+      },
+      "association": {
+        "account": "lab",
+        "cluster": "lab",
+        "partition": "",
+        "user": "labadmin",
+        "id": 6
+      },
+      "block": "",
+      "cluster": "lab",
+      "constraints": "",
+      "container": "",
+      "derived_exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "time": {
+        "elapsed": 0,
+        "eligible": 1790304409,
+        "end": 1790304409,
+        "planned": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "start": 1790304409,
+        "submission": 1790304409,
+        "suspended": 0,
+        "system": {
+          "seconds": 0,
+          "microseconds": 0
+        },
+        "limit": {
+          "set": false,
+          "infinite": true,
+          "number": 0
+        },
+        "total": {
+          "seconds": 0,
+          "microseconds": 1584
+        },
+        "user": {
+          "seconds": 0,
+          "microseconds": 1584
+        }
+      },
+      "exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "extra": "",
+      "failed_node": "",
+      "flags": [
+        "STARTED_ON_SUBMIT",
+        "START_RECEIVED"
+      ],
+      "group": "labadmin",
+      "het": {
+        "job_id": 0,
+        "job_offset": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "job_id": 3,
+      "name": "test",
+      "licenses": "",
+      "mcs": {
+        "label": ""
+      },
+      "nodes": "slurm-c1",
+      "partition": "batch",
+      "hold": false,
+      "priority": {
+        "set": true,
+        "infinite": false,
+        "number": 1
+      },
+      "qos": "normal",
+      "qosreq": "",
+      "required": {
+        "CPUs": 1,
+        "memory_per_cpu": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "memory_per_node": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "kill_request_user": "",
+      "restart_cnt": 0,
+      "reservation": {
+        "id": 0,
+        "name": ""
+      },
+      "script": "",
+      "stdin_expanded": "",
+      "stdout_expanded": "",
+      "stderr_expanded": "",
+      "stdout": "",
+      "stderr": "",
+      "stdin": "",
+      "state": {
+        "current": [
+          "COMPLETED"
+        ],
+        "reason": "None"
+      },
+      "steps": [
+        {
+          "time": {
+            "elapsed": 0,
+            "end": {
+              "set": true,
+              "infinite": false,
+              "number": 1790304409
+            },
+            "start": {
+              "set": true,
+              "infinite": false,
+              "number": 1790304409
+            },
+            "suspended": 0,
+            "system": {
+              "seconds": 0,
+              "microseconds": 0
+            },
+            "total": {
+              "seconds": 0,
+              "microseconds": 1584
+            },
+            "user": {
+              "seconds": 0,
+              "microseconds": 1584
+            }
+          },
+          "exit_code": {
+            "status": [
+              "SUCCESS"
+            ],
+            "return_code": {
+              "set": true,
+              "infinite": false,
+              "number": 0
+            },
+            "signal": {
+              "id": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              },
+              "name": ""
+            }
+          },
+          "nodes": {
+            "count": 1,
+            "range": "slurm-c1",
+            "list": [
+              "slurm-c1"
+            ]
+          },
+          "tasks": {
+            "count": 1
+          },
+          "pid": "",
+          "CPU": {
+            "requested_frequency": {
+              "min": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              },
+              "max": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              }
+            },
+            "governor": "Unknown"
+          },
+          "kill_request_user": "",
+          "state": [
+            "COMPLETED"
+          ],
+          "statistics": {
+            "CPU": {
+              "actual_frequency": 4659679700979810304
+            },
+            "energy": {
+              "consumed": {
+                "set": true,
+                "infinite": false,
+                "number": 0
+              }
+            }
+          },
+          "step": {
+            "id": "3.0",
+            "name": "test"
+          },
+          "task": {
+            "distribution": "Block"
+          },
+          "tres": {
+            "requested": {
+              "max": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 634880,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "min": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 634880,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "average": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 634880
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 1
+                }
+              ],
+              "total": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 634880
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 1
+                }
+              ]
+            },
+            "consumed": {
+              "max": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "min": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "average": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1
+                }
+              ],
+              "total": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1
+                }
+              ]
+            },
+            "allocated": [
+              {
+                "type": "cpu",
+                "name": "",
+                "id": 1,
+                "count": 1
+              },
+              {
+                "type": "mem",
+                "name": "",
+                "id": 2,
+                "count": 1718
+              },
+              {
+                "type": "node",
+                "name": "",
+                "id": 4,
+                "count": 1
+              }
+            ]
+          }
+        }
+      ],
+      "submit_line": "srun -N1 test -f \/shared\/verify-6215",
+      "tres": {
+        "allocated": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 1
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 1718
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 1
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 1
+          }
+        ],
+        "requested": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 1
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 1718
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 1
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 1
+          }
+        ]
+      },
+      "used_gres": "",
+      "user": "labadmin",
+      "wckey": {
+        "wckey": "",
+        "flags": []
+      },
+      "working_directory": "\/home\/labadmin"
+    },
+    {
+      "account": "lab",
+      "comment": {
+        "administrator": "",
+        "job": "",
+        "system": ""
+      },
+      "allocation_nodes": 1,
+      "array": {
+        "job_id": 0,
+        "limits": {
+          "max": {
+            "running": {
+              "tasks": 0
+            }
+          }
+        },
+        "task_id": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "task": ""
+      },
+      "association": {
+        "account": "lab",
+        "cluster": "lab",
+        "partition": "",
+        "user": "labadmin",
+        "id": 6
+      },
+      "block": "",
+      "cluster": "lab",
+      "constraints": "",
+      "container": "",
+      "derived_exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "time": {
+        "elapsed": 0,
+        "eligible": 1790304462,
+        "end": 1790304462,
+        "planned": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "start": 1790304462,
+        "submission": 1790304462,
+        "suspended": 0,
+        "system": {
+          "seconds": 0,
+          "microseconds": 929
+        },
+        "limit": {
+          "set": false,
+          "infinite": true,
+          "number": 0
+        },
+        "total": {
+          "seconds": 0,
+          "microseconds": 9209
+        },
+        "user": {
+          "seconds": 0,
+          "microseconds": 8280
+        }
+      },
+      "exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "extra": "",
+      "failed_node": "",
+      "flags": [
+        "STARTED_ON_SUBMIT",
+        "START_RECEIVED"
+      ],
+      "group": "labadmin",
+      "het": {
+        "job_id": 0,
+        "job_offset": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "job_id": 4,
+      "name": "bash",
+      "licenses": "",
+      "mcs": {
+        "label": ""
+      },
+      "nodes": "slurm-c1",
+      "partition": "batch",
+      "hold": false,
+      "priority": {
+        "set": true,
+        "infinite": false,
+        "number": 1
+      },
+      "qos": "normal",
+      "qosreq": "",
+      "required": {
+        "CPUs": 1,
+        "memory_per_cpu": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "memory_per_node": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "kill_request_user": "",
+      "restart_cnt": 0,
+      "reservation": {
+        "id": 0,
+        "name": ""
+      },
+      "script": "",
+      "stdin_expanded": "",
+      "stdout_expanded": "",
+      "stderr_expanded": "",
+      "stdout": "",
+      "stderr": "",
+      "stdin": "",
+      "state": {
+        "current": [
+          "COMPLETED"
+        ],
+        "reason": "None"
+      },
+      "steps": [
+        {
+          "time": {
+            "elapsed": 0,
+            "end": {
+              "set": true,
+              "infinite": false,
+              "number": 1790304462
+            },
+            "start": {
+              "set": true,
+              "infinite": false,
+              "number": 1790304462
+            },
+            "suspended": 0,
+            "system": {
+              "seconds": 0,
+              "microseconds": 929
+            },
+            "total": {
+              "seconds": 0,
+              "microseconds": 9209
+            },
+            "user": {
+              "seconds": 0,
+              "microseconds": 8280
+            }
+          },
+          "exit_code": {
+            "status": [
+              "SUCCESS"
+            ],
+            "return_code": {
+              "set": true,
+              "infinite": false,
+              "number": 0
+            },
+            "signal": {
+              "id": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              },
+              "name": ""
+            }
+          },
+          "nodes": {
+            "count": 1,
+            "range": "slurm-c1",
+            "list": [
+              "slurm-c1"
+            ]
+          },
+          "tasks": {
+            "count": 1
+          },
+          "pid": "",
+          "CPU": {
+            "requested_frequency": {
+              "min": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              },
+              "max": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              }
+            },
+            "governor": "Unknown"
+          },
+          "kill_request_user": "",
+          "state": [
+            "COMPLETED"
+          ],
+          "statistics": {
+            "CPU": {
+              "actual_frequency": 4659679700979810304
+            },
+            "energy": {
+              "consumed": {
+                "set": true,
+                "infinite": false,
+                "number": 0
+              }
+            }
+          },
+          "step": {
+            "id": "4.0",
+            "name": "bash"
+          },
+          "task": {
+            "distribution": "Block"
+          },
+          "tres": {
+            "requested": {
+              "max": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 8,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 1806336,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "min": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 8,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 1806336,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "average": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 8
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 1806336
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0
+                }
+              ],
+              "total": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 8
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 1806336
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0
+                }
+              ]
+            },
+            "consumed": {
+              "max": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "min": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "average": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1
+                }
+              ],
+              "total": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1
+                }
+              ]
+            },
+            "allocated": [
+              {
+                "type": "cpu",
+                "name": "",
+                "id": 1,
+                "count": 1
+              },
+              {
+                "type": "mem",
+                "name": "",
+                "id": 2,
+                "count": 1718
+              },
+              {
+                "type": "node",
+                "name": "",
+                "id": 4,
+                "count": 1
+              },
+              {
+                "type": "gres",
+                "name": "gpu",
+                "id": 1001,
+                "count": 1
+              }
+            ]
+          }
+        }
+      ],
+      "submit_line": "srun --gres=gpu:fake:1 bash -c echo CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES; for d in \/dev\/fakegpu*; do if exec 3<$d 2>\/dev\/null; then echo \"$d: allowed\"; else err=$( (exec 3<$d) 2>&1 | sed \"s\/.*: \/\/\"); echo \"$d: $err\"; fi; done",
+      "tres": {
+        "allocated": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 1
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 1718
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 1
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 1
+          },
+          {
+            "type": "gres",
+            "name": "gpu",
+            "id": 1001,
+            "count": 1
+          }
+        ],
+        "requested": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 1
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 1718
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 1
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 1
+          },
+          {
+            "type": "gres",
+            "name": "gpu",
+            "id": 1001,
+            "count": 1
+          }
+        ]
+      },
+      "used_gres": "",
+      "user": "labadmin",
+      "wckey": {
+        "wckey": "",
+        "flags": []
+      },
+      "working_directory": "\/home\/labadmin"
+    },
+    {
+      "account": "lab",
+      "comment": {
+        "administrator": "",
+        "job": "",
+        "system": ""
+      },
+      "allocation_nodes": 1,
+      "array": {
+        "job_id": 0,
+        "limits": {
+          "max": {
+            "running": {
+              "tasks": 0
+            }
+          }
+        },
+        "task_id": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "task": ""
+      },
+      "association": {
+        "account": "lab",
+        "cluster": "lab",
+        "partition": "",
+        "user": "labadmin",
+        "id": 6
+      },
+      "block": "",
+      "cluster": "lab",
+      "constraints": "",
+      "container": "",
+      "derived_exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "time": {
+        "elapsed": 12,
+        "eligible": 1790307885,
+        "end": 1790307898,
+        "planned": {
+          "set": true,
+          "infinite": false,
+          "number": 1
+        },
+        "start": 1790307886,
+        "submission": 1790307885,
+        "suspended": 0,
+        "system": {
+          "seconds": 0,
+          "microseconds": 118
+        },
+        "limit": {
+          "set": false,
+          "infinite": true,
+          "number": 0
+        },
+        "total": {
+          "seconds": 0,
+          "microseconds": 1229
+        },
+        "user": {
+          "seconds": 0,
+          "microseconds": 1111
+        }
+      },
+      "exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "extra": "",
+      "failed_node": "",
+      "flags": [
+        "STARTED_ON_SCHEDULE",
+        "START_RECEIVED"
+      ],
+      "group": "labadmin",
+      "het": {
+        "job_id": 0,
+        "job_offset": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "job_id": 5,
+      "name": "long-train",
+      "licenses": "",
+      "mcs": {
+        "label": ""
+      },
+      "nodes": "slurm-c1",
+      "partition": "batch",
+      "hold": false,
+      "priority": {
+        "set": true,
+        "infinite": false,
+        "number": 10000
+      },
+      "qos": "normal",
+      "qosreq": "",
+      "required": {
+        "CPUs": 1,
+        "memory_per_cpu": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "memory_per_node": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "kill_request_user": "root",
+      "restart_cnt": 0,
+      "reservation": {
+        "id": 0,
+        "name": ""
+      },
+      "script": "",
+      "stdin_expanded": "\/dev\/null",
+      "stdout_expanded": "\/home\/labadmin\/slurm-5.out",
+      "stderr_expanded": "",
+      "stdout": "\/home\/labadmin\/slurm-%j.out",
+      "stderr": "",
+      "stdin": "\/dev\/null",
+      "state": {
+        "current": [
+          "CANCELLED"
+        ],
+        "reason": "None"
+      },
+      "steps": [
+        {
+          "time": {
+            "elapsed": 13,
+            "end": {
+              "set": true,
+              "infinite": false,
+              "number": 1790307899
+            },
+            "start": {
+              "set": true,
+              "infinite": false,
+              "number": 1790307886
+            },
+            "suspended": 0,
+            "system": {
+              "seconds": 0,
+              "microseconds": 118
+            },
+            "total": {
+              "seconds": 0,
+              "microseconds": 1229
+            },
+            "user": {
+              "seconds": 0,
+              "microseconds": 1111
+            }
+          },
+          "exit_code": {
+            "status": [
+              "SIGNALED"
+            ],
+            "return_code": {
+              "set": false,
+              "infinite": false,
+              "number": 0
+            },
+            "signal": {
+              "id": {
+                "set": true,
+                "infinite": false,
+                "number": 15
+              },
+              "name": "TERM"
+            }
+          },
+          "nodes": {
+            "count": 1,
+            "range": "slurm-c1",
+            "list": [
+              "slurm-c1"
+            ]
+          },
+          "tasks": {
+            "count": 1
+          },
+          "pid": "",
+          "CPU": {
+            "requested_frequency": {
+              "min": {
+                "set": true,
+                "infinite": false,
+                "number": 0
+              },
+              "max": {
+                "set": true,
+                "infinite": false,
+                "number": 0
+              }
+            },
+            "governor": "0"
+          },
+          "kill_request_user": "",
+          "state": [
+            "CANCELLED"
+          ],
+          "statistics": {
+            "CPU": {
+              "actual_frequency": 4659679700979810304
+            },
+            "energy": {
+              "consumed": {
+                "set": true,
+                "infinite": false,
+                "number": 0
+              }
+            }
+          },
+          "step": {
+            "id": "5.batch",
+            "name": "batch"
+          },
+          "task": {
+            "distribution": "Unknown"
+          },
+          "tres": {
+            "requested": {
+              "max": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 524288,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "min": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 524288,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "average": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 524288
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0
+                }
+              ],
+              "total": [
+                {
+                  "type": "cpu",
+                  "name": "",
+                  "id": 1,
+                  "count": 1
+                },
+                {
+                  "type": "mem",
+                  "name": "",
+                  "id": 2,
+                  "count": 524288
+                },
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 0
+                },
+                {
+                  "type": "vmem",
+                  "name": "",
+                  "id": 7,
+                  "count": 0
+                },
+                {
+                  "type": "pages",
+                  "name": "",
+                  "id": 8,
+                  "count": 0
+                }
+              ]
+            },
+            "consumed": {
+              "max": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "min": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0,
+                  "task": 0,
+                  "node": "slurm-c1"
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1,
+                  "task": 0,
+                  "node": "slurm-c1"
+                }
+              ],
+              "average": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1
+                }
+              ],
+              "total": [
+                {
+                  "type": "energy",
+                  "name": "",
+                  "id": 3,
+                  "count": 0
+                },
+                {
+                  "type": "fs",
+                  "name": "disk",
+                  "id": 6,
+                  "count": 1
+                }
+              ]
+            },
+            "allocated": [
+              {
+                "type": "cpu",
+                "name": "",
+                "id": 1,
+                "count": 1
+              },
+              {
+                "type": "mem",
+                "name": "",
+                "id": 2,
+                "count": 1718
+              },
+              {
+                "type": "node",
+                "name": "",
+                "id": 4,
+                "count": 1
+              }
+            ]
+          }
+        }
+      ],
+      "submit_line": "sbatch -w slurm-c1 -J long-train --wrap sleep 900",
+      "tres": {
+        "allocated": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 1
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 1718
+          },
+          {
+            "type": "energy",
+            "name": "",
+            "id": 3,
+            "count": -2
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 1
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 1
+          }
+        ],
+        "requested": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 1
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 1718
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 1
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 1
+          }
+        ]
+      },
+      "used_gres": "",
+      "user": "labadmin",
+      "wckey": {
+        "wckey": "",
+        "flags": []
+      },
+      "working_directory": "\/home\/labadmin"
+    },
+    {
+      "account": "lab",
+      "comment": {
+        "administrator": "",
+        "job": "",
+        "system": ""
+      },
+      "allocation_nodes": 1,
+      "array": {
+        "job_id": 0,
+        "limits": {
+          "max": {
+            "running": {
+              "tasks": 0
+            }
+          }
+        },
+        "task_id": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "task": ""
+      },
+      "association": {
+        "account": "lab",
+        "cluster": "lab",
+        "partition": "",
+        "user": "labadmin",
+        "id": 6
+      },
+      "block": "",
+      "cluster": "lab",
+      "constraints": "",
+      "container": "",
+      "derived_exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "time": {
+        "elapsed": 373,
+        "eligible": 1790308035,
+        "end": 0,
+        "planned": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "start": 1790308035,
+        "submission": 1790308035,
+        "suspended": 0,
+        "system": {
+          "seconds": 0,
+          "microseconds": 0
+        },
+        "limit": {
+          "set": false,
+          "infinite": true,
+          "number": 0
+        },
+        "total": {
+          "seconds": 0,
+          "microseconds": 0
+        },
+        "user": {
+          "seconds": 0,
+          "microseconds": 0
+        }
+      },
+      "exit_code": {
+        "status": [
+          "SUCCESS"
+        ],
+        "return_code": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "signal": {
+          "id": {
+            "set": false,
+            "infinite": false,
+            "number": 0
+          },
+          "name": ""
+        }
+      },
+      "extra": "",
+      "failed_node": "",
+      "flags": [
+        "STARTED_ON_SCHEDULE",
+        "START_RECEIVED"
+      ],
+      "group": "labadmin",
+      "het": {
+        "job_id": 0,
+        "job_offset": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "job_id": 6,
+      "name": "etl-shard-7",
+      "licenses": "",
+      "mcs": {
+        "label": ""
+      },
+      "nodes": "slurm-c2",
+      "partition": "batch",
+      "hold": false,
+      "priority": {
+        "set": true,
+        "infinite": false,
+        "number": 2500
+      },
+      "qos": "normal",
+      "qosreq": "",
+      "required": {
+        "CPUs": 1,
+        "memory_per_cpu": {
+          "set": false,
+          "infinite": false,
+          "number": 0
+        },
+        "memory_per_node": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        }
+      },
+      "kill_request_user": "",
+      "restart_cnt": 0,
+      "reservation": {
+        "id": 0,
+        "name": ""
+      },
+      "script": "",
+      "stdin_expanded": "\/dev\/null",
+      "stdout_expanded": "\/home\/labadmin\/slurm-6.out",
+      "stderr_expanded": "",
+      "stdout": "\/home\/labadmin\/slurm-%j.out",
+      "stderr": "",
+      "stdin": "\/dev\/null",
+      "state": {
+        "current": [
+          "RUNNING"
+        ],
+        "reason": "None"
+      },
+      "steps": [
+        {
+          "time": {
+            "elapsed": 373,
+            "end": {
+              "set": true,
+              "infinite": false,
+              "number": 0
+            },
+            "start": {
+              "set": true,
+              "infinite": false,
+              "number": 1790308035
+            },
+            "suspended": 0,
+            "system": {
+              "seconds": 0,
+              "microseconds": 0
+            },
+            "total": {
+              "seconds": 0,
+              "microseconds": 0
+            },
+            "user": {
+              "seconds": 0,
+              "microseconds": 0
+            }
+          },
+          "exit_code": {
+            "status": [
+              "SUCCESS"
+            ],
+            "return_code": {
+              "set": true,
+              "infinite": false,
+              "number": 0
+            },
+            "signal": {
+              "id": {
+                "set": false,
+                "infinite": false,
+                "number": 0
+              },
+              "name": ""
+            }
+          },
+          "nodes": {
+            "count": 1,
+            "range": "slurm-c2",
+            "list": [
+              "slurm-c2"
+            ]
+          },
+          "tasks": {
+            "count": 1
+          },
+          "pid": "",
+          "CPU": {
+            "requested_frequency": {
+              "min": {
+                "set": true,
+                "infinite": false,
+                "number": 0
+              },
+              "max": {
+                "set": true,
+                "infinite": false,
+                "number": 0
+              }
+            },
+            "governor": "0"
+          },
+          "kill_request_user": "",
+          "state": [
+            "RUNNING"
+          ],
+          "statistics": {
+            "CPU": {
+              "actual_frequency": 0
+            },
+            "energy": {
+              "consumed": {
+                "set": true,
+                "infinite": false,
+                "number": 0
+              }
+            }
+          },
+          "step": {
+            "id": "6.batch",
+            "name": "batch"
+          },
+          "task": {
+            "distribution": "Unknown"
+          },
+          "tres": {
+            "requested": {
+              "max": [],
+              "min": [],
+              "average": [],
+              "total": []
+            },
+            "consumed": {
+              "max": [],
+              "min": [],
+              "average": [],
+              "total": []
+            },
+            "allocated": [
+              {
+                "type": "cpu",
+                "name": "",
+                "id": 1,
+                "count": 1
+              },
+              {
+                "type": "mem",
+                "name": "",
+                "id": 2,
+                "count": 1718
+              },
+              {
+                "type": "node",
+                "name": "",
+                "id": 4,
+                "count": 1
+              }
+            ]
+          }
+        }
+      ],
+      "submit_line": "sbatch -w slurm-c2 -J etl-shard-7 --wrap sleep 900",
+      "tres": {
+        "allocated": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 1
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 1718
+          },
+          {
+            "type": "energy",
+            "name": "",
+            "id": 3,
+            "count": -2
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 1
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 1
+          }
+        ],
+        "requested": [
+          {
+            "type": "cpu",
+            "name": "",
+            "id": 1,
+            "count": 1
+          },
+          {
+            "type": "mem",
+            "name": "",
+            "id": 2,
+            "count": 1718
+          },
+          {
+            "type": "node",
+            "name": "",
+            "id": 4,
+            "count": 1
+          },
+          {
+            "type": "billing",
+            "name": "",
+            "id": 5,
+            "count": 1
+          }
+        ]
+      },
+      "used_gres": "",
+      "user": "labadmin",
+      "wckey": {
+        "wckey": "",
+        "flags": []
+      },
+      "working_directory": "\/home\/labadmin"
+    }
+  ],
+  "meta": {
+    "plugin": {
+      "type": "",
+      "name": "",
+      "data_parser": "data_parser\/v0.0.42",
+      "accounting_storage": "accounting_storage\/slurmdbd"
+    },
+    "client": {
+      "source": "",
+      "user": "labadmin",
+      "group": "labadmin"
+    },
+    "command": [
+      "sacct",
+      "--json",
+      "-a",
+      "-S"
+    ],
+    "slurm": {
+      "version": {
+        "major": "24",
+        "micro": "5",
+        "minor": "11"
+      },
+      "release": "24.11.5",
+      "cluster": "lab"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

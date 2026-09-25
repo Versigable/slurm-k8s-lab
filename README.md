@@ -27,7 +27,7 @@ scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 
 - [x] **0 — Foundations:** Terraform + Ansible, scoped Proxmox token, template; destroy → apply → converge → verify proven
 - [ ] **1 — Classic Slurm:** munge, slurmctld/slurmd, slurmdbd accounting, cgroup v2, fake GPU GRES, `burnin` → `batch` node flow, fairshare/QOS, node health checks, maintenance reservations
-- [ ] **5 — Node-triage MCP server (Go):** read-only tools over `sinfo`/`scontrol`/`sacct` (then Kubernetes), a `recommend_action` tool that returns *drain / resume / escalate* with its evidence, write actions behind explicit approval
+- [~] **5 — Node-triage MCP server (Go):** Slurm side done (4 read-only tools, opt-in guarded writes, tested on 6 captured failure scenarios). Kubernetes side comes after phase 2
 - [ ] **2 — kubeadm Kubernetes:** containerd, Cilium, MetalLB, local-path storage, kube-prometheus-stack, node-problem-detector
 - [ ] **3 — Slinky:** Slurm on Kubernetes; the same jobs run on classic and Slinky, with a comparison write-up
 - [ ] **4 — Failure drills (ongoing):** node death mid-job, drains, health-check failures, munge/clock faults, cordon + PodDisruptionBudgets, cert expiry
@@ -68,6 +68,30 @@ ansible-playbook verify.yml
 `verify.yml` checks that both computes are idle, a 2-node job runs, `--gres=gpu:fake:2` yields `CUDA_VISIBLE_DEVICES=0,1`, `/shared` is visible from the computes, and `sacct` recorded the jobs.
 
 > **WSL note:** under `/mnt/c` every directory looks world-writable, so Ansible ignores `ansible.cfg` in the current directory. Run with `ANSIBLE_CONFIG=$PWD/ansible.cfg`, or keep a clone on the Linux filesystem.
+
+## node-triage (MCP server)
+
+`triage/` is a Go MCP server that answers the on-call question *"what should I do with this node?"* for a Slurm cluster.
+
+| Tool | What it does |
+|---|---|
+| `triage_cluster` | Assess every node; return the ones needing attention, most severe first |
+| `triage_node` | One node: action (`none` / `wait` / `drain` / `resume` / `investigate` / `escalate_hardware`), severity, evidence, preconditions, suggested commands |
+| `node_detail` | State, reason and who set it, running jobs, recent job outcomes, drain/down events |
+| `list_nodes` | Every node with state flags, CPU and GPU usage |
+| `drain_node` / `resume_node` | **Only with `-allow-writes`.** `resume_node` refuses nodes triage flags as hardware faults unless `force=true` |
+
+The decisions come from deterministic rules in `internal/triage`, not the model, so the same cluster state always gets the same answer and every answer cites the Slurm facts behind it. The LLM client picks what to look at and explains the result. [`skills/triage-slurm-node/SKILL.md`](skills/triage-slurm-node/SKILL.md) tells an agent how to use it and where to stop.
+
+The tests run against **real captures** from this lab. `triage/scripts/capture-scenarios.sh` breaks the cluster on purpose (health-check drain, maintenance drain with an unbounded job, a lost GPU, slurmd dying mid-job), saves what Slurm reports, and restores the cluster.
+
+```bash
+cd triage && make build && cd ../ansible && ansible-playbook triage.yml   # installs on slurm-ctl
+# MCP client config: run it over SSH, stdio transport
+ssh -T labadmin@10.0.5.130 /usr/local/bin/node-triage
+# offline demo against a captured scenario, no cluster needed
+go run ./cmd/node-triage -fixtures internal/slurm/testdata/gres-missing -tz America/Denver
+```
 
 ## Fake GPUs
 

@@ -1,0 +1,23 @@
+- name: Install the node-triage MCP server
+  ansible.builtin.copy:
+    src: "{{ node_triage_binary }}"
+    dest: /usr/local/bin/node-triage
+    owner: root
+    group: root
+    mode: "0755"
+
+# Operator can update node state (drain/resume) through slurmctld without
+# root or sudo. Only matters when the server runs with -allow-writes.
+- name: Read the triage user's Slurm admin level
+  ansible.builtin.command: sacctmgr -n -P show user {{ node_triage_user }} format=adminlevel
+  register: node_triage_adminlevel
+  changed_when: false
+
+- name: Make the triage user a Slurm Operator
+  ansible.builtin.command: sacctmgr -i modify user {{ node_triage_user }} set adminlevel=Operator
+  when: node_triage_adminlevel.stdout | trim != 'Operator'
+  changed_when: true
+
+- name: Smoke-test the binary
+  ansible.builtin.command: /usr/local/bin/node-triage -version
+  changed_when: false

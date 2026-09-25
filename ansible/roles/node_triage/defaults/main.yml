@@ -1,0 +1,3 @@
+# Built on the control node first: (cd ../triage && make build)
+node_triage_binary: "{{ playbook_dir }}/../triage/bin/node-triage"
+node_triage_user: "{{ ansible_user }}"
