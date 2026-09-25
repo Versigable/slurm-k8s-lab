@@ -1,0 +1,44 @@
+- name: Write kubeadm config
+  ansible.builtin.template:
+    src: kubeadm-config.yaml.j2
+    dest: /etc/kubernetes/kubeadm-config.yaml
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Run kubeadm init (first run only)
+  ansible.builtin.command: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
+  args:
+    creates: /etc/kubernetes/admin.conf
+
+- name: Admin kubeconfig for the lab user
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0700"
+
+- name: Copy admin.conf (cluster-admin credentials; never leaves the node through this role)
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+
+- name: Download Helm
+  ansible.builtin.get_url:
+    url: "https://get.helm.sh/helm-{{ helm_version }}-linux-amd64.tar.gz"
+    dest: "/tmp/helm-{{ helm_version }}.tar.gz"
+    checksum: "sha256:{{ helm_sha256 }}"
+    mode: "0644"
+
+- name: Install Helm
+  ansible.builtin.unarchive:
+    src: "/tmp/helm-{{ helm_version }}.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    extra_opts: [--strip-components=1, linux-amd64/helm]
+    creates: /usr/local/bin/helm

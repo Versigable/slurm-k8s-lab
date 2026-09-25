@@ -23,3 +23,29 @@
   become: true
   roles:
     - slurm_compute
+
+# --- Kubernetes (kubeadm). Groups are empty unless terraform enable_k8s=true. ---
+
+- name: Kubernetes node prerequisites
+  hosts: k8s
+  become: true
+  roles:
+    - k8s_node
+
+- name: Kubernetes control plane
+  hosts: k8s_control_plane
+  become: true
+  roles:
+    - k8s_control_plane
+
+- name: Kubernetes workers
+  hosts: k8s_workers
+  become: true
+  roles:
+    - k8s_worker
+
+- name: Kubernetes add-ons (Cilium, LB IPs, storage)
+  hosts: k8s_control_plane
+  become: true
+  roles:
+    - k8s_addons

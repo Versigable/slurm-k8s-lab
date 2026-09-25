@@ -1,0 +1,20 @@
+# Kubernetes is pinned to what the CNI release is e2e-tested against:
+# Cilium 1.20 supports 1.33-1.36 (docs/network/kubernetes/compatibility), so
+# not 1.37 even though it's the current stable. Bump both together.
+k8s_minor: "1.36"
+k8s_version: "1.36.5"
+k8s_cluster_name: slurm-k8s-lab
+k8s_pod_subnet: 10.244.0.0/16      # clear of the 10.0.0.0/16 and 10.1.0.0/16 LANs
+k8s_service_subnet: 10.96.0.0/12
+k8s_api_host: "{{ hostvars[groups['k8s_control_plane'][0]].ansible_host }}"
+
+helm_version: v4.3.0
+helm_sha256: 86584a54def73570558f66f5111cc53dfed56689637ae32c1201205d494f54fb
+
+cilium_version: 1.20.2
+# LoadBalancer IPs, announced on the LAN by Cilium (ARP). Reserved outside
+# X-Mansion DHCP (confirmed 2026-09-24).
+k8s_lb_pool_start: 10.0.5.140
+k8s_lb_pool_stop: 10.0.5.149
+
+local_path_version: v0.0.37
