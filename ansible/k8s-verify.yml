@@ -13,6 +13,9 @@
       {range .items[*]}{.metadata.name}
       {.status.nodeInfo.kubeletVersion}
       {.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}
+    apps_jsonpath: >-
+      {range .items[*]}{.metadata.name}
+      {.status.sync.status}/{.status.health.status}{"\n"}{end}
   tasks:
     - name: Every node is Ready at the pinned version
       ansible.builtin.command: kubectl get nodes -o jsonpath='{{ nodes_jsonpath }}'
@@ -32,6 +35,14 @@
       ansible.builtin.command: kubectl -n kube-system rollout status {{ item }} --timeout=180s
       loop: [ds/cilium, deploy/cilium-operator, deploy/hubble-relay]
       changed_when: false
+
+    - name: Every Argo CD Application is Synced and Healthy
+      ansible.builtin.command: kubectl -n argocd get applications -o jsonpath='{{ apps_jsonpath }}'
+      register: argo_apps
+      changed_when: false
+      failed_when: >-
+        argo_apps.stdout_lines | length == 0 or
+        argo_apps.stdout_lines | reject('search', ' Synced/Healthy$') | list | length > 0
 
     - name: Test workload (2 nginx replicas, LoadBalancer service, PVC writer)
       ansible.builtin.shell: |
@@ -132,5 +143,6 @@
       ansible.builtin.debug:
         msg:
           - "Kubernetes OK: {{ nodes.stdout_lines | join(' | ') }}"
+          - "Argo CD: {{ argo_apps.stdout_lines | join(' | ') }}"
           - "web pods on: {{ placement.stdout }}"
           - "LoadBalancer {{ lb_ip.stdout }} answered HTTP {{ lb_http.status }} from off-cluster"
