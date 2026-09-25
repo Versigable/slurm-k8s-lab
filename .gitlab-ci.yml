@@ -58,6 +58,7 @@ kustomize:
   image: registry.k8s.io/kustomize/kustomize:v5.8.1
   script:
     - kustomize build gitops/local-path > /dev/null
+    - kustomize build gitops/node-problem-detector > /dev/null
 
 # Schema-check every manifest Argo CD will apply, including the CRD-based ones
 # (Argo CD Applications, Cilium pools) via the community CRD catalog.
@@ -71,7 +72,7 @@ kubeconform:
       /kubeconform -strict -summary -kubernetes-version 1.36.5
       -schema-location default
       -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
-      gitops/apps gitops/lb-pool
+      gitops/apps gitops/lb-pool gitops/node-problem-detector/podmonitor.yaml
 
 python:
   stage: lint

@@ -1,0 +1,82 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 91.5.2
+    helm:
+      releaseName: kube-prometheus-stack
+      valuesObject:
+        # kubeadm binds the scheduler, controller-manager and etcd metrics to
+        # 127.0.0.1, and Cilium replaces kube-proxy. Scraping them would only
+        # produce permanent "target down" alerts, so they're off for now.
+        kubeProxy: {enabled: false}
+        kubeScheduler: {enabled: false}
+        kubeControllerManager: {enabled: false}
+        kubeEtcd: {enabled: false}
+
+        prometheus:
+          prometheusSpec:
+            retention: 3d
+            retentionSize: 4GB
+            resources:
+              requests: {cpu: 200m, memory: 800Mi}
+              limits: {memory: 2Gi}
+            # Pick up every ServiceMonitor/PodMonitor/rule in the cluster, not
+            # just ones labelled for this Helm release (e.g. node-problem-detector).
+            serviceMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+            probeSelectorNilUsesHelmValues: false
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: local-path
+                  accessModes: [ReadWriteOnce]
+                  resources:
+                    requests: {storage: 5Gi}
+
+        alertmanager:
+          alertmanagerSpec:
+            resources:
+              requests: {cpu: 20m, memory: 64Mi}
+
+        prometheusOperator:
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+
+        grafana:
+          # Random password in a Secret created out of band
+          # (scripts/create-grafana-admin.sh), never the chart's default.
+          admin:
+            existingSecret: grafana-admin
+            userKey: admin-user
+            passwordKey: admin-password
+          service:
+            type: LoadBalancer   # LAN IP from the Cilium pool
+          defaultDashboardsTimezone: America/Denver
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  # The admission webhook's caBundle is patched in at runtime by the chart's
+  # cert job; don't treat that as drift (selfHeal would fight it).
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions: ['.webhooks[]?.clientConfig.caBundle']
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jqPathExpressions: ['.webhooks[]?.clientConfig.caBundle']
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true   # the operator's CRDs are too big for client-side apply
+      - RespectIgnoreDifferences=true

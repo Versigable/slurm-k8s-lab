@@ -16,6 +16,10 @@
     apps_jsonpath: >-
       {range .items[*]}{.metadata.name}
       {.status.sync.status}/{.status.health.status}{"\n"}{end}
+    prom_api: /api/v1/namespaces/monitoring/services/kube-prometheus-stack-prometheus:http-web/proxy/api/v1
+    npd_conditions_jsonpath: >-
+      {range .items[*]}{.metadata.name}
+      {.status.conditions[*].type}{"\n"}{end}
   tasks:
     - name: Every node is Ready at the pinned version
       ansible.builtin.command: kubectl get nodes -o jsonpath='{{ nodes_jsonpath }}'
@@ -43,6 +47,47 @@
       failed_when: >-
         argo_apps.stdout_lines | length == 0 or
         argo_apps.stdout_lines | reject('search', ' Synced/Healthy$') | list | length > 0
+
+    - name: The node-problem-detector DaemonSet runs on every node
+      ansible.builtin.command: kubectl -n kube-system rollout status ds/node-problem-detector --timeout=120s
+      changed_when: false
+
+    - name: NPD's node conditions are published
+      ansible.builtin.command: kubectl get nodes -o jsonpath='{{ npd_conditions_jsonpath }}'
+      register: npd_conditions
+      changed_when: false
+      failed_when: >-
+        npd_conditions.stdout_lines | length != groups['k8s'] | length or
+        npd_conditions.stdout_lines | reject('search', 'KernelDeadlock') | list | length > 0 or
+        npd_conditions.stdout_lines | reject('search', 'ReadonlyFilesystem') | list | length > 0
+
+    # Through the API server's service proxy: no port-forward, no extra exposure.
+    - name: Prometheus is scraping node-problem-detector and node-exporter on every node
+      ansible.builtin.command: >
+        kubectl get --raw
+        '{{ prom_api }}/query?query={{ ("count(up{job=~\"" ~ item ~ "\"}==1)") | urlencode }}'
+      loop:
+        - .*node-problem-detector.*
+        - node-exporter
+      register: prom_up
+      changed_when: false
+      failed_when: (prom_up.stdout | from_json).data.result[0].value[1] | default('0') | int != groups['k8s'] | length
+
+    - name: Grafana LoadBalancer IP
+      ansible.builtin.command: kubectl -n monitoring get svc kube-prometheus-stack-grafana -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+      register: grafana_ip
+      changed_when: false
+      failed_when: grafana_ip.stdout | length == 0
+
+    - name: Grafana answers from off-cluster
+      ansible.builtin.uri:
+        url: "http://{{ grafana_ip.stdout }}/api/health"
+        return_content: true
+        timeout: 5
+      delegate_to: localhost
+      become: false
+      register: grafana_health
+      failed_when: grafana_health.status != 200 or (grafana_health.content | from_json).database != 'ok'
 
     - name: Test workload (2 nginx replicas, LoadBalancer service, PVC writer)
       ansible.builtin.shell: |
@@ -144,5 +189,6 @@
         msg:
           - "Kubernetes OK: {{ nodes.stdout_lines | join(' | ') }}"
           - "Argo CD: {{ argo_apps.stdout_lines | join(' | ') }}"
+          - "Monitoring: NPD conditions + NPD/node-exporter scrapes on all {{ groups['k8s'] | length }} nodes; Grafana {{ grafana_ip.stdout }} healthy"
           - "web pods on: {{ placement.stdout }}"
           - "LoadBalancer {{ lb_ip.stdout }} answered HTTP {{ lb_http.status }} from off-cluster"
