@@ -1,0 +1,20 @@
+- name: Is this node already joined?
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: k8s_worker_kubelet_conf
+
+# A fresh bootstrap token (24h TTL) per run, created on the control plane and
+# handed over in memory; it never touches disk or the repo.
+- name: Create a join command on the control plane
+  ansible.builtin.command: kubeadm token create --print-join-command
+  delegate_to: "{{ groups['k8s_control_plane'][0] }}"
+  register: k8s_worker_join
+  changed_when: true
+  no_log: true
+  when: not k8s_worker_kubelet_conf.stat.exists
+
+- name: Join the cluster
+  ansible.builtin.command: "{{ k8s_worker_join.stdout }}"
+  changed_when: true
+  no_log: true
+  when: not k8s_worker_kubelet_conf.stat.exists

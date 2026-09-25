@@ -1,0 +1,136 @@
+# Smoke test: proves the CNI, service load-balancing without kube-proxy,
+# cluster DNS, LAN-reachable LoadBalancer IPs and dynamic PVs.
+- name: Verify the Kubernetes cluster
+  hosts: k8s_control_plane
+  become: true
+  gather_facts: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  vars:
+    ns: lab-verify
+    # Folded at spaces that are part of the output format: "name version ready".
+    nodes_jsonpath: >-
+      {range .items[*]}{.metadata.name}
+      {.status.nodeInfo.kubeletVersion}
+      {.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}
+  tasks:
+    - name: Every node is Ready at the pinned version
+      ansible.builtin.command: kubectl get nodes -o jsonpath='{{ nodes_jsonpath }}'
+      register: nodes
+      changed_when: false
+      failed_when: >-
+        nodes.stdout_lines | length != groups['k8s'] | length or
+        nodes.stdout_lines | reject('search', ' v' ~ k8s_version ~ ' True$') | list | length > 0
+
+    - name: No kube-proxy (Cilium does service load-balancing)
+      ansible.builtin.command: kubectl -n kube-system get ds kube-proxy
+      register: kube_proxy
+      changed_when: false
+      failed_when: kube_proxy.rc == 0
+
+    - name: Cilium agents and operator are rolled out
+      ansible.builtin.command: kubectl -n kube-system rollout status {{ item }} --timeout=180s
+      loop: [ds/cilium, deploy/cilium-operator, deploy/hubble-relay]
+      changed_when: false
+
+    - name: Test workload (2 nginx replicas, LoadBalancer service, PVC writer)
+      ansible.builtin.shell: |
+        set -o pipefail
+        kubectl create namespace {{ ns }} --dry-run=client -o yaml | kubectl apply -f -
+        kubectl -n {{ ns }} apply -f - <<'YAML'
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata: {name: web}
+        spec:
+          replicas: 2
+          selector: {matchLabels: {app: web}}
+          template:
+            metadata: {labels: {app: web}}
+            spec:
+              topologySpreadConstraints:
+                - {maxSkew: 1, topologyKey: kubernetes.io/hostname, whenUnsatisfiable: ScheduleAnyway, labelSelector: {matchLabels: {app: web}}}
+              containers:
+                - {name: nginx, image: nginx:stable-alpine, ports: [{containerPort: 80}]}
+        ---
+        apiVersion: v1
+        kind: Service
+        metadata: {name: web}
+        spec:
+          type: LoadBalancer
+          selector: {app: web}
+          ports: [{port: 80, targetPort: 80}]
+        ---
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata: {name: data}
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources: {requests: {storage: 64Mi}}
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata: {name: writer}
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: w
+              image: busybox:stable
+              command: [sh, -c, "echo ok > /data/probe && cat /data/probe"]
+              volumeMounts: [{name: d, mountPath: /data}]
+          volumes: [{name: d, persistentVolumeClaim: {claimName: data}}]
+        YAML
+      args:
+        executable: /bin/bash
+      changed_when: true
+
+    - name: Deployment is available
+      ansible.builtin.command: kubectl -n {{ ns }} rollout status deploy/web --timeout=180s
+      changed_when: false
+
+    - name: PVC was provisioned and written
+      ansible.builtin.command: kubectl -n {{ ns }} wait pod/writer --for=jsonpath='{.status.phase}'=Succeeded --timeout=180s
+      changed_when: false
+
+    - name: In-cluster DNS + ClusterIP (served by Cilium eBPF, no kube-proxy)
+      ansible.builtin.command: >
+        kubectl -n {{ ns }} run probe --image=busybox:stable --restart=Never --rm -i --quiet
+        -- wget -qO- -T 5 http://web.{{ ns }}.svc.cluster.local
+      register: incluster
+      changed_when: false
+      failed_when: "'Welcome to nginx' not in incluster.stdout"
+
+    - name: LoadBalancer IP assigned from the LAN pool
+      ansible.builtin.command: kubectl -n {{ ns }} get svc web -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+      register: lb_ip
+      until: lb_ip.stdout | length > 0
+      retries: 20
+      delay: 3
+      changed_when: false
+
+    - name: LoadBalancer IP answers from the control node (off-cluster, across the LAN)
+      ansible.builtin.uri:
+        url: "http://{{ lb_ip.stdout }}/"
+        return_content: true
+        timeout: 5
+      delegate_to: localhost
+      become: false
+      register: lb_http
+      until: lb_http.status == 200
+      retries: 10
+      delay: 3
+
+    - name: Pods landed on
+      ansible.builtin.command: kubectl -n {{ ns }} get pods -l app=web -o jsonpath='{.items[*].spec.nodeName}'
+      register: placement
+      changed_when: false
+
+    - name: Clean up
+      ansible.builtin.command: kubectl delete namespace {{ ns }} --wait=false
+      changed_when: true
+
+    - name: Report
+      ansible.builtin.debug:
+        msg:
+          - "Kubernetes OK: {{ nodes.stdout_lines | join(' | ') }}"
+          - "web pods on: {{ placement.stdout }}"
+          - "LoadBalancer {{ lb_ip.stdout }} answered HTTP {{ lb_http.status }} from off-cluster"

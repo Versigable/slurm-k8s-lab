@@ -28,7 +28,7 @@ scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 - [x] **0 — Foundations:** Terraform + Ansible, scoped Proxmox token, template; destroy → apply → converge → verify proven
 - [ ] **1 — Classic Slurm:** munge, slurmctld/slurmd, slurmdbd accounting, cgroup v2, fake GPU GRES, `burnin` → `batch` node flow, fairshare/QOS, node health checks, maintenance reservations
 - [~] **5 — Node-triage MCP server (Go):** Slurm side done (4 read-only tools, opt-in guarded writes, tested on 6 captured failure scenarios). Kubernetes side comes after phase 2
-- [ ] **2 — kubeadm Kubernetes:** containerd, Cilium, MetalLB, local-path storage, kube-prometheus-stack, node-problem-detector
+- [x] **2 — kubeadm Kubernetes:** v1.36.5 (pinned to Cilium 1.20's tested range, not the newer 1.37), Cilium as kube-proxy replacement + Hubble, Cilium LB-IPAM with L2 announcements on the LAN (`10.0.5.140–149`) instead of MetalLB, local-path storage, `k8s-verify.yml`. Still to add: kube-prometheus-stack, node-problem-detector
 - [ ] **3 — Slinky:** Slurm on Kubernetes; the same jobs run on classic and Slinky, with a comparison write-up
 - [ ] **4 — Failure drills (ongoing):** node death mid-job, drains, health-check failures, munge/clock faults, cordon + PodDisruptionBudgets, cert expiry
 
@@ -64,6 +64,8 @@ ansible-galaxy collection install -r requirements.yml
 ansible-playbook site.yml
 ansible-playbook verify.yml
 ```
+
+For Kubernetes (`enable_k8s = true` in `terraform.tfvars`), `site.yml` also runs kubeadm, joins the workers and installs the add-ons; `ansible-playbook k8s-verify.yml` then proves nodes Ready at the pinned version, no kube-proxy, cluster DNS and ClusterIP through Cilium, a PVC write, and a LoadBalancer IP answering HTTP from off-cluster.
 
 `verify.yml` checks that both computes are idle, a 2-node job runs, `--gres=gpu:fake:2` yields `CUDA_VISIBLE_DEVICES=0,1`, `/shared` is visible from the computes, and `sacct` recorded the jobs.
 

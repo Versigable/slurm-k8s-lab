@@ -1,0 +1,30 @@
+# {{ ansible_managed }}
+# Cilium replaces kube-proxy and announces LoadBalancer IPs on the LAN itself
+# (LB-IPAM + L2 announcements), so there's no MetalLB.
+kubeProxyReplacement: true
+k8sServiceHost: {{ k8s_api_host }}
+k8sServicePort: 6443
+
+# Use the podSubnet kubeadm allocated per node. Cilium's own default pool is
+# 10.0.0.0/8, which would swallow the X-Mansion LAN (10.0.0.0/16).
+ipam:
+  mode: kubernetes
+
+l2announcements:
+  enabled: true
+externalIPs:
+  enabled: true
+# L2 announcements hold a lease per service; the defaults (qps 5) are too low.
+k8sClientRateLimit:
+  qps: 20
+  burst: 40
+
+operator:
+  replicas: 1          # one control-plane node; two replicas would sit Pending
+rollOutCiliumPods: true  # restart agents when this config changes
+
+hubble:
+  relay:
+    enabled: true
+  ui:
+    enabled: true

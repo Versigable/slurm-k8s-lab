@@ -1,0 +1,112 @@
+# Everything a node needs before kubeadm: kernel prerequisites, containerd with
+# the systemd cgroup driver, and version-pinned kubelet/kubeadm/kubectl.
+- name: Swap is off (kubelet refuses to start with swap by default)
+  ansible.builtin.command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+  changed_when: true
+
+- name: Kernel modules for container networking
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/k8s.conf
+    content: |
+      overlay
+      br_netfilter
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Load kernel modules now
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: [overlay, br_netfilter]
+
+- name: Kernel networking sysctls
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_file: /etc/sysctl.d/99-k8s.conf
+    reload: true
+  loop:
+    - net.ipv4.ip_forward
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+
+- name: Install containerd and tools
+  ansible.builtin.apt:
+    name: [containerd, gpg, apt-transport-https]
+    state: present
+
+# Two settings in containerd's config matter for Kubernetes:
+#  - SystemdCgroup = true: kubelet (via kubeadm) uses the systemd cgroup driver;
+#    a mismatch gets pods restarted under memory pressure.
+#  - CNI bin_dir = /opt/cni/bin: Debian's containerd package defaults to
+#    /usr/lib/cni, which doesn't exist here. kubeadm's CNI plugins and Cilium's
+#    cilium-cni live in /opt/cni/bin, so pods sat in ContainerCreating with
+#    'failed to find plugin "cilium-cni" in path [/usr/lib/cni]'.
+- name: Check containerd's cgroup driver and CNI plugin path
+  ansible.builtin.shell: |
+    grep -q 'SystemdCgroup = true' /etc/containerd/config.toml &&
+    grep -q 'bin_dir = "/opt/cni/bin"' /etc/containerd/config.toml
+  register: k8s_node_containerd_config
+  changed_when: false
+  failed_when: false
+
+# Regenerate from containerd's own defaults so the file matches the installed version.
+- name: Write containerd config (systemd cgroups, /opt/cni/bin)
+  ansible.builtin.shell: |
+    set -o pipefail
+    mkdir -p /etc/containerd
+    containerd config default \
+      | sed -e 's/SystemdCgroup = false/SystemdCgroup = true/' \
+            -e 's#bin_dir = "/usr/lib/cni"#bin_dir = "/opt/cni/bin"#' \
+      > /etc/containerd/config.toml
+    grep -q 'SystemdCgroup = true' /etc/containerd/config.toml
+    grep -q 'bin_dir = "/opt/cni/bin"' /etc/containerd/config.toml
+  args:
+    executable: /bin/bash
+  when: k8s_node_containerd_config.rc != 0
+  changed_when: true
+  notify: Restart containerd
+
+- name: Apply a pending containerd restart before kubeadm
+  ansible.builtin.meta: flush_handlers
+
+- name: Kubernetes apt keyring
+  ansible.builtin.get_url:
+    url: "https://pkgs.k8s.io/core:/stable:/v{{ k8s_minor }}/deb/Release.key"
+    dest: /etc/apt/keyrings/kubernetes-{{ k8s_minor }}.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Kubernetes apt repository (pinned minor)
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/kubernetes.list
+    content: "deb [signed-by=/etc/apt/keyrings/kubernetes-{{ k8s_minor }}.asc] https://pkgs.k8s.io/core:/stable:/v{{ k8s_minor }}/deb/ /\n"
+    owner: root
+    group: root
+    mode: "0644"
+  register: k8s_node_repo
+
+- name: Install kubelet, kubeadm, kubectl at the pinned version
+  ansible.builtin.apt:
+    name:
+      - "kubelet={{ k8s_version }}-*"
+      - "kubeadm={{ k8s_version }}-*"
+      - "kubectl={{ k8s_version }}-*"
+    update_cache: "{{ k8s_node_repo.changed }}"
+    allow_change_held_packages: true
+    state: present
+
+# Held so a routine `apt upgrade` can't skew versions across the cluster.
+- name: Hold Kubernetes packages
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop: [kubelet, kubeadm, kubectl]
+
+- name: Enable kubelet (it crash-loops until kubeadm configures it; that's expected)
+  ansible.builtin.service:
+    name: kubelet
+    enabled: true
