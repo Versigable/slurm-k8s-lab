@@ -1,0 +1,34 @@
+- name: Hostname matches the inventory name
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Every lab node resolves every other lab node
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} slurm-k8s-lab (ansible)"
+    block: |
+      {% for h in groups['all'] | sort %}
+      {{ hostvars[h].ansible_host }} {{ h }}
+      {% endfor %}
+
+- name: Read current timezone
+  ansible.builtin.command: timedatectl show -p Timezone --value
+  register: common_current_tz
+  changed_when: false
+
+- name: Set timezone
+  ansible.builtin.command: timedatectl set-timezone {{ lab_timezone }}
+  when: common_current_tz.stdout != lab_timezone
+  changed_when: true
+
+- name: Base packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Time sync (munge and Slurm credentials fail on clock skew)
+  ansible.builtin.service:
+    name: chrony
+    state: started
+    enabled: true

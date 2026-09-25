@@ -1,0 +1,11 @@
+lab_timezone: America/Denver
+
+common_packages:
+  - chrony
+  - curl
+  - git
+  - htop
+  - jq
+  - vim
+  - ca-certificates
+  - python3-apt

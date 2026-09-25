@@ -1,0 +1,2 @@
+# Generated on first run into ansible/.secrets/ (gitignored); never committed.
+slurmdbd_db_password: "{{ lookup('ansible.builtin.password', playbook_dir ~ '/.secrets/slurmdbd_db_password', length=32, chars=['ascii_letters', 'digits']) }}"

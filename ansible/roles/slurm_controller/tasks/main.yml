@@ -1,0 +1,165 @@
+- name: Controller packages
+  ansible.builtin.apt:
+    name:
+      - slurmctld
+      - slurmdbd
+      - mariadb-server
+      - python3-pymysql
+      - nfs-kernel-server
+    state: present
+
+# --- MariaDB for slurmdbd ---------------------------------------------------------
+- name: MariaDB tuning for slurmdbd (sized for a 3 GiB VM)
+  ansible.builtin.copy:
+    dest: /etc/mysql/mariadb.conf.d/99-slurmdbd.cnf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Managed by Ansible. SchedMD's recommended settings, scaled down.
+      [mysqld]
+      bind-address = 127.0.0.1
+      innodb_buffer_pool_size = 256M
+      innodb_log_file_size = 64M
+      innodb_lock_wait_timeout = 900
+      max_allowed_packet = 16M
+  notify: Restart mariadb
+
+- name: MariaDB running
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: true
+
+- name: Apply a pending MariaDB restart
+  ansible.builtin.meta: flush_handlers
+
+- name: Accounting database
+  ansible.mysql.mysql_db:
+    name: slurm_slurm_controller_acct_db
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Accounting DB user
+  ansible.mysql.mysql_user:
+    name: slurm
+    host: localhost
+    password: "{{ slurmdbd_db_password }}"
+    priv: "slurm_slurm_controller_acct_db.*:ALL"
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+  no_log: true
+
+# --- slurmdbd -------------------------------------------------------------------
+- name: Template slurmdbd.conf (contains the DB password; slurm-only)
+  ansible.builtin.template:
+    src: slurmdbd.conf.j2
+    dest: /etc/slurm/slurmdbd.conf
+    owner: slurm
+    group: slurm
+    mode: "0600"
+  no_log: true
+  notify: Restart slurmdbd
+
+- name: Start slurmdbd
+  ansible.builtin.service:
+    name: slurmdbd
+    state: started
+    enabled: true
+
+- name: Apply a pending slurmdbd restart
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for slurmdbd to accept connections
+  ansible.builtin.wait_for:
+    port: 6819
+    timeout: 60
+
+- name: Existing clusters in accounting
+  ansible.builtin.command: sacctmgr -n -P show cluster format=cluster
+  register: slurm_controller_acct_clusters
+  changed_when: false
+
+- name: Register the cluster
+  ansible.builtin.command: sacctmgr -i add cluster {{ slurm_cluster_name }}
+  when: slurm_cluster_name not in slurm_controller_acct_clusters.stdout_lines
+  changed_when: true
+
+# --- slurmctld ------------------------------------------------------------------
+- name: Create slurmctld state directory
+  ansible.builtin.file:
+    path: /var/lib/slurm/slurmctld
+    state: directory
+    owner: slurm
+    group: slurm
+    mode: "0750"
+
+- name: Start slurmctld
+  ansible.builtin.service:
+    name: slurmctld
+    state: started
+    enabled: true
+
+- name: Restart slurmctld when Slurm config changed
+  ansible.builtin.service:
+    name: slurmctld
+    state: restarted
+  when: slurm_common_config_changed | bool
+
+# --- accounts and users -----------------------------------------------------------
+- name: Existing accounts
+  ansible.builtin.command: sacctmgr -n -P show account format=account
+  register: slurm_controller_acct_accounts
+  changed_when: false
+
+- name: Lab account
+  ansible.builtin.command: >
+    sacctmgr -i add account {{ slurm_lab_account }}
+    cluster={{ slurm_cluster_name }} description="lab users" organization=lab
+  when: slurm_lab_account not in slurm_controller_acct_accounts.stdout_lines
+  changed_when: true
+
+- name: Existing users in the lab account
+  ansible.builtin.command: sacctmgr -n -P show assoc account={{ slurm_lab_account }} format=user
+  register: slurm_controller_acct_users
+  changed_when: false
+
+- name: Lab users (plus the admin user, so verify.yml can submit jobs)
+  ansible.builtin.command: >
+    sacctmgr -i add user {{ item }} account={{ slurm_lab_account }} cluster={{ slurm_cluster_name }}
+  loop: "{{ slurm_lab_users | map(attribute='name') | list + [ansible_user] }}"
+  when: item not in slurm_controller_acct_users.stdout_lines
+  changed_when: true
+
+# --- shared storage -----------------------------------------------------------------
+- name: Shared directory
+  ansible.builtin.file:
+    path: /srv/shared
+    state: directory
+    owner: root
+    group: root
+    mode: "1777"
+
+- name: Same /shared path on the controller as on the computes
+  ansible.builtin.file:
+    src: /srv/shared
+    dest: /shared
+    state: link
+
+- name: NFS export to compute nodes
+  ansible.builtin.copy:
+    dest: /etc/exports.d/slurm-lab.exports
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Managed by Ansible.
+      /srv/shared {% for h in groups['slurm_compute'] | sort %}{{ hostvars[h].ansible_host }}(rw,sync,no_subtree_check,root_squash) {% endfor %}
+
+  notify: Reload NFS exports
+
+- name: NFS server running
+  ansible.builtin.service:
+    name: nfs-kernel-server
+    state: started
+    enabled: true

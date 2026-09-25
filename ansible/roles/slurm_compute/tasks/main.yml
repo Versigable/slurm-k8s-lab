@@ -1,0 +1,57 @@
+- name: Compute packages
+  ansible.builtin.apt:
+    name:
+      - slurmd
+      - nfs-common
+      - dbus # slurmd's cgroup/v2 plugin creates its systemd scope over D-Bus
+    state: present
+
+# --- fake GPUs ------------------------------------------------------------------
+# systemd-tmpfiles recreates the device nodes on every boot (/dev is tmpfs).
+- name: Fake GPU device nodes (persistent across reboots)
+  ansible.builtin.copy:
+    dest: /etc/tmpfiles.d/fakegpu.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Managed by Ansible. Char devices on an unused major so Slurm GRES and the
+      # device cgroup treat them like real GPUs. Opening them returns ENXIO.
+      {% for i in range(fake_gpu_count) %}
+      c /dev/fakegpu{{ i }} 0666 root root - {{ fake_gpu_major }}:{{ i }}
+      {% endfor %}
+  register: slurm_compute_fakegpu_tmpfiles
+  notify: Create fake GPU device nodes
+
+- name: Create the fake GPU nodes before slurmd (re)starts
+  ansible.builtin.meta: flush_handlers
+
+# --- shared storage -----------------------------------------------------------------
+- name: Mount /shared from the controller
+  ansible.posix.mount:
+    src: "{{ groups['slurm_controller'][0] }}:/srv/shared"
+    path: /shared
+    fstype: nfs
+    opts: defaults,_netdev,nofail,x-systemd.automount
+    state: mounted
+
+# --- slurmd -------------------------------------------------------------------
+- name: Create slurmd spool directory
+  ansible.builtin.file:
+    path: /var/lib/slurm/slurmd
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Start slurmd
+  ansible.builtin.service:
+    name: slurmd
+    state: started
+    enabled: true
+
+- name: Restart slurmd when config or devices changed
+  ansible.builtin.service:
+    name: slurmd
+    state: restarted
+  when: (slurm_common_config_changed | bool) or slurm_compute_fakegpu_tmpfiles.changed

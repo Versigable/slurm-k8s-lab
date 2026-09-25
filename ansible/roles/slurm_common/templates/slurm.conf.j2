@@ -1,0 +1,58 @@
+# {{ ansible_managed }}
+# Lab cluster: one controller, N compute nodes, fake GPUs. Slurm from Debian 13 packages.
+ClusterName={{ slurm_cluster_name }}
+SlurmctldHost={{ groups['slurm_controller'][0] }}({{ hostvars[groups['slurm_controller'][0]].ansible_host }})
+
+# --- auth ---------------------------------------------------------------------
+AuthType=auth/munge
+CredType=cred/munge
+SlurmUser=slurm
+
+# --- daemons, state, logs --------------------------------------------------------
+SlurmctldPort=6817
+SlurmdPort=6818
+StateSaveLocation=/var/lib/slurm/slurmctld
+SlurmdSpoolDir=/var/lib/slurm/slurmd
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmdLogFile=/var/log/slurm/slurmd.log
+SlurmctldTimeout=120
+SlurmdTimeout=300
+# 1 = a DOWN node returns to service when it registers with a valid config.
+# Phase 4 drills flip this to 0 to practise manual return-to-service.
+ReturnToService=1
+
+# --- process tracking & isolation (cgroup v2) -----------------------------------
+ProctrackType=proctrack/cgroup
+TaskPlugin=task/cgroup,task/affinity
+JobAcctGatherType=jobacct_gather/cgroup
+
+# --- scheduling ---------------------------------------------------------------
+SchedulerType=sched/backfill
+SelectType=select/cons_tres
+SelectTypeParameters=CR_Core_Memory
+GresTypes=gpu
+
+PriorityType=priority/multifactor
+PriorityDecayHalfLife=1-0
+PriorityWeightFairshare=10000
+PriorityWeightAge=1000
+PriorityWeightQOS=5000
+PriorityWeightJobSize=0
+
+# --- accounting ---------------------------------------------------------------
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStorageHost={{ groups['slurm_controller'][0] }}
+AccountingStorageEnforce=associations,limits,qos
+AccountingStorageTRES=gres/gpu
+JobCompType=jobcomp/none
+
+# --- nodes --------------------------------------------------------------------
+{% for h in groups['slurm_compute'] | sort %}
+NodeName={{ h }} NodeAddr={{ hostvars[h].ansible_host }} CPUs={{ hostvars[h].ansible_processor_vcpus }} RealMemory={{ hostvars[h].ansible_memtotal_mb - slurm_mem_reserve_mb }} Gres=gpu:fake:{{ fake_gpu_count }} State=UNKNOWN
+{% endfor %}
+
+# --- partitions -----------------------------------------------------------------
+# batch  = production. burnin = where new/repaired nodes prove themselves before
+# they rejoin batch (hidden, root-only). Models a compute-production bring-up flow.
+PartitionName=batch Nodes={{ groups['slurm_compute'] | sort | join(',') }} Default=YES MaxTime=INFINITE State=UP
+PartitionName=burnin Nodes={{ groups['slurm_compute'] | sort | join(',') }} Default=NO Hidden=YES RootOnly=YES MaxTime=04:00:00 State=UP

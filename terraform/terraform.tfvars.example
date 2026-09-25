@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+ssh_public_keys = [
+  "ssh-ed25519 AAAA... you@workstation",
+]
+
+# enable_k8s = true   # Phase 2
+# started    = false  # park the lab without destroying it

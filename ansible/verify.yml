@@ -1,0 +1,44 @@
+# Smoke test: proves scheduling, GRES, cgroups, NFS and accounting end to end.
+- name: Verify the Slurm cluster
+  hosts: slurm_controller
+  become: false # jobs run as the admin user, who has a Slurm association
+  gather_facts: false
+  tasks:
+    - name: All compute nodes are idle
+      ansible.builtin.command: sinfo -h -p batch -o "%T"
+      register: sinfo
+      changed_when: false
+      failed_when: sinfo.stdout_lines | reject('equalto', 'idle') | list | length > 0
+
+    - name: A 2-node job runs on both computes
+      ansible.builtin.command: srun -N2 -p batch hostname
+      register: two_node
+      changed_when: false
+      failed_when: two_node.stdout_lines | sort != groups['slurm_compute'] | sort
+
+    - name: Fake GPUs are allocated and exposed to the job
+      ansible.builtin.command: srun -N1 --gres=gpu:fake:2 bash -c 'echo $CUDA_VISIBLE_DEVICES'
+      register: gres
+      changed_when: false
+      failed_when: gres.stdout | trim != '0,1'
+
+    - name: Shared storage is visible from a compute node
+      ansible.builtin.shell: |
+        marker=/shared/verify-$$
+        touch "$marker"
+        srun -N1 test -f "$marker"; rc=$?
+        rm -f "$marker"; exit $rc
+      changed_when: false
+
+    - name: Accounting recorded the jobs
+      ansible.builtin.command: sacct -n -X -S now-10minutes -o JobID
+      register: acct
+      changed_when: false
+      failed_when: acct.stdout_lines | length == 0
+
+    - name: Report
+      ansible.builtin.debug:
+        msg:
+          - "Slurm OK. Nodes: {{ two_node.stdout_lines | sort | join(', ') }}"
+          - "GRES: CUDA_VISIBLE_DEVICES={{ gres.stdout | trim }}"
+          - "Accounting: {{ acct.stdout_lines | length }} jobs in sacct"

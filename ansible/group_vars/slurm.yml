@@ -1,0 +1,15 @@
+slurm_cluster_name: lab
+
+# Fake GPUs: char devices on an unused "local/experimental" major, so Slurm can
+# track and cgroup-constrain them like real /dev/nvidiaN nodes. Opening them fails (ENXIO).
+fake_gpu_count: 4
+fake_gpu_major: 240
+
+# Memory kept back from Slurm on each compute node, in MiB.
+slurm_mem_reserve_mb: 256
+
+# Lab users with fixed UIDs (identical on every node) for fairshare/QOS experiments.
+slurm_lab_account: lab
+slurm_lab_users:
+  - { name: alice, uid: 2001 }
+  - { name: bob, uid: 2002 }
