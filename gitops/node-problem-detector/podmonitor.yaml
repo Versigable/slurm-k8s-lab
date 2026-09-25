@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: node-problem-detector
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: node-problem-detector
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 30s

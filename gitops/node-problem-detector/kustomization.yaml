@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Upstream's own deployment files at the v1.36.0 tag. Raw URLs rather than a
+# git base, so rendering doesn't need git (CI image, Argo CD repo-server).
+resources:
+  - https://raw.githubusercontent.com/kubernetes/node-problem-detector/v1.36.0/deployment/rbac.yaml
+  - https://raw.githubusercontent.com/kubernetes/node-problem-detector/v1.36.0/deployment/node-problem-detector-config.yaml
+  - https://raw.githubusercontent.com/kubernetes/node-problem-detector/v1.36.0/deployment/node-problem-detector.yaml
+  - podmonitor.yaml
+images:
+  # Upstream's v1.36.0 manifest still points at v0.8.19; NPD now versions with
+  # Kubernetes minors, so match the cluster (1.36).
+  - name: registry.k8s.io/node-problem-detector/node-problem-detector
+    newTag: v1.36.0
+patches:
+  - target: {kind: DaemonSet, name: node-problem-detector}
+    patch: |
+      # containerd nodes: no Docker log monitor. Serve metrics beyond localhost
+      # so Prometheus can scrape them.
+      - op: replace
+        path: /spec/template/spec/containers/0/command
+        value:
+          - /node-problem-detector
+          - --logtostderr
+          - --config.system-log-monitor=/config/kernel-monitor.json,/config/readonly-monitor.json
+          - --prometheus-address=0.0.0.0
+          - --prometheus-port=20257
+      - op: add
+        path: /spec/template/spec/containers/0/ports
+        value:
+          - {name: metrics, containerPort: 20257}

@@ -11,7 +11,7 @@ Everything is code. `terraform destroy && terraform apply && ansible-playbook si
 ```
 terraform/   Proxmox VMs (bpg/proxmox), cloned from a Debian 13 cloud-init template
 ansible/     Node configuration: Slurm, and Kubernetes bootstrap (kubeadm, Cilium, Argo CD)
-gitops/      What Argo CD manages on the cluster: LB IP pool, storage, CI runner
+gitops/      What Argo CD manages on the cluster: LB IP pool, storage, CI runner, monitoring, node-problem-detector
 triage/      node-triage MCP server (Go)
 scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 ```
@@ -31,7 +31,7 @@ scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 - [ ] **1 — Classic Slurm:** munge, slurmctld/slurmd, slurmdbd accounting, cgroup v2, fake GPU GRES, `burnin` → `batch` node flow, fairshare/QOS, node health checks, maintenance reservations
 - [~] **5 — Node-triage MCP server (Go):** Slurm side done (4 read-only tools, opt-in guarded writes, tested on 6 captured failure scenarios). Kubernetes side comes after phase 2
 - [x] **GitOps + CI:** Argo CD (app of apps from `gitops/`, pulled from GitLab over the LAN with a read-only deploy token) owns the add-ons after bootstrap; GitLab CI runs on a Kubernetes-executor runner inside the cluster and `main` requires a green pipeline
-- [x] **2 — kubeadm Kubernetes:** v1.36.5 (pinned to Cilium 1.20's tested range, not the newer 1.37), Cilium as kube-proxy replacement + Hubble, Cilium LB-IPAM with L2 announcements on the LAN (`10.0.5.140–149`) instead of MetalLB, local-path storage, `k8s-verify.yml`. Still to add: kube-prometheus-stack, node-problem-detector
+- [x] **2 — kubeadm Kubernetes:** v1.36.5 (pinned to Cilium 1.20's tested range, not the newer 1.37), Cilium as kube-proxy replacement + Hubble, Cilium LB-IPAM with L2 announcements on the LAN (`10.0.5.140–149`) instead of MetalLB, local-path storage, `k8s-verify.yml`. kube-prometheus-stack and node-problem-detector (v1.36.0) run as Argo CD apps
 - [ ] **3 — Slinky:** Slurm on Kubernetes; the same jobs run on classic and Slinky, with a comparison write-up
 - [ ] **4 — Failure drills (ongoing):** node death mid-job, drains, health-check failures, munge/clock faults, cordon + PodDisruptionBudgets, cert expiry
 
@@ -75,6 +75,7 @@ For Kubernetes (`enable_k8s = true` in `terraform.tfvars`), `site.yml` also runs
 ```bash
 scripts/register-argocd-repo.sh   # read-only GitLab deploy token -> Argo CD repository Secret
 scripts/register-runner.sh        # GitLab runner token -> Secret the runner Application uses
+scripts/create-grafana-admin.sh   # random Grafana admin password -> Secret
 ansible-playbook site.yml         # applies the root Application; Argo CD syncs gitops/
 ```
 
