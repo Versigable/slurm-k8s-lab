@@ -33,6 +33,17 @@
       loop: [ds/cilium, deploy/cilium-operator, deploy/hubble-relay]
       changed_when: false
 
+    - name: Every Argo CD Application is Synced and Healthy
+      ansible.builtin.command: >
+        kubectl -n argocd get applications
+        -o jsonpath='{range .items[*]}{.metadata.name} {.status.sync.status}/{.status.health.status}{"
+"}{end}'
+      register: argo_apps
+      changed_when: false
+      failed_when: >-
+        argo_apps.stdout_lines | length == 0 or
+        argo_apps.stdout_lines | reject('search', ' Synced/Healthy$') | list | length > 0
+
     - name: Test workload (2 nginx replicas, LoadBalancer service, PVC writer)
       ansible.builtin.shell: |
         set -o pipefail
@@ -132,5 +143,6 @@
       ansible.builtin.debug:
         msg:
           - "Kubernetes OK: {{ nodes.stdout_lines | join(' | ') }}"
+          - "Argo CD: {{ argo_apps.stdout_lines | join(' | ') }}"
           - "web pods on: {{ placement.stdout }}"
           - "LoadBalancer {{ lb_ip.stdout }} answered HTTP {{ lb_http.status }} from off-cluster"
