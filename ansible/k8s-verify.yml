@@ -65,7 +65,7 @@
     - name: Prometheus is scraping node-problem-detector and node-exporter on every node
       ansible.builtin.command: >
         kubectl get --raw
-        '{{ prom_api }}/query?query={{ ("count(up{job=~\"" ~ item ~ "\"}==1)") | urlencode }}'
+        '{{ prom_api }}/query?query={{ ("count(up{job=~`" ~ item ~ "`}==1)") | urlencode }}'
       loop:
         - .*node-problem-detector.*
         - node-exporter
