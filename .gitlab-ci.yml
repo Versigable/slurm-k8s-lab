@@ -33,7 +33,7 @@ ansible-lint:
     - pip install --quiet --root-user-action=ignore "ansible-core==2.19.13" "ansible-lint==26.9.0"
     - cd ansible
     - ansible-galaxy collection install -r requirements.yml
-    - ansible-lint site.yml verify.yml triage.yml k8s-verify.yml ci-runner.yml
+    - ansible-lint site.yml verify.yml triage.yml k8s-verify.yml
 
 terraform:
   stage: lint
@@ -51,6 +51,27 @@ shellcheck:
   image: koalaman/shellcheck-alpine:stable
   script:
     - shellcheck scripts/*.sh triage/scripts/*.sh
+
+# Argo CD renders gitops/ with kustomize; fail here instead of in the cluster.
+kustomize:
+  stage: lint
+  image: registry.k8s.io/kustomize/kustomize:v5.8.1
+  script:
+    - kustomize build gitops/local-path > /dev/null
+
+# Schema-check every manifest Argo CD will apply, including the CRD-based ones
+# (Argo CD Applications, Cilium pools) via the community CRD catalog.
+kubeconform:
+  stage: lint
+  image:
+    name: ghcr.io/yannh/kubeconform:v0.8.0-alpine
+    entrypoint: [""]
+  script:
+    - >-
+      /kubeconform -strict -summary -kubernetes-version 1.36.5
+      -schema-location default
+      -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+      gitops/apps gitops/lb-pool
 
 python:
   stage: lint

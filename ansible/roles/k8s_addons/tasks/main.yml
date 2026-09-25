@@ -1,4 +1,6 @@
 # Runs on the control plane as root against /etc/kubernetes/admin.conf.
+# Only what must exist before Argo CD can run (the CNI). The other add-ons
+# (LB IP pool, storage, CI runner) are in gitops/ and owned by Argo CD.
 - name: Create add-on manifests directory
   ansible.builtin.file:
     path: /etc/kubernetes/addons
@@ -40,34 +42,3 @@
   ansible.builtin.command: kubectl wait --for=condition=Ready nodes --all --timeout=300s
   environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
   changed_when: false
-
-# --- LoadBalancer IPs on the LAN ----------------------------------------------------------
-- name: Write LB IP pool and L2 announcement policy
-  ansible.builtin.template:
-    src: lb-pool.yaml.j2
-    dest: /etc/kubernetes/addons/lb-pool.yaml
-    owner: root
-    group: root
-    mode: "0600"
-
-- name: Apply LB IP pool and L2 policy
-  ansible.builtin.command: kubectl apply -f /etc/kubernetes/addons/lb-pool.yaml
-  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
-  register: k8s_addons_lb_apply
-  changed_when: k8s_addons_lb_apply.stdout_lines | reject('search', 'unchanged') | list | length > 0
-
-# --- Storage ---------------------------------------------------------------------------
-- name: Install local-path-provisioner (node-local PVs)
-  ansible.builtin.command: >
-    kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/{{ local_path_version }}/deploy/local-path-storage.yaml
-  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
-  register: k8s_addons_local_path
-  changed_when: k8s_addons_local_path.stdout_lines | reject('search', 'unchanged') | list | length > 0
-
-- name: Make local-path the default StorageClass
-  ansible.builtin.command: >
-    kubectl patch storageclass local-path
-    -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
-  register: k8s_addons_default_sc
-  changed_when: "'no change' not in k8s_addons_default_sc.stdout"

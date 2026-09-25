@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+# App of apps: syncs every Application in gitops/apps.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lab-root
+  namespace: {{ k8s_argocd_namespace }}
+spec:
+  project: default
+  source:
+    repoURL: {{ k8s_argocd_repo_url }}
+    targetRevision: {{ k8s_argocd_revision }}
+    path: gitops/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ k8s_argocd_namespace }}
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}

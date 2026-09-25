@@ -1,0 +1,54 @@
+# Bootstrap only: Argo CD itself and the root Application. Everything under
+# gitops/ is Argo CD's from then on.
+- name: Write Argo CD values
+  ansible.builtin.template:
+    src: argocd-values.yaml.j2
+    dest: /etc/kubernetes/addons/argocd-values.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  register: k8s_argocd_values
+
+- name: Read the installed Argo CD chart
+  ansible.builtin.command: helm list -n {{ k8s_argocd_namespace }} -f '^argocd$' -o json
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  register: k8s_argocd_release
+  changed_when: false
+
+- name: Install or upgrade Argo CD
+  ansible.builtin.command: >
+    helm upgrade --install argocd argo-cd --repo https://argoproj.github.io/argo-helm
+    --version {{ k8s_argocd_chart_version }} --namespace {{ k8s_argocd_namespace }} --create-namespace
+    --values /etc/kubernetes/addons/argocd-values.yaml --wait --timeout 10m
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  when: >-
+    k8s_argocd_values.changed or
+    (k8s_argocd_release.stdout | from_json | selectattr('status', 'equalto', 'deployed')
+     | map(attribute='chart') | list) != ['argo-cd-' ~ k8s_argocd_chart_version]
+  changed_when: true
+
+- name: Check for the repository credentials secret
+  ansible.builtin.command: >
+    kubectl -n {{ k8s_argocd_namespace }} get secret -l argocd.argoproj.io/secret-type=repository -o name
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  register: k8s_argocd_repo_secret
+  changed_when: false
+
+- name: Stop if Argo CD can't read the repo yet
+  ansible.builtin.fail:
+    msg: "No repository secret in {{ k8s_argocd_namespace }}. Run scripts/register-argocd-repo.sh first."
+  when: k8s_argocd_repo_secret.stdout | length == 0
+
+- name: Write the root Application
+  ansible.builtin.template:
+    src: root-app.yaml.j2
+    dest: /etc/kubernetes/addons/argocd-root-app.yaml
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Apply the root Application
+  ansible.builtin.command: kubectl apply -f /etc/kubernetes/addons/argocd-root-app.yaml
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  register: k8s_argocd_root
+  changed_when: "'unchanged' not in k8s_argocd_root.stdout"

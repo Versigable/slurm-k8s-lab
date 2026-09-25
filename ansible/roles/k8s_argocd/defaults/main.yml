@@ -1,0 +1,5 @@
+k8s_argocd_chart_version: 10.9.2   # Argo CD v3.5.3
+k8s_argocd_namespace: argocd
+# Git source of truth for gitops/: GitLab over the LAN, not the GitHub mirror (which lags).
+k8s_argocd_repo_url: http://10.0.1.13:8081/agent-dev/slurm-k8s-lab.git
+k8s_argocd_revision: main

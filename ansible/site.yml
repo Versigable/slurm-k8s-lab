@@ -44,8 +44,16 @@
   roles:
     - k8s_worker
 
-- name: Kubernetes add-ons (Cilium, LB IPs, storage)
+- name: Kubernetes CNI (Cilium)
   hosts: k8s_control_plane
   become: true
   roles:
     - k8s_addons
+
+# Argo CD + the root Application; Argo CD then syncs everything in gitops/.
+# Needs its repo credentials first: scripts/register-argocd-repo.sh (one-time).
+- name: Argo CD bootstrap
+  hosts: k8s_control_plane
+  become: true
+  roles:
+    - k8s_argocd
