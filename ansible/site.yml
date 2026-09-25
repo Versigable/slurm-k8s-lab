@@ -1,0 +1,25 @@
+# Converge the whole lab. Terraform writes inventory/hosts.yml first.
+- name: Base configuration for every lab node
+  hosts: all
+  become: true
+  roles:
+    - common
+
+- name: Classic Slurm cluster
+  hosts: slurm
+  become: true
+  roles:
+    - munge
+    - slurm_common
+
+- name: Slurm controller (slurmctld + slurmdbd + MariaDB + NFS server)
+  hosts: slurm_controller
+  become: true
+  roles:
+    - slurm_controller
+
+- name: Slurm compute nodes (slurmd + fake GPUs + NFS client)
+  hosts: slurm_compute
+  become: true
+  roles:
+    - slurm_compute

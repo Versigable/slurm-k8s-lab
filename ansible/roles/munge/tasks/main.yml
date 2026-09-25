@@ -1,0 +1,42 @@
+# Debian's munge postinst generates a random key on EVERY host, so out of the box
+# no two nodes can authenticate each other. The controller's key is the source of
+# truth: read it into memory and push it to the rest. It never touches the control
+# node's disk or this repo.
+- name: Install munge
+  ansible.builtin.apt:
+    name: [munge, libmunge2]
+    state: present
+
+- name: Controller has a munge key (the package usually creates one)
+  ansible.builtin.command: mungekey --create --keyfile /etc/munge/munge.key
+  args:
+    creates: /etc/munge/munge.key
+  delegate_to: "{{ groups['slurm_controller'][0] }}"
+  run_once: true
+
+- name: Read the controller's munge key
+  ansible.builtin.slurp:
+    src: /etc/munge/munge.key
+  delegate_to: "{{ groups['slurm_controller'][0] }}"
+  run_once: true
+  register: munge_key
+  no_log: true
+
+- name: Same munge key on every node
+  ansible.builtin.copy:
+    content: "{{ munge_key.content | b64decode }}"
+    dest: /etc/munge/munge.key
+    owner: munge
+    group: munge
+    mode: "0400"
+  no_log: true
+  notify: Restart munge
+
+- name: Start munge
+  ansible.builtin.service:
+    name: munge
+    state: started
+    enabled: true
+
+- name: Apply a pending munge restart before Slurm starts
+  ansible.builtin.meta: flush_handlers

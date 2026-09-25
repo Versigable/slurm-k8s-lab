@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+# Fake GPUs: /dev/fakegpuN are char devices on major {{ fake_gpu_major }} (see slurm_compute).
+{% for h in groups['slurm_compute'] | sort %}
+NodeName={{ h }} Name=gpu Type=fake File=/dev/fakegpu[0-{{ fake_gpu_count - 1 }}]
+{% endfor %}

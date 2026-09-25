@@ -1,0 +1,82 @@
+# Slurm needs the same slurm UID/GID on every node. Pin it before the packages
+# create it (64030 is what Debian's own packaging picks).
+- name: Create slurm group
+  ansible.builtin.group:
+    name: slurm
+    gid: 64030
+    system: true
+
+- name: Create slurm user
+  ansible.builtin.user:
+    name: slurm
+    uid: 64030
+    group: slurm
+    system: true
+    home: /var/lib/slurm
+    create_home: false
+    shell: /usr/sbin/nologin
+
+- name: Slurm client tools on every Slurm node
+  ansible.builtin.apt:
+    name: [slurm-client]
+    state: present
+
+- name: Slurm config directory
+  ansible.builtin.file:
+    path: "{{ slurm_common_conf_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Log and state directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: slurm
+    group: slurm
+    mode: "0755"
+  loop:
+    - /var/log/slurm
+    - /var/lib/slurm
+
+- name: Lab users with identical UIDs on every node
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    shell: /bin/bash
+    create_home: true
+  loop: "{{ slurm_lab_users }}"
+
+# slurm.conf must be byte-identical everywhere; slurmctld warns (and drills break)
+# when a node's hash differs.
+- name: Template slurm.conf
+  ansible.builtin.template:
+    src: slurm.conf.j2
+    dest: "{{ slurm_common_conf_dir }}/slurm.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  register: slurm_common_slurm_conf
+
+- name: Template cgroup.conf
+  ansible.builtin.template:
+    src: cgroup.conf.j2
+    dest: "{{ slurm_common_conf_dir }}/cgroup.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  register: slurm_common_cgroup_conf
+
+- name: Template gres.conf
+  ansible.builtin.template:
+    src: gres.conf.j2
+    dest: "{{ slurm_common_conf_dir }}/gres.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  register: slurm_common_gres_conf
+
+- name: Remember whether Slurm config changed (the daemon roles restart on it)
+  ansible.builtin.set_fact:
+    slurm_common_config_changed: "{{ slurm_common_slurm_conf.changed or slurm_common_cgroup_conf.changed or slurm_common_gres_conf.changed }}"

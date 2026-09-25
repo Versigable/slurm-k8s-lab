@@ -1,0 +1,16 @@
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars
+terraform/crash.log
+terraform/.terraform.tfstate.lock.info
+
+# Generated from Terraform state
+ansible/inventory/hosts.yml
+
+# Generated secrets (slurmdbd DB password, etc.). Never commit.
+ansible/.secrets/
+
+*.retry
+.venv/
