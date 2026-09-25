@@ -20,11 +20,17 @@ Guidance for coding agents (and humans) working in this repo.
 - **Write tools stay opt-in.** `drain_node`/`resume_node` register only with `-allow-writes`. Don't add a write path that bypasses the hardware-fault guard in `resume_node`.
 - **No secrets in the repo.** It's mirrored publicly. Tokens live in the environment; generated secrets go to `ansible/.secrets/` (gitignored).
 
-## Checks before a merge request
+## Checks
+
+CI runs on every merge request and on `main` (`.gitlab-ci.yml`): gofmt + `go vet` + `go test`, `ansible-lint` (production profile), `terraform fmt`/`validate`, `shellcheck`, and a Python compile check. `main` only accepts merges whose pipeline passed.
+
+Jobs run as pods on the lab's own Kubernetes cluster (GitLab Runner, Kubernetes executor, tag `k8s-lab`; see `ansible/ci-runner.yml`). Every job must carry that tag: other runners visible to this project are production host runners.
+
+Run the same checks locally before pushing:
 
 ```bash
-cd triage && make lint test          # gofmt, go vet, go test
-cd ansible && ansible-lint site.yml verify.yml triage.yml
+cd triage && gofmt -l . && go vet ./... && go test ./...
+cd ansible && ansible-lint site.yml verify.yml triage.yml k8s-verify.yml ci-runner.yml
 cd terraform && terraform fmt -check && terraform validate
 ```
 

@@ -1,0 +1,7 @@
+# GitLab Runner (Kubernetes executor) on the lab cluster.
+# One-time first: scripts/register-runner.sh (creates the runner and its token secret).
+- name: Deploy GitLab Runner to the lab cluster
+  hosts: k8s_control_plane
+  become: true
+  roles:
+    - k8s_gitlab_runner

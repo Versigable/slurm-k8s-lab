@@ -1,0 +1,59 @@
+# Lint and test on every merge request and on main. Jobs run as pods on the
+# lab's own Kubernetes cluster (GitLab Runner, Kubernetes executor), so each
+# job gets exactly the image it names. See ansible/ci-runner.yml.
+#
+# Toolchain versions are pinned to what the repo is developed against.
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+default:
+  tags: [k8s-lab]
+  interruptible: true
+
+stages: [lint, test]
+
+go:
+  stage: test
+  image: golang:1.27.1
+  variables:
+    GOFLAGS: -mod=readonly
+  script:
+    - cd triage
+    - unformatted=$(gofmt -l .); if [ -n "$unformatted" ]; then echo "gofmt needed:"; echo "$unformatted"; exit 1; fi
+    - go vet ./...
+    - go test ./...
+
+ansible-lint:
+  stage: lint
+  image: python:3.13-slim
+  script:
+    - pip install --quiet --root-user-action=ignore "ansible-core==2.19.13" "ansible-lint==26.9.0"
+    - cd ansible
+    - ansible-galaxy collection install -r requirements.yml
+    - ansible-lint site.yml verify.yml triage.yml k8s-verify.yml ci-runner.yml
+
+terraform:
+  stage: lint
+  image:
+    name: hashicorp/terraform:1.16.4
+    entrypoint: [""]
+  script:
+    - cd terraform
+    - terraform fmt -check -recursive -diff
+    - terraform init -backend=false -input=false
+    - terraform validate
+
+shellcheck:
+  stage: lint
+  image: koalaman/shellcheck-alpine:stable
+  script:
+    - shellcheck scripts/*.sh triage/scripts/*.sh
+
+python:
+  stage: lint
+  image: python:3.13-slim
+  script:
+    - python -m py_compile demo/*.py

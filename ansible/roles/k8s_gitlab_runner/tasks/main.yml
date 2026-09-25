@@ -1,0 +1,50 @@
+# GitLab Runner with the Kubernetes executor: every CI job is a pod in
+# k8s_gitlab_runner_namespace running the image the job names.
+- name: CI namespace
+  ansible.builtin.shell: |
+    set -o pipefail
+    kubectl create namespace {{ k8s_gitlab_runner_namespace }} --dry-run=client -o yaml | kubectl apply -f -
+  args:
+    executable: /bin/bash
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  register: k8s_gitlab_runner_ns
+  changed_when: "'unchanged' not in k8s_gitlab_runner_ns.stdout"
+
+- name: Runner token secret exists
+  ansible.builtin.command: kubectl -n {{ k8s_gitlab_runner_namespace }} get secret gitlab-runner-token
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  register: k8s_gitlab_runner_secret
+  changed_when: false
+  failed_when: false
+
+- name: Stop if the runner hasn't been registered
+  ansible.builtin.fail:
+    msg: "No gitlab-runner-token secret in {{ k8s_gitlab_runner_namespace }}. Run scripts/register-runner.sh first."
+  when: k8s_gitlab_runner_secret.rc != 0
+
+- name: Write runner values
+  ansible.builtin.template:
+    src: gitlab-runner-values.yaml.j2
+    dest: /etc/kubernetes/addons/gitlab-runner-values.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  register: k8s_gitlab_runner_values
+
+- name: Read the installed runner chart
+  ansible.builtin.command: helm list -n {{ k8s_gitlab_runner_namespace }} -f '^gitlab-runner$' -o json
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  register: k8s_gitlab_runner_release
+  changed_when: false
+
+- name: Install or upgrade GitLab Runner
+  ansible.builtin.command: >
+    helm upgrade --install gitlab-runner gitlab-runner --repo https://charts.gitlab.io
+    --version {{ k8s_gitlab_runner_chart_version }} --namespace {{ k8s_gitlab_runner_namespace }}
+    --values /etc/kubernetes/addons/gitlab-runner-values.yaml --wait --timeout 5m
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  when: >-
+    k8s_gitlab_runner_values.changed or
+    (k8s_gitlab_runner_release.stdout | from_json | selectattr('status', 'equalto', 'deployed')
+     | map(attribute='chart') | list) != ['gitlab-runner-' ~ k8s_gitlab_runner_chart_version]
+  changed_when: true
