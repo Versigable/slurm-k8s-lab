@@ -1,0 +1,45 @@
+{
+  "jobs": [],
+  "last_backfill": {
+    "set": true,
+    "infinite": false,
+    "number": 0
+  },
+  "last_update": {
+    "set": true,
+    "infinite": false,
+    "number": 1790307807
+  },
+  "meta": {
+    "plugin": {
+      "type": "",
+      "name": "",
+      "data_parser": "data_parser\/v0.0.42",
+      "accounting_storage": "accounting_storage\/slurmdbd"
+    },
+    "client": {
+      "source": "",
+      "user": "labadmin",
+      "group": "labadmin"
+    },
+    "command": [
+      "squeue"
+    ],
+    "slurm": {
+      "version": {
+        "major": "24",
+        "micro": "5",
+        "minor": "11"
+      },
+      "release": "24.11.5",
+      "cluster": "lab"
+    }
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "description": "Zero jobs to dump",
+      "source": ""
+    }
+  ]
+}

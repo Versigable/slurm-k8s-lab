@@ -1,0 +1,7 @@
+# Deploy the node-triage MCP server to the Slurm controller.
+# Build it first: (cd ../triage && make build)
+- name: Deploy the node-triage MCP server
+  hosts: slurm_controller
+  become: true
+  roles:
+    - node_triage

@@ -12,5 +12,11 @@ ansible/inventory/hosts.yml
 # Generated secrets (slurmdbd DB password, etc.). Never commit.
 ansible/.secrets/
 
+# Go build output
+triage/bin/
+
 *.retry
 .venv/
+
+# ansible-lint cache
+.ansible/

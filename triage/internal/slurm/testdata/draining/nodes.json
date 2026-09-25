@@ -1,0 +1,237 @@
+{
+  "nodes": [
+    {
+      "architecture": "x86_64",
+      "burstbuffer_network_address": "",
+      "boards": 1,
+      "boot_time": {
+        "set": true,
+        "infinite": false,
+        "number": 1790304168
+      },
+      "cluster_name": "",
+      "cores": 1,
+      "specialized_cores": 0,
+      "cpu_binding": 0,
+      "cpu_load": 1,
+      "free_mem": {
+        "set": true,
+        "infinite": false,
+        "number": 1170
+      },
+      "cpus": 2,
+      "effective_cpus": 2,
+      "specialized_cpus": "",
+      "energy": {
+        "average_watts": 0,
+        "base_consumed_energy": 0,
+        "consumed_energy": 0,
+        "current_watts": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "previous_consumed_energy": 0,
+        "last_collected": 0
+      },
+      "external_sensors": {},
+      "extra": "",
+      "power": {},
+      "features": [],
+      "active_features": [],
+      "gpu_spec": "",
+      "gres": "gpu:fake:4",
+      "gres_drained": "N\/A",
+      "gres_used": "gpu:fake:0(IDX:N\/A)",
+      "instance_id": "",
+      "instance_type": "",
+      "last_busy": {
+        "set": true,
+        "infinite": false,
+        "number": 1790304462
+      },
+      "mcs_label": "",
+      "specialized_memory": 0,
+      "name": "slurm-c1",
+      "next_state_after_reboot": [
+        "INVALID"
+      ],
+      "address": "10.0.5.131",
+      "hostname": "slurm-c1",
+      "state": [
+        "MIXED",
+        "DRAIN"
+      ],
+      "operating_system": "Linux 6.12.107+deb13-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.107-1 (2026-08-29)",
+      "owner": "",
+      "partitions": [
+        "batch"
+      ],
+      "port": 6818,
+      "real_memory": 1718,
+      "res_cores_per_gpu": 0,
+      "comment": "",
+      "reason": "maint: kernel update CHG-1042",
+      "reason_changed_at": {
+        "set": true,
+        "infinite": false,
+        "number": 1790307891
+      },
+      "reason_set_by_user": "root",
+      "resume_after": {
+        "set": true,
+        "infinite": false,
+        "number": 0
+      },
+      "reservation": "",
+      "alloc_memory": 1718,
+      "alloc_cpus": 1,
+      "alloc_idle_cpus": 1,
+      "tres_used": "cpu=1,mem=1718M",
+      "tres_weighted": 1.0,
+      "slurmd_start_time": {
+        "set": true,
+        "infinite": false,
+        "number": 1790304407
+      },
+      "sockets": 2,
+      "threads": 1,
+      "temporary_disk": 0,
+      "weight": 1,
+      "tres": "cpu=2,mem=1718M,billing=2,gres\/gpu=4",
+      "version": "24.11.5"
+    },
+    {
+      "architecture": "x86_64",
+      "burstbuffer_network_address": "",
+      "boards": 1,
+      "boot_time": {
+        "set": true,
+        "infinite": false,
+        "number": 1790304169
+      },
+      "cluster_name": "",
+      "cores": 1,
+      "specialized_cores": 0,
+      "cpu_binding": 0,
+      "cpu_load": 0,
+      "free_mem": {
+        "set": true,
+        "infinite": false,
+        "number": 1188
+      },
+      "cpus": 2,
+      "effective_cpus": 2,
+      "specialized_cpus": "",
+      "energy": {
+        "average_watts": 0,
+        "base_consumed_energy": 0,
+        "consumed_energy": 0,
+        "current_watts": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "previous_consumed_energy": 0,
+        "last_collected": 0
+      },
+      "external_sensors": {},
+      "extra": "",
+      "power": {},
+      "features": [],
+      "active_features": [],
+      "gpu_spec": "",
+      "gres": "gpu:fake:4",
+      "gres_drained": "N\/A",
+      "gres_used": "gpu:fake:0(IDX:N\/A)",
+      "instance_id": "",
+      "instance_type": "",
+      "last_busy": {
+        "set": true,
+        "infinite": false,
+        "number": 1790307879
+      },
+      "mcs_label": "",
+      "specialized_memory": 0,
+      "name": "slurm-c2",
+      "next_state_after_reboot": [
+        "INVALID"
+      ],
+      "address": "10.0.5.132",
+      "hostname": "slurm-c2",
+      "state": [
+        "IDLE"
+      ],
+      "operating_system": "Linux 6.12.107+deb13-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.107-1 (2026-08-29)",
+      "owner": "",
+      "partitions": [
+        "batch"
+      ],
+      "port": 6818,
+      "real_memory": 1718,
+      "res_cores_per_gpu": 0,
+      "comment": "",
+      "reason": "",
+      "reason_changed_at": {
+        "set": true,
+        "infinite": false,
+        "number": 0
+      },
+      "reason_set_by_user": "",
+      "resume_after": {
+        "set": true,
+        "infinite": false,
+        "number": 0
+      },
+      "reservation": "",
+      "alloc_memory": 0,
+      "alloc_cpus": 0,
+      "alloc_idle_cpus": 2,
+      "tres_used": "",
+      "tres_weighted": 0.0,
+      "slurmd_start_time": {
+        "set": true,
+        "infinite": false,
+        "number": 1790304407
+      },
+      "sockets": 2,
+      "threads": 1,
+      "temporary_disk": 0,
+      "weight": 1,
+      "tres": "cpu=2,mem=1718M,billing=2,gres\/gpu=4",
+      "version": "24.11.5"
+    }
+  ],
+  "last_update": {
+    "set": true,
+    "infinite": false,
+    "number": 1790307894
+  },
+  "meta": {
+    "plugin": {
+      "type": "",
+      "name": "",
+      "data_parser": "data_parser\/v0.0.42",
+      "accounting_storage": "accounting_storage\/slurmdbd"
+    },
+    "client": {
+      "source": "",
+      "user": "labadmin",
+      "group": "labadmin"
+    },
+    "command": [
+      "show"
+    ],
+    "slurm": {
+      "version": {
+        "major": "24",
+        "micro": "5",
+        "minor": "11"
+      },
+      "release": "24.11.5",
+      "cluster": "lab"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}
