@@ -5,8 +5,8 @@ run_demo.py records real wall-clock timings. Model answers then arrive as one
 burst of ~30 lines followed by a 1.5 s pause, which nobody can read, and model
 latency shows up as dead air. This rewrites only the timestamps:
 
-  - any gap longer than --max-gap is shortened to --max-gap (like asciinema's
-    idle_time_limit), and
+  - gaps longer than --latency (model/network wait) are shortened to --max-gap
+    (like asciinema's idle_time_limit); the recorder's own shorter pauses are kept, and
   - after a burst of output, the next gap is stretched to a reading pause of
     --per-line seconds per line, capped at --max-hold.
 
@@ -24,6 +24,7 @@ def main():
     ap.add_argument("src")
     ap.add_argument("dst")
     ap.add_argument("--max-gap", type=float, default=1.5)
+    ap.add_argument("--latency", type=float, default=3.5, help="gaps longer than this are waiting, not pacing")
     ap.add_argument("--per-line", type=float, default=0.3)
     ap.add_argument("--max-hold", type=float, default=12.0)
     ap.add_argument("--burst-lines", type=int, default=6, help="lines of output that count as a burst worth reading")
@@ -43,7 +44,8 @@ def main():
         gap = t - prev_t
         if gap > 0.8:  # a pause point: model latency, or the recorder's own pause
             hold = args.per_line * lines_since_gap if lines_since_gap >= args.burst_lines else 0.0
-            gap = max(min(gap, args.max_gap), min(hold, args.max_hold))
+            base = args.max_gap if gap > args.latency else gap
+            gap = max(base, min(hold, args.max_hold))
             lines_since_gap = 0
         clock += gap
         prev_t = t

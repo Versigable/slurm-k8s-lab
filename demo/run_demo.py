@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """Record a live demo of the node-triage MCP server driven by Claude Code.
 
-What it does, against the real lab cluster:
-  1. Breaks slurm-c1 the way a GPU falling off the bus does (slurmd registers
-     3 of 4 GPUs, slurmctld marks the node INVALID).
+What it does, against the real lab (classic Slurm VMs + a kubeadm cluster
+running Slurm on Kubernetes via Slinky):
+  1. Two failures at once: a GPU drops off the bus on classic Slurm node
+     slurm-c1 (slurmd registers 3 of 4 GPUs), and the kernel remounts k8s-w1's
+     filesystem read-only (injected into /dev/kmsg, the way node-problem-
+     detector itself is tested). k8s-w1 also hosts Slinky worker slinky-0.
   2. Asks Claude Code (headless, `claude -p`) what needs attention.
-  3. Asks it to put slurm-c1 back into service (the server's hardware guard).
-  4. Approves a maintenance drain of slurm-c2 and shows the result in sinfo.
-  5. Restores both nodes.
+  3. Approves taking k8s-w1 out of service, then shows Slinky draining the
+     Slurm node on it, with the Kubernetes fault as the Slurm drain reason.
+  4. Asks to put k8s-w1 back (the server's hardware guard).
+  5. Restores everything (k8s-w1 waits out NPD's 5-minute kmsg lookback).
 
-Claude gets only the slurm-triage MCP tools (no shell, no file access), with
+Claude gets only the node-triage MCP tools (no shell, no file access), with
 skills/triage-slurm-node/SKILL.md appended as its instructions. Everything on
 screen is real output; the recording is written as an asciicast v2 file
 (wall-clock timings; retime.py makes the watchable version).
@@ -33,6 +37,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 CTL, C1, C2 = "10.0.5.130", "10.0.5.131", "10.0.5.132"
+KCP, KW1 = "10.0.5.133", "10.0.5.134"
+NPD_LOOKBACK = 300  # node-problem-detector replays /dev/kmsg this far back on start
 WIDTH, HEIGHT = 110, 36
 
 RESET, BOLD, DIM = "\x1b[0m", "\x1b[1m", "\x1b[2m"
@@ -103,9 +109,11 @@ def summarize_tool_result(payload) -> list[str]:
         lines.append(f"{payload.get('total_nodes')} nodes, {payload.get('healthy_nodes')} healthy")
         for r in payload["recommendations"]:
             color = SEVERITY_COLOR.get(r["severity"], "")
-            head = f"{r['severity'].upper():8} {r['node']:9} {r['action']}  "
+            sched = r.get("scheduler", "")
+            head = f"{r['severity'].upper():8} {sched:10} {r['node']:9} {r['action']}  "
             summary = textwrap.shorten(r["summary"], WIDTH - 8 - len(head), placeholder="…")
-            lines.append(f"{color}{r['severity'].upper():8}{RESET} {r['node']:9} {BOLD}{r['action']}{RESET}  {summary}")
+            lines.append(f"{color}{r['severity'].upper():8}{RESET} {DIM}{sched:10}{RESET} {r['node']:9} "
+                         f"{BOLD}{r['action']}{RESET}  {summary}")
     elif isinstance(payload, dict) and "action" in payload:
         color = SEVERITY_COLOR.get(payload["severity"], "")
         lines.append(f"{color}{payload['severity'].upper()}{RESET} {payload['node']}: {BOLD}{payload['action']}{RESET} ({payload['category']})")
@@ -177,13 +185,54 @@ def break_gpu(key: str):
                  "sudo systemctl restart slurmd")
 
 
-def restore(key: str):
+def restore_slurm(key: str):
     ssh(key, C1, "test -f /etc/slurm/gres.conf.orig && sudo mv /etc/slurm/gres.conf.orig /etc/slurm/gres.conf; "
                  "sudo systemd-tmpfiles --create /etc/tmpfiles.d/fakegpu.conf && sudo systemctl restart slurmd", check=False)
     time.sleep(10)
     for node in ("slurm-c1", "slurm-c2"):
         ssh(key, CTL, f"sudo scontrol update nodename={node} state=resume", check=False)
     time.sleep(3)
+
+
+def kubectl(key: str, args: str, check: bool = True) -> str:
+    return ssh(key, KCP, f"kubectl {args}", check=check)
+
+
+def slinky(key: str, args: str) -> str:
+    """Run a Slurm command on the Slinky cluster (inside the slurmctld pod)."""
+    return kubectl(key, f"-n slurm exec slurm-controller-0 -c slurmctld -- {args}", check=False)
+
+
+def k8s_condition(key: str, node: str, cond: str) -> str:
+    path = '{.status.conditions[?(@.type=="' + cond + '")].status}'
+    return kubectl(key, f"get node {node} -o jsonpath='{path}'", check=False).strip()
+
+
+def break_disk(key: str) -> float:
+    ssh(key, KW1, "echo 'EXT4-fs (vda1): Remounting filesystem read-only' | sudo tee /dev/kmsg >/dev/null")
+    return time.monotonic()
+
+
+def restore_k8s(key: str, injected_at: float | None):
+    """Clear k8s-w1's NPD condition and put it back in service (Kubernetes and Slinky)."""
+    if injected_at is not None:
+        wait = injected_at + NPD_LOOKBACK + 15 - time.monotonic()
+        if wait > 0:
+            print(f"{DIM}  waiting {int(wait)}s for the kmsg line to leave NPD's lookback window{RESET}")
+            time.sleep(wait)
+        kubectl(key, "-n kube-system delete pod -l app=node-problem-detector "
+                     "--field-selector spec.nodeName=k8s-w1 --wait=true", check=False)
+        kubectl(key, "-n kube-system rollout status ds/node-problem-detector --timeout=120s", check=False)
+        for _ in range(40):
+            if k8s_condition(key, "k8s-w1", "ReadonlyFilesystem") == "False":
+                break
+            time.sleep(3)
+    kubectl(key, "uncordon k8s-w1", check=False)
+    kubectl(key, "annotate node k8s-w1 slurm-k8s-lab/triage-reason-", check=False)
+    for _ in range(20):
+        if slinky(key, "sinfo -h -N -n slinky-0 -o %T").strip() == "idle":
+            break
+        time.sleep(3)
 
 
 def main():
@@ -218,50 +267,66 @@ def main():
     if args.model:
         claude += ["--model", args.model]
 
-    restore(args.key)  # start from a clean cluster
-    if not wait_for(args.key, "slurm-c1", r"State=IDLE\s") or not wait_for(args.key, "slurm-c2", r"State=IDLE\s"):
-        sys.exit("cluster isn't clean (both computes IDLE); fix it before recording")
+    restore_slurm(args.key)  # start from a clean lab
+    restore_k8s(args.key, None)
+    clean = (wait_for(args.key, "slurm-c1", r"State=IDLE\s") and wait_for(args.key, "slurm-c2", r"State=IDLE\s")
+             and k8s_condition(args.key, "k8s-w1", "ReadonlyFilesystem") == "False"
+             and slinky(args.key, "sinfo -h -N -o %T").split() == ["idle", "idle"])
+    if not clean:
+        sys.exit("lab isn't clean (classic computes IDLE, k8s-w1 ReadonlyFilesystem=False, Slinky nodes idle)")
 
-    cast = Cast(Path(args.out), "node-triage: Claude Code triaging a real Slurm failure over MCP")
+    cast = Cast(Path(args.out), "node-triage: Claude Code triaging Slurm and Kubernetes over MCP")
+    injected_at = None
     try:
-        cast.line(f"{BOLD}node-triage demo{RESET}  {DIM}Claude Code + a Go MCP server on a real 3-node Slurm lab{RESET}")
-        cast.line(f"{DIM}Claude has only the slurm-triage tools: no shell, no files. SKILL.md is its playbook.{RESET}")
+        cast.line(f"{BOLD}node-triage demo{RESET}  {DIM}Claude Code + a Go MCP server over a real Slurm cluster and a Kubernetes cluster{RESET}")
+        cast.line(f"{DIM}Claude has only the node-triage tools: no shell, no files. SKILL.md is its playbook.{RESET}")
         cast.line()
-        cast.line(f"{BOLD}1. A GPU falls off the bus on slurm-c1{RESET} {DIM}(slurmd now finds 3 of 4 GPUs){RESET}")
+        cast.line(f"{BOLD}1. Two failures at once{RESET}")
+        cast.line(f"{DIM}   classic Slurm: a GPU falls off the bus on slurm-c1 (slurmd now finds 3 of 4){RESET}")
         cast.type("ssh slurm-c1 'rm /dev/fakegpu3; <gres.conf lists 3 devices>; systemctl restart slurmd'")
         break_gpu(args.key)
-        cast.out(f"{DIM}  waiting for slurmctld to register it{RESET}")
-        for _ in range(30):
-            if wait_for(args.key, "slurm-c1", r"INVALID_REG", timeout=3):
+        cast.line(f"{DIM}   Kubernetes: the kernel remounts k8s-w1's disk read-only (k8s-w1 also runs Slinky worker slinky-0){RESET}")
+        cast.type("ssh k8s-w1 \"echo 'EXT4-fs (vda1): Remounting filesystem read-only' > /dev/kmsg\"")
+        injected_at = break_disk(args.key)
+        cast.out(f"{DIM}  waiting for slurmctld and node-problem-detector to notice{RESET}")
+        for _ in range(40):
+            if (wait_for(args.key, "slurm-c1", r"INVALID_REG", timeout=2)
+                    and k8s_condition(args.key, "k8s-w1", "ReadonlyFilesystem") == "True"):
                 break
             cast.out(".")
         cast.line()
-        cast.type("sinfo -N -o '%N %T %E'")
-        cast.out(ssh(args.key, CTL, "sinfo -N -p batch -o '%N %T %E'"))
         cast.pause(1.5)
 
         cast.line()
         cast.line(f"{BOLD}2. Ask Claude{RESET}")
-        session = ask(cast, claude, "Anything in the Slurm cluster need attention?", None, workdir)
+        session = ask(cast, claude, "Anything in our Slurm and Kubernetes clusters need attention?", None, workdir)
         cast.pause(1.5)
 
         cast.line()
-        cast.line(f"{BOLD}3. Try to put it back{RESET}")
-        session = ask(cast, claude, "Resume slurm-c1, I approve.", session, workdir)
-        cast.pause(1.5)
+        cast.line(f"{BOLD}3. Take the Kubernetes node out{RESET}")
+        session = ask(cast, claude, "Take k8s-w1 out of service for the disk fault. I approve.", session, workdir)
+        cast.line()
+        cast.line(f"{DIM}   Slinky (Slurm on Kubernetes) reacts to the cordon on its own:{RESET}")
+        cast.type("kubectl -n slurm exec slurm-controller-0 -- sinfo -N -o '%N %T %E'")
+        for _ in range(20):
+            if "drain" in slinky(args.key, "sinfo -h -N -n slinky-0 -o %T"):
+                break
+            time.sleep(1)
+        cast.out(slinky(args.key, "sinfo -N -o '%N %T %E'"))
+        cast.pause(3)
 
         cast.line()
-        cast.line(f"{BOLD}4. An approved maintenance drain{RESET}")
-        session = ask(cast, claude, "Drain slurm-c2 for CHG-1043, a BIOS update tonight. I approve.", session, workdir)
-        cast.line()
-        cast.type("sinfo -N -o '%N %T %E'")
-        cast.out(ssh(args.key, CTL, "sinfo -N -p batch -o '%N %T %E'"))
+        cast.line(f"{BOLD}4. Try to put it back{RESET}")
+        session = ask(cast, claude, "Put k8s-w1 back into service, I approve.", session, workdir)
         cast.pause(3)
     finally:
         cast.close()
-        print(f"\n{DIM}restoring the cluster...{RESET}")
-        restore(args.key)
+        print(f"\n{DIM}restoring the lab...{RESET}")
+        restore_slurm(args.key)
+        restore_k8s(args.key, injected_at)
         print(ssh(args.key, CTL, "sinfo -N -p batch -o '%N %T %E'", check=False))
+        print(slinky(args.key, "sinfo -N -o '%N %T %E'"))
+        print(kubectl(args.key, "get nodes", check=False))
         print(f"recording: {args.out}")
 
 
