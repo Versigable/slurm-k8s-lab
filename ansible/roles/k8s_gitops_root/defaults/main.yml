@@ -1,0 +1,12 @@
+k8s_gitops_root_namespace: argocd
+# Git source of truth for gitops/: GitLab over the LAN, not the GitHub mirror (which lags).
+k8s_gitops_root_repo_url: http://10.0.1.13:8081/agent-dev/slurm-k8s-lab.git
+k8s_gitops_root_revision: main
+# One-time Secrets the gitops/ apps depend on, and the script that creates each.
+# They never live in git, so they have to exist before Argo CD takes over.
+k8s_gitops_root_required_secrets:
+  - {namespace: argocd, selector: argocd.argoproj.io/secret-type=repository, script: scripts/register-argocd-repo.sh}
+  - {namespace: gitlab-ci, name: gitlab-runner-token, script: scripts/register-runner.sh}
+  - {namespace: monitoring, name: grafana-admin, script: scripts/create-grafana-admin.sh}
+  - {namespace: slurm, name: slurm-auth-slurm, script: scripts/create-slurm-auth.sh}
+  - {namespace: slurm, name: slurm-auth-jwt, script: scripts/create-slurm-auth.sh}

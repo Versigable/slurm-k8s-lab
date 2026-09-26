@@ -70,17 +70,15 @@ ansible-playbook verify.yml
 
 For Kubernetes (`enable_k8s = true` in `terraform.tfvars`), `site.yml` also runs kubeadm, joins the workers and installs the add-ons; `ansible-playbook k8s-verify.yml` then proves nodes Ready at the pinned version, no kube-proxy, cluster DNS and ClusterIP through Cilium, a PVC write, and a LoadBalancer IP answering HTTP from off-cluster.
 
-**Kubernetes bootstrap order (fresh cluster):** `site.yml` installs Argo CD, then stops until Argo CD can read the repo. Run the two one-time scripts, then `site.yml` again:
+**Rebuild everything from scratch** (on the control node):
 
 ```bash
-scripts/register-argocd-repo.sh   # read-only GitLab deploy token -> Argo CD repository Secret
-scripts/register-runner.sh        # GitLab runner token -> Secret the runner Application uses
-scripts/create-grafana-admin.sh   # random Grafana admin password -> Secret
-scripts/create-slurm-auth.sh      # Slinky cluster's Slurm auth + JWT keys -> Secrets
-ansible-playbook site.yml         # applies the root Application; Argo CD syncs gitops/
+GITLAB_TOKEN_FILE=/path/to/gitlab.env scripts/rebuild.sh --yes-destroy
 ```
 
-Both scripts pipe tokens from the GitLab API straight into Kubernetes Secrets; nothing lands on disk or in git.
+It runs the whole sequence and times each step: `terraform destroy` + `apply`, refresh SSH host keys, `site.yml` (classic Slurm, kubeadm, Cilium, Argo CD), the one-time secret scripts, `gitops-bootstrap.yml` (hands the cluster to Argo CD and waits until every app is Synced/Healthy), `triage.yml`, then `verify.yml` and `k8s-verify.yml`.
+
+The one-time scripts create what never lives in git: Argo CD's read-only deploy token, the CI runner token, the Grafana admin password and Slinky's Slurm keys. On a rebuild they also remove the previous runner and revoke the previous deploy token in GitLab, so no stale credential stays valid. `gitops-bootstrap.yml` refuses to start until all of those Secrets exist.
 
 `verify.yml` checks that both computes are idle, a 2-node job runs, `--gres=gpu:fake:2` yields `CUDA_VISIBLE_DEVICES=0,1`, `/shared` is visible from the computes, and `sacct` recorded the jobs.
 

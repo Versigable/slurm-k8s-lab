@@ -33,7 +33,7 @@ Run the same checks locally before pushing:
 
 ```bash
 cd triage && gofmt -l . && go vet ./... && go test ./...
-cd ansible && ansible-lint site.yml verify.yml triage.yml k8s-verify.yml
+cd ansible && ansible-lint site.yml verify.yml triage.yml k8s-verify.yml gitops-bootstrap.yml
 cd terraform && terraform fmt -check && terraform validate
 ```
 

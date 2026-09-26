@@ -50,9 +50,10 @@
   roles:
     - k8s_addons
 
-# Argo CD + the root Application; Argo CD then syncs everything in gitops/.
-# Needs its repo credentials first: scripts/register-argocd-repo.sh (one-time).
-- name: Argo CD bootstrap
+# Argo CD itself. The root Application (and with it gitops/) is applied by
+# gitops-bootstrap.yml once the one-time secrets exist; scripts/rebuild.sh runs
+# the whole sequence.
+- name: Install Argo CD
   hosts: k8s_control_plane
   become: true
   roles:

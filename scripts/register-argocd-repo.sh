@@ -36,8 +36,18 @@ if [[ -n $(cp_ssh "kubectl -n $NAMESPACE get secret -l argocd.argoproj.io/secret
   exit 0
 fi
 
+TOKEN_NAME=argocd-slurm-k8s-lab
+
+# A rebuilt cluster has no Secret, but GitLab still has the previous deploy
+# token. Revoke it so a rebuild never leaves an unused, valid credential behind.
+curl -fsS -H "$(auth)" "$GITLAB_API/projects/$PROJECT/deploy_tokens?active=true" \
+  | TOKEN_NAME="$TOKEN_NAME" "$PY" -c 'import json,os,sys; [print(t["id"]) for t in json.load(sys.stdin) if t.get("name")==os.environ["TOKEN_NAME"]]' \
+  | while read -r stale; do
+      curl -fsS -X DELETE -H "$(auth)" "$GITLAB_API/projects/$PROJECT/deploy_tokens/$stale" >/dev/null && echo "revoked stale deploy token $stale"
+    done
+
 curl -fsS -X POST -H "$(auth)" "$GITLAB_API/projects/$PROJECT/deploy_tokens" \
-    --data-urlencode "name=argocd-slurm-k8s-lab" \
+    --data-urlencode "name=$TOKEN_NAME" \
     --data-urlencode "scopes[]=read_repository" \
   | REPO_URL="$REPO_URL" NAMESPACE="$NAMESPACE" "$PY" -c '
 import json, os, sys

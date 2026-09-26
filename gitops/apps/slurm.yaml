@@ -40,6 +40,9 @@ spec:
           # LAN IP (Cilium pool) so node-triage on slurm-ctl can read this cluster.
           # Every request needs a Slurm JWT; see ansible/roles/node_triage.
           service:
+            metadata:
+              annotations:
+                lbipam.cilium.io/ips: "10.0.5.142"   # pinned: stable across rebuilds
             spec:
               type: LoadBalancer
         nodesets:
