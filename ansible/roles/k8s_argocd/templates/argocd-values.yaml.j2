@@ -13,3 +13,17 @@ configs:
   cm:
     # Re-check git every minute; the default is 3.
     timeout.reconciliation: 60s
+    # Slinky's NodeSet reports readiness in its status, but Argo CD doesn't know
+    # the CRD and would call it Healthy the moment it's applied (seen on a fresh
+    # rebuild: "Healthy" ~30 s before any slurmd pod existed). Judge it by pods.
+    resource.customizations.health.slinky.slurm.net_NodeSet: |
+      local hs = {status = "Progressing", message = "waiting for slurmd pods"}
+      if obj.status ~= nil then
+        local want = obj.status.desired or (obj.spec ~= nil and obj.spec.replicas) or 0
+        local ready = obj.status.readyReplicas or 0
+        hs.message = ready .. "/" .. want .. " slurmd pods ready"
+        if want > 0 and ready >= want then
+          hs.status = "Healthy"
+        end
+      end
+      return hs

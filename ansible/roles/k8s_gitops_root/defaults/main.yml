@@ -10,3 +10,15 @@ k8s_gitops_root_required_secrets:
   - {namespace: monitoring, name: grafana-admin, script: scripts/create-grafana-admin.sh}
   - {namespace: slurm, name: slurm-auth-slurm, script: scripts/create-slurm-auth.sh}
   - {namespace: slurm, name: slurm-auth-jwt, script: scripts/create-slurm-auth.sh}
+
+# Readiness Argo CD can't see. Slinky's Controller and RestApi CRs carry no
+# status, so "Synced/Healthy" only means "applied"; the operator creates the
+# real pods afterwards. Each check is retried until it passes.
+k8s_gitops_root_ready_checks:
+  - name: slurmctld pod Ready
+    cmd: kubectl -n slurm wait --for=condition=Ready pod/slurm-controller-0 --timeout=10s
+  - name: slurmrestd rolled out
+    cmd: kubectl -n slurm rollout status deploy/slurm-restapi --timeout=10s
+  - name: slurmctld answers
+    cmd: kubectl -n slurm exec slurm-controller-0 -c slurmctld -- scontrol ping
+    expect: UP

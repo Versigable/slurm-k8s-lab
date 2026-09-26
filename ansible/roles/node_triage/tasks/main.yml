@@ -152,6 +152,10 @@
           loop: [nobody, slurm]
           register: node_triage_slinky_tokens
           when: node_triage_slinky_days.stdout | int < 7
+          # slurmctld may still be starting right after a rebuild.
+          until: node_triage_slinky_tokens.rc == 0
+          retries: 12
+          delay: 10
           changed_when: true
           no_log: true
 
