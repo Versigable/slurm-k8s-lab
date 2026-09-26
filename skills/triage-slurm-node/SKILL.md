@@ -1,11 +1,11 @@
 ---
 name: triage-slurm-node
-description: Work out what to do with an unhealthy Slurm node (drained, down, invalid, or eating jobs) using the node-triage MCP server, and hand the on-call engineer a decision with evidence. Use when someone asks why a node is drained or down, whether it can go back into service, or which nodes need attention.
+description: Work out what to do with an unhealthy Slurm or Kubernetes node (drained, down, cordoned, NotReady, invalid, kernel faults, or eating jobs) using the node-triage MCP server, and hand the on-call engineer a decision with evidence. Use when someone asks why a node is drained, cordoned or down, whether it can go back into service, or which nodes need attention.
 ---
 
-# Triage a Slurm node
+# Triage a Slurm or Kubernetes node
 
-You have the `slurm-node-triage` MCP server. Its recommendations come from deterministic rules over live Slurm state. Your job is to run the right tools, relay the decision faithfully, and stop at the approval boundary.
+You have the `node-triage` MCP server. It covers both schedulers; every recommendation carries `scheduler: slurm | kubernetes`. Its recommendations come from deterministic rules over live Slurm state. Your job is to run the right tools, relay the decision faithfully, and stop at the approval boundary.
 
 ## Steps
 
@@ -29,6 +29,12 @@ You have the `slurm-node-triage` MCP server. Its recommendations come from deter
 | `resume` | Drained for a known, finished reason | Confirm preconditions, then resume |
 | `investigate` | Needs a human look first | Follow `next_steps`; don't resume yet |
 | `escalate_hardware` | Hardware fault or chronic node | Keep it out; hardware ticket; burn-in before return |
+
+## Slurm vs Kubernetes
+
+- `drain_node` on Slurm drains (running jobs finish, nothing new starts). On Kubernetes it **cordons** (running pods stay, nothing new is scheduled). Evicting pods (`kubectl drain`) is left to the engineer: say so, and include the suggested command.
+- A Kubernetes node that is cordoned but whose drain is **blocked by a PodDisruptionBudget** needs a person: capacity elsewhere or an agreed disruption. Never suggest deleting pods to get past a PDB.
+- `ReadonlyFilesystem` and `KernelDeadlock` come from node-problem-detector reading the kernel log. They clear on reboot, or when NPD restarts after the triggering line is older than its 5-minute lookback. Restarting NPD sooner just re-detects the fault.
 
 ## Don't
 

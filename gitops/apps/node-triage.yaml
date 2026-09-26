@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: node-triage
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: http://10.0.1.13:8081/agent-dev/slurm-k8s-lab.git
+    targetRevision: main
+    path: gitops/node-triage
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}

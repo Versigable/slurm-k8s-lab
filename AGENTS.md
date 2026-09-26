@@ -9,9 +9,10 @@ Guidance for coding agents (and humans) working in this repo.
 - `gitops/`: everything Argo CD owns on the cluster (LB IP pool, local-path, GitLab runner, future add-ons). Change add-ons here, never with kubectl or Ansible: Argo CD `selfHeal` reverts manual edits.
 - `triage/`: Go module for the `node-triage` MCP server.
   - `internal/slurm`: CLI JSON parsing (Slurm 24.11, data_parser v0.0.42), fixture runner.
+  - `internal/kube`: minimal Kubernetes REST client (ServiceAccount token), fixture source.
   - `internal/triage`: the decision rules. Pure functions of a `Snapshot`; no I/O.
   - `internal/server`: MCP tool wiring.
-  - `internal/slurm/testdata/<scenario>/`: **real** captures from the lab cluster.
+  - `internal/slurm/testdata/<scenario>/`, `internal/kube/testdata/<scenario>/`: **real** captures from the lab (`scripts/capture-scenarios.sh`, `scripts/capture-k8s-scenarios.sh`).
 
 ## Rules
 

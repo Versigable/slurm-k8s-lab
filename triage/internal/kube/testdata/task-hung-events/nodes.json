@@ -1,0 +1,251 @@
+{
+ "items": [
+  {
+   "metadata": {
+    "name": "k8s-cp",
+    "labels": {
+     "beta.kubernetes.io/arch": "amd64",
+     "beta.kubernetes.io/os": "linux",
+     "kubernetes.io/arch": "amd64",
+     "kubernetes.io/hostname": "k8s-cp",
+     "kubernetes.io/os": "linux",
+     "node-role.kubernetes.io/control-plane": "",
+     "node.kubernetes.io/exclude-from-external-load-balancers": ""
+    },
+    "annotations": {}
+   },
+   "spec": {
+    "taints": [
+     {
+      "effect": "NoSchedule",
+      "key": "node-role.kubernetes.io/control-plane"
+     }
+    ]
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:03Z",
+      "lastTransitionTime": "2026-09-25T17:19:28Z",
+      "message": "kernel has no deadlock",
+      "reason": "KernelHasNoDeadlock",
+      "status": "False",
+      "type": "KernelDeadlock"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:03Z",
+      "lastTransitionTime": "2026-09-25T17:19:28Z",
+      "message": "Filesystem is not read-only",
+      "reason": "FilesystemIsNotReadOnly",
+      "status": "False",
+      "type": "ReadonlyFilesystem"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-25T05:28:24Z",
+      "lastTransitionTime": "2026-09-25T05:28:24Z",
+      "message": "Cilium is running on this node",
+      "reason": "CiliumIsUp",
+      "status": "False",
+      "type": "NetworkUnavailable"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:14:35Z",
+      "lastTransitionTime": "2026-09-25T05:27:39Z",
+      "message": "kubelet has sufficient memory available",
+      "reason": "KubeletHasSufficientMemory",
+      "status": "False",
+      "type": "MemoryPressure"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:14:35Z",
+      "lastTransitionTime": "2026-09-25T05:27:39Z",
+      "message": "kubelet has no disk pressure",
+      "reason": "KubeletHasNoDiskPressure",
+      "status": "False",
+      "type": "DiskPressure"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:14:35Z",
+      "lastTransitionTime": "2026-09-25T05:27:39Z",
+      "message": "kubelet has sufficient PID available",
+      "reason": "KubeletHasSufficientPID",
+      "status": "False",
+      "type": "PIDPressure"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:14:35Z",
+      "lastTransitionTime": "2026-09-25T05:28:23Z",
+      "message": "kubelet is posting ready status",
+      "reason": "KubeletReady",
+      "status": "True",
+      "type": "Ready"
+     }
+    ],
+    "nodeInfo": {
+     "kubeletVersion": "v1.36.5"
+    }
+   }
+  },
+  {
+   "metadata": {
+    "name": "k8s-w1",
+    "labels": {
+     "beta.kubernetes.io/arch": "amd64",
+     "beta.kubernetes.io/os": "linux",
+     "kubernetes.io/arch": "amd64",
+     "kubernetes.io/hostname": "k8s-w1",
+     "kubernetes.io/os": "linux"
+    },
+    "annotations": {}
+   },
+   "spec": {},
+   "status": {
+    "conditions": [
+     {
+      "lastHeartbeatTime": "2026-09-26T08:14:43Z",
+      "lastTransitionTime": "2026-09-26T08:14:42Z",
+      "message": "kernel has no deadlock",
+      "reason": "KernelHasNoDeadlock",
+      "status": "False",
+      "type": "KernelDeadlock"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:14:43Z",
+      "lastTransitionTime": "2026-09-26T08:14:42Z",
+      "message": "Filesystem is not read-only",
+      "reason": "FilesystemIsNotReadOnly",
+      "status": "False",
+      "type": "ReadonlyFilesystem"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-25T05:28:26Z",
+      "lastTransitionTime": "2026-09-25T05:28:26Z",
+      "message": "Cilium is running on this node",
+      "reason": "CiliumIsUp",
+      "status": "False",
+      "type": "NetworkUnavailable"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:25Z",
+      "lastTransitionTime": "2026-09-25T05:27:51Z",
+      "message": "kubelet has sufficient memory available",
+      "reason": "KubeletHasSufficientMemory",
+      "status": "False",
+      "type": "MemoryPressure"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:25Z",
+      "lastTransitionTime": "2026-09-25T05:27:51Z",
+      "message": "kubelet has no disk pressure",
+      "reason": "KubeletHasNoDiskPressure",
+      "status": "False",
+      "type": "DiskPressure"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:25Z",
+      "lastTransitionTime": "2026-09-25T05:27:51Z",
+      "message": "kubelet has sufficient PID available",
+      "reason": "KubeletHasSufficientPID",
+      "status": "False",
+      "type": "PIDPressure"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:25Z",
+      "lastTransitionTime": "2026-09-25T05:28:21Z",
+      "message": "kubelet is posting ready status",
+      "reason": "KubeletReady",
+      "status": "True",
+      "type": "Ready"
+     }
+    ],
+    "nodeInfo": {
+     "kubeletVersion": "v1.36.5"
+    }
+   }
+  },
+  {
+   "metadata": {
+    "name": "k8s-w2",
+    "labels": {
+     "beta.kubernetes.io/arch": "amd64",
+     "beta.kubernetes.io/os": "linux",
+     "kubernetes.io/arch": "amd64",
+     "kubernetes.io/hostname": "k8s-w2",
+     "kubernetes.io/os": "linux"
+    },
+    "annotations": {}
+   },
+   "spec": {
+    "taints": [
+     {
+      "effect": "NoSchedule",
+      "key": "node.cilium.io/agent-not-ready"
+     }
+    ]
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:03Z",
+      "lastTransitionTime": "2026-09-25T17:19:28Z",
+      "message": "Filesystem is not read-only",
+      "reason": "FilesystemIsNotReadOnly",
+      "status": "False",
+      "type": "ReadonlyFilesystem"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:03Z",
+      "lastTransitionTime": "2026-09-25T17:19:28Z",
+      "message": "kernel has no deadlock",
+      "reason": "KernelHasNoDeadlock",
+      "status": "False",
+      "type": "KernelDeadlock"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-25T05:28:26Z",
+      "lastTransitionTime": "2026-09-25T05:28:26Z",
+      "message": "Cilium is running on this node",
+      "reason": "CiliumIsUp",
+      "status": "False",
+      "type": "NetworkUnavailable"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:09Z",
+      "lastTransitionTime": "2026-09-26T08:16:09Z",
+      "message": "kubelet has sufficient memory available",
+      "reason": "KubeletHasSufficientMemory",
+      "status": "False",
+      "type": "MemoryPressure"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:09Z",
+      "lastTransitionTime": "2026-09-26T08:16:09Z",
+      "message": "kubelet has no disk pressure",
+      "reason": "KubeletHasNoDiskPressure",
+      "status": "False",
+      "type": "DiskPressure"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:09Z",
+      "lastTransitionTime": "2026-09-26T08:16:09Z",
+      "message": "kubelet has sufficient PID available",
+      "reason": "KubeletHasSufficientPID",
+      "status": "False",
+      "type": "PIDPressure"
+     },
+     {
+      "lastHeartbeatTime": "2026-09-26T08:16:09Z",
+      "lastTransitionTime": "2026-09-26T08:16:09Z",
+      "message": "kubelet is posting ready status",
+      "reason": "KubeletReady",
+      "status": "True",
+      "type": "Ready"
+     }
+    ],
+    "nodeInfo": {
+     "kubeletVersion": "v1.36.5"
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,44 @@
+{
+ "items": [
+  {
+   "apiVersion": "policy/v1",
+   "kind": "PodDisruptionBudget",
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"policy/v1\",\"kind\":\"PodDisruptionBudget\",\"metadata\":{\"annotations\":{},\"name\":\"checkout-api\",\"namespace\":\"triage-drill\"},\"spec\":{\"minAvailable\":2,\"selector\":{\"matchLabels\":{\"app\":\"checkout-api\"}}}}\n"
+    },
+    "creationTimestamp": "2026-09-26T08:14:45Z",
+    "generation": 1,
+    "name": "checkout-api",
+    "namespace": "triage-drill",
+    "resourceVersion": "287388",
+    "uid": "bc44b200-d627-4768-b364-4490076480e7"
+   },
+   "spec": {
+    "minAvailable": 2,
+    "selector": {
+     "matchLabels": {
+      "app": "checkout-api"
+     }
+    }
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastTransitionTime": "2026-09-26T08:14:45Z",
+      "message": "",
+      "observedGeneration": 1,
+      "reason": "InsufficientPods",
+      "status": "False",
+      "type": "DisruptionAllowed"
+     }
+    ],
+    "currentHealthy": 2,
+    "desiredHealthy": 2,
+    "disruptionsAllowed": 0,
+    "expectedPods": 2,
+    "observedGeneration": 1
+   }
+  }
+ ]
+}

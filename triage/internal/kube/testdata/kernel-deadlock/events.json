@@ -1,0 +1,178 @@
+{
+ "items": [
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:01:19Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:01:19Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:01:19Z",
+    "name": "k8s-w1.18d8d01dfe399a68",
+    "namespace": "default",
+    "resourceVersion": "284699",
+    "uid": "b127c835-2393-4414-b82e-34f392e27062"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "readonly-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "readonly-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:01:19Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:01:19Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:01:19Z",
+    "name": "k8s-w1.18d8d01dfe3a1812",
+    "namespace": "default",
+    "resourceVersion": "284700",
+    "uid": "5d7e86fc-583e-4687-9677-6056cd903b79"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:01:30Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:01:30Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:01:30Z",
+    "name": "k8s-w1.18d8d02097e33bee",
+    "namespace": "default",
+    "resourceVersion": "284760",
+    "uid": "1e050f57-f971-4d47-a30a-35efdffa3833"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:01:30Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:01:30Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:01:30Z",
+    "name": "k8s-w1.18d8d020a3c9074f",
+    "namespace": "default",
+    "resourceVersion": "284766",
+    "uid": "0e1f70fa-aefc-420f-90f2-3b983f3fb924"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "readonly-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "readonly-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:09:21Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:09:21Z",
+   "message": "task docker:4242 blocked for more than 120 seconds.",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:09:21Z",
+    "name": "k8s-w1.18d8d08e45fdcac9",
+    "namespace": "default",
+    "resourceVersion": "286286",
+    "uid": "aa1188c6-a853-48d2-bd31-0b5485791db5"
+   },
+   "reason": "TaskHung",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:09:21Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:09:21Z",
+   "message": "Node condition KernelDeadlock is now: True, reason: DockerHung, message: \"task docker:4242 blocked for more than 120 seconds.\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:09:21Z",
+    "name": "k8s-w1.18d8d08e45fde8a5",
+    "namespace": "default",
+    "resourceVersion": "286287",
+    "uid": "a79a4ef7-0eb8-411c-b0d1-4622463741d5"
+   },
+   "reason": "DockerHung",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  }
+ ]
+}
