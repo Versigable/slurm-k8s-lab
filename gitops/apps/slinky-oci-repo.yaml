@@ -1,0 +1,14 @@
+# Argo CD repository entry for Slinky's OCI Helm charts on ghcr.io.
+# Public registry: no credentials, so it can live in git.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: slinky-oci
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  name: slinky
+  type: helm
+  url: ghcr.io/slinkyproject/charts
+  enableOCI: "true"

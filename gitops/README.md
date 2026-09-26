@@ -12,13 +12,25 @@ node-problem-detector/  upstream v1.36.0 manifests + metrics patch + PodMonitor
 node-triage/            ServiceAccount + RBAC for the node-triage MCP server (read; patch nodes only for cordon)
 ```
 
+Slurm on Kubernetes (Slinky), all Helm apps in `apps/`:
+
+```
+cert-manager          webhook certificates for the operator (its no-cert-manager fallback drifts under Argo CD)
+slinky-oci-repo       Argo CD repository entry for ghcr.io/slinkyproject/charts (public OCI, no credentials)
+slurm-operator-crds   the CRDs, separate so an operator change can't delete them (never pruned)
+slurm-operator        the operator; propagates NPD's ReadonlyFilesystem/KernelDeadlock into Slurm drains
+slurm                 the cluster: slurmctld + 2 slurmd pods + slurmrestd, metrics to Prometheus
+```
+
 Helm-chart apps keep their values inline in `apps/`: `gitlab-runner`, and
 `kube-prometheus-stack` (Prometheus, Alertmanager, Grafana, node-exporter,
 kube-state-metrics; lab-sized, 3-day retention on local-path).
 
 Secrets never live in git; they're created out of band by one-time scripts:
 `scripts/register-runner.sh` (runner token), `scripts/register-argocd-repo.sh`
-(read-only deploy token), `scripts/create-grafana-admin.sh` (random Grafana admin password).
+(read-only deploy token), `scripts/create-grafana-admin.sh` (random Grafana admin password),
+`scripts/create-slurm-auth.sh` (Slinky's Slurm auth + JWT keys: the chart would mint new random
+keys on every Argo CD render, onto immutable Secrets).
 
 To change an add-on: edit it here, open an MR, let CI pass, merge. Argo CD syncs
 `main` automatically, and `selfHeal` reverts manual changes made with kubectl.

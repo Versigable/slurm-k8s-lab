@@ -1,0 +1,20 @@
+# Slinky CRDs (Controller, NodeSet, LoginSet, RestApi, Accounting, Token) as
+# their own app, so upgrading or removing the operator can't take them (and
+# every Slurm cluster defined with them) along.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: slurm-operator-crds
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: ghcr.io/slinkyproject/charts
+    chart: slurm-operator-crds
+    targetRevision: 1.2.2
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated: {prune: false, selfHeal: true}   # never prune CRDs
+    syncOptions:
+      - ServerSideApply=true

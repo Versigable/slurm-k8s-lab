@@ -32,7 +32,7 @@ scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 - [x] **5 — Node-triage MCP server (Go):** Slurm and Kubernetes (4 read-only tools, opt-in guarded writes; tested on 6 Slurm and 6 Kubernetes captured scenarios)
 - [x] **GitOps + CI:** Argo CD (app of apps from `gitops/`, pulled from GitLab over the LAN with a read-only deploy token) owns the add-ons after bootstrap; GitLab CI runs on a Kubernetes-executor runner inside the cluster and `main` requires a green pipeline
 - [x] **2 — kubeadm Kubernetes:** v1.36.5 (pinned to Cilium 1.20's tested range, not the newer 1.37), Cilium as kube-proxy replacement + Hubble, Cilium LB-IPAM with L2 announcements on the LAN (`10.0.5.140–149`) instead of MetalLB, local-path storage, `k8s-verify.yml`. kube-prometheus-stack and node-problem-detector (v1.36.0) run as Argo CD apps
-- [ ] **3 — Slinky:** Slurm on Kubernetes; the same jobs run on classic and Slinky, with a comparison write-up
+- [~] **3 — Slinky:** Slurm on Kubernetes (slurm-operator 1.2.2 via Argo CD, cert-manager for its webhook). Kubernetes node conditions from node-problem-detector drain the matching Slurm node. Comparison with the classic cluster in progress
 - [ ] **4 — Failure drills (ongoing):** node death mid-job, drains, health-check failures, munge/clock faults, cordon + PodDisruptionBudgets, cert expiry
 
 ## Usage
@@ -76,6 +76,7 @@ For Kubernetes (`enable_k8s = true` in `terraform.tfvars`), `site.yml` also runs
 scripts/register-argocd-repo.sh   # read-only GitLab deploy token -> Argo CD repository Secret
 scripts/register-runner.sh        # GitLab runner token -> Secret the runner Application uses
 scripts/create-grafana-admin.sh   # random Grafana admin password -> Secret
+scripts/create-slurm-auth.sh      # Slinky cluster's Slurm auth + JWT keys -> Secrets
 ansible-playbook site.yml         # applies the root Application; Argo CD syncs gitops/
 ```
 
