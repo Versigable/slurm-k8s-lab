@@ -46,3 +46,15 @@
   retries: 60
   delay: 15
   changed_when: false
+
+- name: Wait for workloads Argo CD can't health-check
+  ansible.builtin.command: "{{ item.cmd }}"
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  loop: "{{ k8s_gitops_root_ready_checks }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: k8s_gitops_root_ready
+  until: k8s_gitops_root_ready.rc == 0 and (item.expect | default('')) in k8s_gitops_root_ready.stdout
+  retries: 30
+  delay: 10
+  changed_when: false
