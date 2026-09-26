@@ -89,6 +89,20 @@
       register: grafana_health
       failed_when: grafana_health.status != 200 or (grafana_health.content | from_json).database != 'ok'
 
+    - name: Slinky Slurm nodes are registered and idle
+      ansible.builtin.command: kubectl -n slurm exec slurm-controller-0 -c slurmctld -- sinfo -h -N -o '%N %T'
+      register: slinky_nodes
+      changed_when: false
+      failed_when: >-
+        slinky_nodes.stdout_lines | length != 2 or
+        slinky_nodes.stdout_lines | reject('search', ' idle$') | list | length > 0
+
+    - name: A Slinky job runs across both slurmd pods
+      ansible.builtin.command: kubectl -n slurm exec slurm-controller-0 -c slurmctld -- srun -N2 hostname
+      register: slinky_job
+      changed_when: false
+      failed_when: slinky_job.stdout_lines | sort != ['slinky-0', 'slinky-1']
+
     - name: Test workload (2 nginx replicas, LoadBalancer service, PVC writer)
       ansible.builtin.shell: |
         set -o pipefail
@@ -190,5 +204,6 @@
           - "Kubernetes OK: {{ nodes.stdout_lines | join(' | ') }}"
           - "Argo CD: {{ argo_apps.stdout_lines | join(' | ') }}"
           - "Monitoring: NPD conditions + NPD/node-exporter scrapes on all {{ groups['k8s'] | length }} nodes; Grafana {{ grafana_ip.stdout }} healthy"
+          - "Slinky: {{ slinky_nodes.stdout_lines | join(', ') }}; srun -N2 ran on {{ slinky_job.stdout_lines | sort | join(' + ') }}"
           - "web pods on: {{ placement.stdout }}"
           - "LoadBalancer {{ lb_ip.stdout }} answered HTTP {{ lb_http.status }} from off-cluster"

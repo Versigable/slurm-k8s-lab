@@ -18,7 +18,7 @@ Slurm on Kubernetes (Slinky), all Helm apps in `apps/`:
 cert-manager          webhook certificates for the operator (its no-cert-manager fallback drifts under Argo CD)
 slinky-oci-repo       Argo CD repository entry for ghcr.io/slinkyproject/charts (public OCI, no credentials)
 slurm-operator-crds   the CRDs, separate so an operator change can't delete them (never pruned)
-slurm-operator        the operator; propagates NPD's ReadonlyFilesystem/KernelDeadlock into Slurm drains
+slurm-operator        the operator; cordoning a K8s node drains its Slurm node, with NPD's condition as the reason
 slurm                 the cluster: slurmctld + 2 slurmd pods + slurmrestd, metrics to Prometheus
 ```
 
