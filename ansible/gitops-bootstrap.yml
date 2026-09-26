@@ -1,0 +1,7 @@
+# Step 3 of a fresh build (after site.yml and the one-time secret scripts):
+# apply the root Application and wait for Argo CD to converge gitops/.
+- name: Hand the cluster to Argo CD
+  hosts: k8s_control_plane
+  become: true
+  roles:
+    - k8s_gitops_root

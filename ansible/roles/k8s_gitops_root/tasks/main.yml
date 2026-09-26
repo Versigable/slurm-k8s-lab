@@ -1,0 +1,48 @@
+# Hand the cluster to Argo CD: apply the root Application (app of apps over
+# gitops/apps). Refuses to until every out-of-band Secret exists, because the
+# apps that need them would otherwise sync broken.
+- name: Look up the one-time Secrets
+  ansible.builtin.command: >
+    kubectl -n {{ item.namespace }} get secret
+    {{ ('-l ' ~ item.selector) if item.selector is defined else item.name }} -o name
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  loop: "{{ k8s_gitops_root_required_secrets }}"
+  loop_control:
+    label: "{{ item.namespace }}/{{ item.name | default(item.selector) }}"
+  register: k8s_gitops_root_secrets
+  changed_when: false
+  failed_when: false
+
+- name: Stop if any are missing
+  ansible.builtin.fail:
+    msg: >-
+      Missing one-time Secrets; run these first:
+      {{ k8s_gitops_root_secrets.results | selectattr('stdout', 'equalto', '') | map(attribute='item.script') | unique | join(', ') }}
+  when: k8s_gitops_root_secrets.results | selectattr('stdout', 'equalto', '') | list | length > 0
+
+- name: Write the root Application
+  ansible.builtin.template:
+    src: root-app.yaml.j2
+    dest: /etc/kubernetes/addons/argocd-root-app.yaml
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Apply the root Application
+  ansible.builtin.command: kubectl apply -f /etc/kubernetes/addons/argocd-root-app.yaml
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  register: k8s_gitops_root_apply
+  changed_when: "'unchanged' not in k8s_gitops_root_apply.stdout"
+
+- name: Wait until every Argo CD Application is Synced and Healthy
+  ansible.builtin.command: >
+    kubectl -n {{ k8s_gitops_root_namespace }} get applications
+    -o jsonpath='{range .items[*]}{.metadata.name}={.status.sync.status}/{.status.health.status}{" "}{end}'
+  environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+  register: k8s_gitops_root_apps
+  until: >-
+    k8s_gitops_root_apps.stdout.split() | length > 1 and
+    k8s_gitops_root_apps.stdout.split() | reject('search', '=Synced/Healthy$') | list | length == 0
+  retries: 60
+  delay: 15
+  changed_when: false

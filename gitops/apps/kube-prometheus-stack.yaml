@@ -59,6 +59,8 @@ spec:
             passwordKey: admin-password
           service:
             type: LoadBalancer   # LAN IP from the Cilium pool
+            annotations:
+              lbipam.cilium.io/ips: "10.0.5.141"   # pinned: stable across rebuilds
           defaultDashboardsTimezone: America/Denver
           resources:
             requests: {cpu: 50m, memory: 128Mi}

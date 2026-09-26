@@ -36,13 +36,23 @@ if cp_ssh "kubectl -n $NAMESPACE get secret gitlab-runner-token" >/dev/null 2>&1
 fi
 
 project_id=$(curl -fsS -H "$(auth)" "$GITLAB_API/projects/$PROJECT" | "$PY" -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+DESCRIPTION="slurm-k8s-lab (Kubernetes executor on the lab cluster)"
+
+# A rebuilt cluster has no Secret, but GitLab still has the previous runner.
+# Remove it (and any duplicates) so a rebuild never leaves an orphaned runner
+# holding a valid token.
+curl -fsS -H "$(auth)" "$GITLAB_API/projects/$project_id/runners?type=project_type&per_page=100" \
+  | DESCRIPTION="$DESCRIPTION" "$PY" -c 'import json,os,sys; [print(r["id"]) for r in json.load(sys.stdin) if r.get("description")==os.environ["DESCRIPTION"]]' \
+  | while read -r stale; do
+      curl -fsS -X DELETE -H "$(auth)" "$GITLAB_API/runners/$stale" >/dev/null && echo "removed stale runner $stale"
+    done
 cp_ssh "kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f - >/dev/null"
 
 # Create the runner; only the token field leaves Python, straight into kubectl.
 curl -fsS -X POST -H "$(auth)" "$GITLAB_API/user/runners" \
     --data-urlencode "runner_type=project_type" \
     --data-urlencode "project_id=$project_id" \
-    --data-urlencode "description=slurm-k8s-lab (Kubernetes executor on the lab cluster)" \
+    --data-urlencode "description=$DESCRIPTION" \
     --data-urlencode "tag_list=$TAG" \
     --data-urlencode "run_untagged=false" \
   | "$PY" -c 'import json,sys; sys.stdout.write(json.load(sys.stdin)["token"])' \

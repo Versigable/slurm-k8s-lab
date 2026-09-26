@@ -7,6 +7,8 @@ notifications:
 server:
   service:
     type: LoadBalancer     # UI on a LAN IP from the Cilium pool (self-signed TLS)
+    annotations:
+      lbipam.cilium.io/ips: "{{ k8s_argocd_ui_ip }}"   # pinned: stable across rebuilds
 configs:
   cm:
     # Re-check git every minute; the default is 3.
