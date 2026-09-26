@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: slurm-operator
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: ghcr.io/slinkyproject/charts
+    chart: slurm-operator
+    targetRevision: 1.2.2
+    helm:
+      releaseName: slurm-operator
+      valuesObject:
+        crds:
+          enabled: false        # owned by the slurm-operator-crds app
+        certManager:
+          enabled: true
+        # Drain the Slurm node whose pod runs on a Kubernetes node with one of
+        # these conditions. Both come from node-problem-detector, so a kernel
+        # fault seen by Kubernetes also takes the node out of Slurm.
+        propagatedNodeConditions:
+          - ReadonlyFilesystem
+          - KernelDeadlock
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: slinky
+  # cert-manager's CA injector writes the webhooks' caBundle at runtime;
+  # don't treat that as drift (selfHeal would fight it).
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions: ['.webhooks[]?.clientConfig.caBundle']
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jqPathExpressions: ['.webhooks[]?.clientConfig.caBundle']
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true   # cert-manager CRDs may not exist yet
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 10
+      backoff: {duration: 15s, factor: 2, maxDuration: 5m}
