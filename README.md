@@ -92,7 +92,7 @@ Both scripts pipe tokens from the GitLab API straight into Kubernetes Secrets; n
 
 *Claude Code with only the node-triage tools, on the real lab: a lost GPU on classic Slurm and a read-only disk on Kubernetes are triaged in one call; an approved cordon of the Kubernetes node makes Slinky drain the Slurm worker on it, with the kernel fault as the reason; putting the node back is declined while the fault stands. How it was recorded, what varies between runs, and where the model's narration was wrong: [`demo/`](demo/README.md).*
 
-`triage/` is a Go MCP server that answers the on-call question *"what should I do with this node?"* for a Slurm cluster and a Kubernetes cluster side by side. Slurm is read through its CLIs' JSON output; Kubernetes through the API server with a least-privilege ServiceAccount (read nodes/pods/events/PDBs, patch nodes for cordon only; `gitops/node-triage`).
+`triage/` is a Go MCP server that answers the on-call question *"what should I do with this node?"* across three clusters: classic Slurm (read through its CLIs' JSON output), Slurm on Kubernetes via Slinky (read through slurmrestd, with a read-only JWT for user `nobody` and a separate admin JWT used only for drain/resume), and Kubernetes (the API server with a least-privilege ServiceAccount: read nodes/pods/events/PDBs, patch nodes for cordon only; `gitops/node-triage`). Slinky nodes are linked to the pod and Kubernetes node they run on (the operator writes that into the Slurm node comment). A Slinky node the operator drained because its Kubernetes node is cordoned takes its recommendation from that Kubernetes node, and `resume_node` redirects there: resuming it in Slurm gets reverted within seconds.
 
 | Tool | What it does |
 |---|---|

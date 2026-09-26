@@ -70,6 +70,26 @@ type Node struct {
 	BootTime        Number   `json:"boot_time"`
 	SlurmdStartTime Number   `json:"slurmd_start_time"`
 	LastBusy        Number   `json:"last_busy"`
+	// Comment is free text; the Slinky operator stores the node's pod and
+	// Kubernetes node in it as JSON (see SlinkyPod).
+	Comment string `json:"comment"`
+}
+
+// SlinkyPod says where a Slinky (Slurm-on-Kubernetes) node runs.
+type SlinkyPod struct {
+	Namespace string `json:"namespace"`
+	PodName   string `json:"podName"`
+	Node      string `json:"node"` // Kubernetes node name
+}
+
+// SlinkyPod parses the pod link the Slinky operator writes into the node
+// comment, e.g. {"namespace":"slurm","podName":"slurm-worker-slinky-0","node":"k8s-w1",...}.
+func (n Node) SlinkyPod() (SlinkyPod, bool) {
+	var p SlinkyPod
+	if !strings.HasPrefix(strings.TrimSpace(n.Comment), "{") || json.Unmarshal([]byte(n.Comment), &p) != nil {
+		return SlinkyPod{}, false
+	}
+	return p, p.PodName != "" && p.Node != ""
 }
 
 // Has reports whether the node carries a state flag (IDLE, DRAIN, DOWN, NOT_RESPONDING, ...).

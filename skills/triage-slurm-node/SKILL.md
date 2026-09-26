@@ -5,7 +5,7 @@ description: Work out what to do with an unhealthy Slurm or Kubernetes node (dra
 
 # Triage a Slurm or Kubernetes node
 
-You have the `node-triage` MCP server. It covers both schedulers; every recommendation carries `scheduler: slurm | kubernetes`. Its recommendations come from deterministic rules over live Slurm state. Your job is to run the right tools, relay the decision faithfully, and stop at the approval boundary.
+You have the `node-triage` MCP server. It covers three clusters: classic Slurm (`lab`), Slurm on Kubernetes (`slinky`), and Kubernetes. Every recommendation carries `scheduler` (slurm | kubernetes) and `cluster`. Its recommendations come from deterministic rules over live Slurm state. Your job is to run the right tools, relay the decision faithfully, and stop at the approval boundary.
 
 ## Steps
 
@@ -34,6 +34,7 @@ You have the `node-triage` MCP server. It covers both schedulers; every recommen
 
 - `drain_node` on Slurm drains (running jobs finish, nothing new starts). On Kubernetes it **cordons** (running pods stay, nothing new is scheduled). Evicting pods (`kubectl drain`) is left to the engineer: say so, and include the suggested command.
 - A Kubernetes node that is cordoned but whose drain is **blocked by a PodDisruptionBudget** needs a person: capacity elsewhere or an agreed disruption. Never suggest deleting pods to get past a PDB.
+- **Slinky nodes follow their Kubernetes node.** A Slinky node drained with a reason starting `slurm-operator:` was drained because its Kubernetes node is cordoned (category `kubernetes_managed`). Don't resume it in Slurm: the operator re-drains it within seconds, and `resume_node` refuses. Work the Kubernetes node (its name is in the evidence) and uncordon *that* once fixed.
 - `ReadonlyFilesystem` and `KernelDeadlock` come from node-problem-detector reading the kernel log. They clear on reboot, or when NPD restarts after the triggering line is older than its 5-minute lookback. Restarting NPD sooner just re-detects the fault.
 
 ## Don't

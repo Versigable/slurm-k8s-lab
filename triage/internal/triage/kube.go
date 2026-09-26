@@ -30,13 +30,25 @@ const defaultEvictionDelay = 300 * time.Second
 // node-problem-detector's temporary kernel events (kernel-monitor.json).
 var npdKernelEvents = []string{"TaskHung", "KernelOops", "OOMKilling", "MemoryReadError", "UnregisterNetDevice"}
 
+// SlurmNodeRef is a Slurm node that runs as a pod on a Kubernetes node (Slinky).
+type SlurmNodeRef struct {
+	Name     string
+	Cluster  string
+	State    []string
+	Reason   string
+	KubeNode string
+}
+
 // KubeSnapshot is the Kubernetes state triage reads, taken at one instant.
 type KubeSnapshot struct {
-	Now    time.Time
-	Nodes  []kube.Node
-	Pods   []kube.Pod
-	Events []kube.Event // events whose involvedObject is a Node
-	PDBs   []kube.PDB
+	Cluster string // e.g. "kubernetes"
+	// SlurmNodes lists Slinky nodes and where they run, for cross-links.
+	SlurmNodes []SlurmNodeRef
+	Now        time.Time
+	Nodes      []kube.Node
+	Pods       []kube.Pod
+	Events     []kube.Event // events whose involvedObject is a Node
+	PDBs       []kube.PDB
 }
 
 // AssessKube returns the recommendation for one Kubernetes node.
@@ -81,10 +93,19 @@ func (a kubeAssessor) assess() Recommendation {
 	n := a.n
 	name := n.Metadata.Name
 	reason := n.Metadata.Annotations[kube.ReasonAnnotation]
-	r := Recommendation{Node: name, Scheduler: SchedulerKubernetes, Category: CategoryNone}
+	r := Recommendation{Node: name, Scheduler: SchedulerKubernetes, Cluster: a.s.Cluster, Category: CategoryNone}
 	r.Evidence = append(r.Evidence, a.stateLine())
 	if reason != "" {
 		r.Evidence = append(r.Evidence, fmt.Sprintf("cordon reason %q (annotation %s)", reason, kube.ReasonAnnotation))
+	}
+	for _, sn := range a.s.SlurmNodes {
+		if sn.KubeNode == name {
+			line := fmt.Sprintf("hosts Slinky Slurm node %s (%s)", sn.Name, strings.Join(sn.State, "+"))
+			if sn.Reason != "" {
+				line += fmt.Sprintf(": %q", sn.Reason)
+			}
+			r.Evidence = append(r.Evidence, line+"; cordoning this node drains it in Slurm")
+		}
 	}
 	workload := a.workloadPods()
 	events, eventCount := a.kernelEvents()

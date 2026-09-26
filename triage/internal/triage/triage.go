@@ -61,12 +61,16 @@ const (
 	CategoryUnreachable  Category = "unreachable"
 	CategoryTriage       Category = "triage" // drained by this tool
 	CategoryOther        Category = "other"
+	// Drained by the Slinky operator because its Kubernetes node is cordoned.
+	// The fix lives on the Kubernetes side.
+	CategoryKubernetesManaged Category = "kubernetes_managed"
 )
 
 // Recommendation is the answer for one node.
 type Recommendation struct {
 	Node      string   `json:"node" jsonschema:"node name"`
 	Scheduler string   `json:"scheduler" jsonschema:"slurm or kubernetes"`
+	Cluster   string   `json:"cluster,omitempty" jsonschema:"which cluster: e.g. lab (classic Slurm), slinky (Slurm on Kubernetes), kubernetes"`
 	Action    Action   `json:"action" jsonschema:"one of none, wait, drain, resume, investigate, escalate_hardware"`
 	Severity  Severity `json:"severity" jsonschema:"info, warning or critical"`
 	Category  Category `json:"category" jsonschema:"classification of the node's drain/down reason"`
@@ -81,6 +85,9 @@ type Recommendation struct {
 
 // Snapshot is everything triage needs, taken at one instant.
 type Snapshot struct {
+	Cluster string // cluster name, e.g. "lab" or "slinky"
+	// Kube, when set, lets Slinky nodes be linked to the Kubernetes node they run on.
+	Kube    *KubeSnapshot
 	Now     time.Time
 	Nodes   []slurm.Node
 	Jobs    []slurm.Job
@@ -118,6 +125,7 @@ var categoryPatterns = []struct {
 	cat Category
 	re  *regexp.Regexp
 }{
+	{CategoryKubernetesManaged, regexp.MustCompile(`^slurm-operator:`)},
 	{CategoryTriage, regexp.MustCompile(`(?i)^triage:`)},
 	{CategoryHardware, regexp.MustCompile(`(?i)gres/\S+ count|xid|ecc|nvlink|pcie|fell off the bus|gpu (missing|lost)`)},
 	{CategoryStuckProcess, regexp.MustCompile(`(?i)kill task failed`)},
@@ -172,10 +180,18 @@ type assessor struct {
 
 func (a assessor) assess() Recommendation {
 	n := a.n
-	r := Recommendation{Node: n.Name, Scheduler: SchedulerSlurm, Category: Classify(n.Reason)}
+	r := Recommendation{Node: n.Name, Scheduler: SchedulerSlurm, Cluster: a.s.Cluster, Category: Classify(n.Reason)}
 	r.Evidence = append(r.Evidence, a.stateLine())
 	if n.Reason != "" {
 		r.Evidence = append(r.Evidence, a.reasonLine())
+	}
+
+	if pod, ok := n.SlinkyPod(); ok {
+		r.Evidence = append(r.Evidence, fmt.Sprintf("Slinky node: runs as pod %s/%s on Kubernetes node %s", pod.Namespace, pod.PodName, pod.Node))
+		if r.Category == CategoryKubernetesManaged {
+			a.kubernetesManaged(&r, pod)
+			return r
+		}
 	}
 
 	chronic := a.events()
@@ -226,6 +242,34 @@ func (a assessor) assess() Recommendation {
 		}
 	}
 	return r
+}
+
+// kubernetesManaged: the Slinky operator drained this node because its
+// Kubernetes node is cordoned. Resuming it in Slurm is pointless: while the
+// Kubernetes node stays cordoned the operator re-drains it (within 2 s in the
+// lab). So the recommendation follows the Kubernetes node's.
+func (a assessor) kubernetesManaged(r *Recommendation, pod slurm.SlinkyPod) {
+	n := a.n
+	r.Action, r.Severity = ActionInvestigate, SeverityWarning
+	r.Summary = fmt.Sprintf("Drained by the Slinky operator because Kubernetes node %s is cordoned. Handle it on the Kubernetes side; resuming this node in Slurm gets reverted.", pod.Node)
+	if a.s.Kube != nil {
+		if kr, err := AssessKube(*a.s.Kube, pod.Node, a.p); err == nil {
+			r.Evidence = append(r.Evidence, fmt.Sprintf("Kubernetes node %s: %s/%s: %s", pod.Node, kr.Action, kr.Severity, kr.Summary))
+			switch kr.Action {
+			case ActionNone:
+				r.Action, r.Severity = ActionWait, SeverityInfo
+				r.Summary = fmt.Sprintf("Kubernetes node %s is back in service; the Slinky operator should undrain this node within seconds.", pod.Node)
+			default:
+				r.Action, r.Severity = kr.Action, kr.Severity
+			}
+		}
+	}
+	r.NextSteps = []string{
+		fmt.Sprintf("Work the problem on Kubernetes node %s (triage_node %s).", pod.Node, pod.Node),
+		fmt.Sprintf("Once %s is fixed, uncordon it; the operator undrains %s by itself.", pod.Node, n.Name),
+		"Don't resume this node in Slurm: while the Kubernetes node is cordoned, the operator re-drains it within seconds.",
+	}
+	r.Commands = []string{fmt.Sprintf("kubectl uncordon %s   # after the fix; the operator then undrains %s", pod.Node, n.Name)}
 }
 
 func (a assessor) hardware(r *Recommendation) {

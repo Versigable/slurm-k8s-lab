@@ -16,11 +16,24 @@ import (
 	"github.com/Versigable/slurm-k8s-lab/triage/internal/triage"
 )
 
-// Config wires the server to the clusters it triages. Either scheduler may be
+// SlurmSource is a Slurm cluster triage can read and (with -allow-writes)
+// drain/resume: the CLI-backed slurm.Client or slurmrestd's slurm.RESTClient.
+type SlurmSource interface {
+	Nodes(ctx context.Context) ([]slurm.Node, error)
+	Jobs(ctx context.Context) ([]slurm.Job, error)
+	History(ctx context.Context, window time.Duration) ([]slurm.HistoricalJob, error)
+	Events(ctx context.Context, window time.Duration) ([]slurm.Event, error)
+	Drain(ctx context.Context, node, reason string) error
+	Resume(ctx context.Context, node string) error
+}
+
+// Config wires the server to the clusters it triages. Any of them may be
 // absent (nil); at least one must be set.
 type Config struct {
-	Client        *slurm.Client // Slurm
-	Kube          kube.Source   // Kubernetes
+	Client        SlurmSource // classic Slurm, read through its CLIs
+	ClusterName   string      // name for Client's cluster (default "lab")
+	Slinky        SlurmSource // Slurm on Kubernetes, read through slurmrestd (cluster "slinky")
+	Kube          kube.Source // Kubernetes
 	Policy        triage.Policy
 	HistoryWindow time.Duration // how far back to read sacct (NODE_FAIL evidence)
 	EventWindow   time.Duration // how far back to read Slurm drain/down events (chronic nodes)
@@ -47,6 +60,9 @@ func New(cfg Config) *mcp.Server {
 	}
 	if cfg.Now == nil {
 		cfg.Now = time.Now
+	}
+	if cfg.ClusterName == "" {
+		cfg.ClusterName = "lab"
 	}
 	h := &handlers{cfg: cfg}
 
@@ -115,6 +131,7 @@ type NodeInput struct {
 type NodeSummary struct {
 	Name        string   `json:"name"`
 	Scheduler   string   `json:"scheduler" jsonschema:"slurm or kubernetes"`
+	Cluster     string   `json:"cluster" jsonschema:"lab (classic Slurm), slinky (Slurm on Kubernetes) or kubernetes"`
 	State       []string `json:"state" jsonschema:"Slurm state flags, or Kubernetes Ready status plus cordoned and any True problem conditions"`
 	Reason      string   `json:"reason,omitempty"`
 	ReasonSetBy string   `json:"reason_set_by,omitempty"`
@@ -190,33 +207,33 @@ type WriteOutput struct {
 
 type handlers struct{ cfg Config }
 
+const (
+	clusterSlinky     = "slinky"
+	clusterKubernetes = "kubernetes"
+)
+
 type snapshot struct {
-	slurm *triage.Snapshot     // nil when Slurm isn't configured
-	kube  *triage.KubeSnapshot // nil when Kubernetes isn't configured
+	slurm map[string]*triage.Snapshot // by cluster name
+	order []string                    // cluster names in a stable order
+	kube  *triage.KubeSnapshot        // nil when Kubernetes isn't configured
+}
+
+func (h *handlers) slurmSources() (names []string, srcs map[string]SlurmSource) {
+	srcs = map[string]SlurmSource{}
+	if h.cfg.Client != nil {
+		names, srcs[h.cfg.ClusterName] = append(names, h.cfg.ClusterName), h.cfg.Client
+	}
+	if h.cfg.Slinky != nil {
+		names, srcs[clusterSlinky] = append(names, clusterSlinky), h.cfg.Slinky
+	}
+	return names, srcs
 }
 
 func (h *handlers) snapshot(ctx context.Context) (snapshot, error) {
-	var out snapshot
+	out := snapshot{slurm: map[string]*triage.Snapshot{}}
 	now := h.cfg.Now()
-	if c := h.cfg.Client; c != nil {
-		s := triage.Snapshot{Now: now}
-		var err error
-		if s.Nodes, err = c.Nodes(ctx); err != nil {
-			return out, fmt.Errorf("slurm: %w", err)
-		}
-		if s.Jobs, err = c.Jobs(ctx); err != nil {
-			return out, fmt.Errorf("slurm: %w", err)
-		}
-		if s.History, err = c.History(ctx, h.cfg.HistoryWindow); err != nil {
-			return out, fmt.Errorf("slurm: %w", err)
-		}
-		if s.Events, err = c.Events(ctx, h.cfg.EventWindow); err != nil {
-			return out, fmt.Errorf("slurm: %w", err)
-		}
-		out.slurm = &s
-	}
 	if k := h.cfg.Kube; k != nil {
-		s := triage.KubeSnapshot{Now: now}
+		s := triage.KubeSnapshot{Cluster: clusterKubernetes, Now: now}
 		var err error
 		if s.Nodes, err = k.Nodes(ctx); err != nil {
 			return out, fmt.Errorf("kubernetes: %w", err)
@@ -232,27 +249,57 @@ func (h *handlers) snapshot(ctx context.Context) (snapshot, error) {
 		}
 		out.kube = &s
 	}
+	names, srcs := h.slurmSources()
+	for _, name := range names {
+		c := srcs[name]
+		s := triage.Snapshot{Cluster: name, Kube: out.kube, Now: now}
+		var err error
+		if s.Nodes, err = c.Nodes(ctx); err != nil {
+			return out, fmt.Errorf("slurm %s: %w", name, err)
+		}
+		if s.Jobs, err = c.Jobs(ctx); err != nil {
+			return out, fmt.Errorf("slurm %s: %w", name, err)
+		}
+		if s.History, err = c.History(ctx, h.cfg.HistoryWindow); err != nil {
+			return out, fmt.Errorf("slurm %s: %w", name, err)
+		}
+		if s.Events, err = c.Events(ctx, h.cfg.EventWindow); err != nil {
+			return out, fmt.Errorf("slurm %s: %w", name, err)
+		}
+		out.slurm[name], out.order = &s, append(out.order, name)
+		// Cross-link Slinky nodes onto the Kubernetes nodes they run on.
+		if out.kube != nil {
+			for _, n := range s.Nodes {
+				if pod, ok := n.SlinkyPod(); ok {
+					out.kube.SlurmNodes = append(out.kube.SlurmNodes, triage.SlurmNodeRef{
+						Name: n.Name, Cluster: name, State: n.State, Reason: n.Reason, KubeNode: pod.Node})
+				}
+			}
+		}
+	}
 	return out, nil
 }
 
-// schedulerOf says which scheduler owns a node name.
-func (s snapshot) schedulerOf(node string) (string, error) {
-	if s.slurm != nil && slices.ContainsFunc(s.slurm.Nodes, func(n slurm.Node) bool { return n.Name == node }) {
-		return triage.SchedulerSlurm, nil
+// locate says which scheduler and cluster own a node name.
+func (s snapshot) locate(node string) (scheduler, cluster string, err error) {
+	for _, name := range s.order {
+		if slices.ContainsFunc(s.slurm[name].Nodes, func(n slurm.Node) bool { return n.Name == node }) {
+			return triage.SchedulerSlurm, name, nil
+		}
 	}
 	if s.kube != nil && slices.ContainsFunc(s.kube.Nodes, func(n kube.Node) bool { return n.Metadata.Name == node }) {
-		return triage.SchedulerKubernetes, nil
+		return triage.SchedulerKubernetes, clusterKubernetes, nil
 	}
-	return "", fmt.Errorf("node %q not found in any configured scheduler", node)
+	return "", "", fmt.Errorf("node %q not found in any configured cluster", node)
 }
 
 func (h *handlers) assess(s snapshot, node string) (triage.Recommendation, error) {
-	sched, err := s.schedulerOf(node)
+	sched, cluster, err := s.locate(node)
 	if err != nil {
 		return triage.Recommendation{}, err
 	}
 	if sched == triage.SchedulerSlurm {
-		return triage.Assess(*s.slurm, node, h.cfg.Policy)
+		return triage.Assess(*s.slurm[cluster], node, h.cfg.Policy)
 	}
 	return triage.AssessKube(*s.kube, node, h.cfg.Policy)
 }
@@ -265,9 +312,9 @@ func (h *handlers) listNodes(ctx context.Context, _ *mcp.CallToolRequest, _ NoIn
 		return nil, ListNodesOutput{}, err
 	}
 	out := ListNodesOutput{Nodes: []NodeSummary{}}
-	if s.slurm != nil {
-		for _, n := range s.slurm.Nodes {
-			out.Nodes = append(out.Nodes, summarizeSlurm(n))
+	for _, name := range s.order {
+		for _, n := range s.slurm[name].Nodes {
+			out.Nodes = append(out.Nodes, summarizeSlurm(n, name))
 		}
 	}
 	if s.kube != nil {
@@ -283,21 +330,21 @@ func (h *handlers) nodeDetail(ctx context.Context, _ *mcp.CallToolRequest, in No
 	if err != nil {
 		return nil, NodeDetailOutput{}, err
 	}
-	sched, err := s.schedulerOf(in.Node)
+	sched, cluster, err := s.locate(in.Node)
 	if err != nil {
 		return nil, NodeDetailOutput{}, err
 	}
 	if sched == triage.SchedulerKubernetes {
 		return nil, kubeDetail(*s.kube, in.Node), nil
 	}
-	return nil, slurmDetail(*s.slurm, in.Node), nil
+	return nil, slurmDetail(*s.slurm[cluster], in.Node), nil
 }
 
 func slurmDetail(s triage.Snapshot, node string) NodeDetailOutput {
 	var out NodeDetailOutput
 	for _, n := range s.Nodes {
 		if n.Name == node {
-			out.Node = summarizeSlurm(n)
+			out.Node = summarizeSlurm(n, s.Cluster)
 		}
 	}
 	out.RunningJobs, out.RecentJobs, out.Events = []JobSummary{}, []JobSummary{}, []EventSummary{}
@@ -379,8 +426,8 @@ func (h *handlers) triageCluster(ctx context.Context, _ *mcp.CallToolRequest, in
 		return nil, TriageClusterOutput{}, err
 	}
 	var all []triage.Recommendation
-	if s.slurm != nil {
-		all = append(all, triage.AssessAll(*s.slurm, h.cfg.Policy)...)
+	for _, name := range s.order {
+		all = append(all, triage.AssessAll(*s.slurm[name], h.cfg.Policy)...)
 	}
 	if s.kube != nil {
 		all = append(all, triage.AssessKubeAll(*s.kube, h.cfg.Policy)...)
@@ -411,7 +458,7 @@ func (h *handlers) drainNode(ctx context.Context, _ *mcp.CallToolRequest, in Dra
 	if err != nil {
 		return nil, WriteOutput{}, err
 	}
-	sched, err := s.schedulerOf(in.Node)
+	sched, cluster, err := s.locate(in.Node)
 	if err != nil {
 		return nil, WriteOutput{}, err
 	}
@@ -422,8 +469,9 @@ func (h *handlers) drainNode(ctx context.Context, _ *mcp.CallToolRequest, in Dra
 		}
 		return nil, WriteOutput{Done: true, Command: cmd, Note: "cordoned: nothing new is scheduled; running pods stay until drained"}, nil
 	}
-	cmd := fmt.Sprintf("scontrol update nodename=%s state=drain reason=%q", in.Node, reason)
-	if err := h.cfg.Client.Drain(ctx, in.Node, reason); err != nil {
+	cmd := fmt.Sprintf("scontrol update nodename=%s state=drain reason=%q   # cluster %s", in.Node, reason, cluster)
+	_, srcs := h.slurmSources()
+	if err := srcs[cluster].Drain(ctx, in.Node, reason); err != nil {
 		return nil, WriteOutput{Command: cmd}, err
 	}
 	return nil, WriteOutput{Done: true, Command: cmd}, nil
@@ -434,11 +482,11 @@ func (h *handlers) resumeNode(ctx context.Context, _ *mcp.CallToolRequest, in Re
 	if err != nil {
 		return nil, WriteOutput{}, err
 	}
-	sched, err := s.schedulerOf(in.Node)
+	sched, cluster, err := s.locate(in.Node)
 	if err != nil {
 		return nil, WriteOutput{}, err
 	}
-	cmd := fmt.Sprintf("scontrol update nodename=%s state=resume", in.Node)
+	cmd := fmt.Sprintf("scontrol update nodename=%s state=resume   # cluster %s", in.Node, cluster)
 	if sched == triage.SchedulerKubernetes {
 		cmd = fmt.Sprintf("kubectl uncordon %s", in.Node)
 	}
@@ -446,13 +494,19 @@ func (h *handlers) resumeNode(ctx context.Context, _ *mcp.CallToolRequest, in Re
 	if err != nil {
 		return nil, WriteOutput{Command: cmd}, err
 	}
+	// A Slinky node the operator drained follows its Kubernetes node: resuming it
+	// in Slurm is reverted within seconds, so don't pretend it worked. No force.
+	if r.Category == triage.CategoryKubernetesManaged {
+		return nil, WriteOutput{Command: cmd, Note: "refused: " + r.Summary + " Resume the Kubernetes node instead (resume_node on it), once it's fixed."}, nil
+	}
 	if r.Action == triage.ActionEscalateHardware && !in.Force {
 		return nil, WriteOutput{Command: cmd, Note: "refused: " + r.Summary + " Pass force=true only after the hardware is repaired and burn-in passed."}, nil
 	}
 	if sched == triage.SchedulerKubernetes {
 		err = h.cfg.Kube.SetUnschedulable(ctx, in.Node, false, "")
 	} else {
-		err = h.cfg.Client.Resume(ctx, in.Node)
+		_, srcs := h.slurmSources()
+		err = srcs[cluster].Resume(ctx, in.Node)
 	}
 	if err != nil {
 		return nil, WriteOutput{Command: cmd}, err
@@ -464,10 +518,11 @@ func (h *handlers) resumeNode(ctx context.Context, _ *mcp.CallToolRequest, in Re
 	return nil, out, nil
 }
 
-func summarizeSlurm(n slurm.Node) NodeSummary {
+func summarizeSlurm(n slurm.Node, cluster string) NodeSummary {
 	return NodeSummary{
 		Name:        n.Name,
 		Scheduler:   triage.SchedulerSlurm,
+		Cluster:     cluster,
 		State:       n.State,
 		Reason:      n.Reason,
 		ReasonSetBy: n.ReasonSetBy,
@@ -493,6 +548,7 @@ func summarizeKube(n kube.Node) NodeSummary {
 	return NodeSummary{
 		Name:      n.Metadata.Name,
 		Scheduler: triage.SchedulerKubernetes,
+		Cluster:   clusterKubernetes,
 		State:     state,
 		Reason:    n.Metadata.Annotations[kube.ReasonAnnotation],
 	}

@@ -1,0 +1,46 @@
+{
+  "jobs": [],
+  "last_backfill": {
+    "set": true,
+    "infinite": false,
+    "number": 0
+  },
+  "last_update": {
+    "set": true,
+    "infinite": false,
+    "number": 1790461754
+  },
+  "meta": {
+    "plugin": {
+      "type": "",
+      "name": "",
+      "data_parser": "data_parser\/v0.0.45",
+      "accounting_storage": ""
+    },
+    "client": {
+      "source": "",
+      "user": "slurm",
+      "group": "slurm"
+    },
+    "command": [
+      "squeue",
+      "--json"
+    ],
+    "slurm": {
+      "version": {
+        "major": "26",
+        "micro": "4",
+        "minor": "05"
+      },
+      "release": "26.05.4",
+      "cluster": "slinky"
+    }
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "description": "Zero jobs to dump",
+      "source": ""
+    }
+  ]
+}

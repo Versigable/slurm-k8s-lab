@@ -7,8 +7,9 @@
 //	ssh -T labadmin@slurm-ctl /usr/local/bin/node-triage
 //
 // Kubernetes is read with the ServiceAccount credentials in -kube-dir
-// (api-url, token, ca.crt; installed by ansible/triage.yml). Without them only
-// Slurm is triaged.
+// (api-url, token, ca.crt), and Slinky's Slurm through slurmrestd with the
+// tokens in -slinky-dir (url, token-read, token-admin); both installed by
+// ansible/triage.yml. Whatever is missing is skipped.
 //
 // Or offline against captured scenarios:
 //
@@ -43,7 +44,10 @@ func main() {
 		fixtures    = flag.String("fixtures", "", "serve a captured Slurm scenario directory instead of the live cluster")
 		kubeDir     = flag.String("kube-dir", "/etc/node-triage", "Kubernetes API credentials (api-url, token, ca.crt); skipped if absent")
 		kubeFix     = flag.String("kube-fixtures", "", "serve a captured Kubernetes scenario directory instead of the live cluster")
-		noSlurm     = flag.Bool("no-slurm", false, "don't triage Slurm (Kubernetes only)")
+		noSlurm     = flag.Bool("no-slurm", false, "don't triage the classic Slurm cluster")
+		clusterName = flag.String("cluster-name", "lab", "name of the classic Slurm cluster in recommendations")
+		slinkyDir   = flag.String("slinky-dir", "/etc/node-triage/slinky", "slurmrestd URL and tokens for Slinky's Slurm; skipped if absent")
+		slinkyFix   = flag.String("slinky-fixtures", "", "serve a captured Slinky scenario directory instead of slurmrestd")
 		history     = flag.Duration("history", 24*time.Hour, "sacct window for NODE_FAIL evidence")
 		events      = flag.Duration("events", 7*24*time.Hour, "sacctmgr event window for chronic-node detection")
 		nodeFail    = flag.Int("node-fail-threshold", triage.DefaultPolicy.NodeFailDrainThreshold, "NODE_FAIL jobs before recommending a drain")
@@ -74,6 +78,7 @@ func main() {
 		EventWindow:   *events,
 		AllowWrites:   *allowWrites,
 		Version:       version,
+		ClusterName:   *clusterName,
 	}
 	switch {
 	case *noSlurm:
@@ -112,8 +117,21 @@ func main() {
 			log.Printf("no Kubernetes credentials in %s; triaging Slurm only", *kubeDir)
 		}
 	}
-	if cfg.Client == nil && cfg.Kube == nil {
-		log.Fatal("nothing to triage: Slurm disabled and no Kubernetes credentials")
+	switch {
+	case *slinkyFix != "":
+		cfg.Slinky = &slurm.Client{Runner: &slurm.FixtureRunner{Dir: *slinkyFix}, Location: loc}
+		log.Printf("serving Slinky fixtures from %s; writes are recorded, not executed", *slinkyFix)
+	default:
+		if _, err := os.Stat(filepath.Join(*slinkyDir, "url")); err == nil {
+			c, err := slurm.NewRESTFromDir(*slinkyDir)
+			if err != nil {
+				log.Fatalf("slinky: %v", err)
+			}
+			cfg.Slinky = c
+		}
+	}
+	if cfg.Client == nil && cfg.Slinky == nil && cfg.Kube == nil {
+		log.Fatal("nothing to triage: no Slurm cluster and no Kubernetes credentials")
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

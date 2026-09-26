@@ -19,7 +19,7 @@ cert-manager          webhook certificates for the operator (its no-cert-manager
 slinky-oci-repo       Argo CD repository entry for ghcr.io/slinkyproject/charts (public OCI, no credentials)
 slurm-operator-crds   the CRDs, separate so an operator change can't delete them (never pruned)
 slurm-operator        the operator; cordoning a K8s node drains its Slurm node, with NPD's condition as the reason
-slurm                 the cluster: slurmctld + 2 slurmd pods + slurmrestd, metrics to Prometheus
+slurm                 the cluster: slurmctld + 2 slurmd pods + slurmrestd (LAN LB, JWT-protected, read by node-triage), metrics to Prometheus
 ```
 
 Helm-chart apps keep their values inline in `apps/`: `gitlab-runner`, and
