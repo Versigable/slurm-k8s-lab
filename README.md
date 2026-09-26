@@ -32,7 +32,7 @@ scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 - [x] **5 — Node-triage MCP server (Go):** Slurm and Kubernetes (4 read-only tools, opt-in guarded writes; tested on 6 Slurm and 6 Kubernetes captured scenarios)
 - [x] **GitOps + CI:** Argo CD (app of apps from `gitops/`, pulled from GitLab over the LAN with a read-only deploy token) owns the add-ons after bootstrap; GitLab CI runs on a Kubernetes-executor runner inside the cluster and `main` requires a green pipeline
 - [x] **2 — kubeadm Kubernetes:** v1.36.5 (pinned to Cilium 1.20's tested range, not the newer 1.37), Cilium as kube-proxy replacement + Hubble, Cilium LB-IPAM with L2 announcements on the LAN (`10.0.5.140–149`) instead of MetalLB, local-path storage, `k8s-verify.yml`. kube-prometheus-stack and node-problem-detector (v1.36.0) run as Argo CD apps
-- [~] **3 — Slinky:** Slurm on Kubernetes (slurm-operator 1.2.2 via Argo CD, cert-manager for its webhook). Kubernetes node conditions from node-problem-detector drain the matching Slurm node. Comparison with the classic cluster in progress
+- [x] **3 — Slinky:** Slurm 26.05 on Kubernetes (slurm-operator 1.2.2 via Argo CD, cert-manager for its webhook). Cordoning a Kubernetes node drains its Slurm node with the node-problem-detector condition as the reason. [Classic vs Slinky comparison](docs/classic-vs-slinky.md)
 - [ ] **4 — Failure drills (ongoing):** node death mid-job, drains, health-check failures, munge/clock faults, cordon + PodDisruptionBudgets, cert expiry
 
 ## Usage

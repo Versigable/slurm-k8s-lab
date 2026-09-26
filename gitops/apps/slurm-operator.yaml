@@ -16,9 +16,13 @@ spec:
           enabled: false        # owned by the slurm-operator-crds app
         certManager:
           enabled: true
-        # Drain the Slurm node whose pod runs on a Kubernetes node with one of
-        # these conditions. Both come from node-problem-detector, so a kernel
-        # fault seen by Kubernetes also takes the node out of Slurm.
+        # When a Kubernetes node is cordoned, the operator drains the Slurm node
+        # whose pod runs there. These conditions don't trigger that; they supply
+        # the Slurm drain *reason* ("(Reason: Message)" for each one that is True).
+        # Both come from node-problem-detector, so cordoning a node for a kernel
+        # fault puts the fault itself on the Slurm side. Verified 2026-09-26:
+        # cordon k8s-w1 -> slinky-0 drained in 1 s with
+        # "(FilesystemIsReadOnly: EXT4-fs (vda1): Remounting filesystem read-only)".
         propagatedNodeConditions:
           - ReadonlyFilesystem
           - KernelDeadlock
