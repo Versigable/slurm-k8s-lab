@@ -87,3 +87,22 @@ func TestSlinkyPodParsing(t *testing.T) {
 		}
 	}
 }
+
+func TestSlinkyMirrorsProblemClassNotKubernetesActions(t *testing.T) {
+	// k8s-w1 cordoned for maintenance with pods still on it: the Kubernetes
+	// recommendation is "drain" (finish evicting). The Slurm node, already
+	// drained by the operator, must not be told to "drain".
+	s := slinkyFixture(t, "slinky-cordoned-readonly", true)
+	for i := range s.Kube.Nodes {
+		if s.Kube.Nodes[i].Metadata.Name == "k8s-w1" {
+			// no fault, just the cordon
+			s.Kube.Nodes[i].Status.Conditions = kubeNode("x", map[string]string{"Ready": "True"}).Status.Conditions
+		}
+	}
+	if kr := mustAssessKube(t, *s.Kube, "k8s-w1"); kr.Action != ActionDrain {
+		t.Fatalf("precondition: k8s-w1 should be 'drain', got %s", kr.Action)
+	}
+	if r := mustAssess(t, s, "slinky-0"); r.Action != ActionWait {
+		t.Errorf("slinky-0: got %s, want wait (nothing to do in Slurm)", r.Action)
+	}
+}

@@ -255,12 +255,17 @@ func (a assessor) kubernetesManaged(r *Recommendation, pod slurm.SlinkyPod) {
 	if a.s.Kube != nil {
 		if kr, err := AssessKube(*a.s.Kube, pod.Node, a.p); err == nil {
 			r.Evidence = append(r.Evidence, fmt.Sprintf("Kubernetes node %s: %s/%s: %s", pod.Node, kr.Action, kr.Severity, kr.Summary))
+			// Mirror the problem class (hardware, investigate), not actions that
+			// are performed on the Kubernetes node: "drain" or "resume" here would
+			// read as instructions for this already-drained Slurm node.
 			switch kr.Action {
 			case ActionNone:
 				r.Action, r.Severity = ActionWait, SeverityInfo
 				r.Summary = fmt.Sprintf("Kubernetes node %s is back in service; the Slinky operator should undrain this node within seconds.", pod.Node)
-			default:
+			case ActionEscalateHardware, ActionInvestigate:
 				r.Action, r.Severity = kr.Action, kr.Severity
+			default:
+				r.Action, r.Severity = ActionWait, kr.Severity
 			}
 		}
 	}
