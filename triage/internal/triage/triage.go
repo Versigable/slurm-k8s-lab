@@ -8,7 +8,6 @@
 package triage
 
 import (
-	"cmp"
 	"fmt"
 	"regexp"
 	"slices"
@@ -66,12 +65,13 @@ const (
 
 // Recommendation is the answer for one node.
 type Recommendation struct {
-	Node     string   `json:"node" jsonschema:"node name"`
-	Action   Action   `json:"action" jsonschema:"one of none, wait, drain, resume, investigate, escalate_hardware"`
-	Severity Severity `json:"severity" jsonschema:"info, warning or critical"`
-	Category Category `json:"category" jsonschema:"classification of the node's drain/down reason"`
-	Summary  string   `json:"summary" jsonschema:"one-line explanation"`
-	Evidence []string `json:"evidence" jsonschema:"facts from Slurm that support the recommendation"`
+	Node      string   `json:"node" jsonschema:"node name"`
+	Scheduler string   `json:"scheduler" jsonschema:"slurm or kubernetes"`
+	Action    Action   `json:"action" jsonschema:"one of none, wait, drain, resume, investigate, escalate_hardware"`
+	Severity  Severity `json:"severity" jsonschema:"info, warning or critical"`
+	Category  Category `json:"category" jsonschema:"classification of the node's drain/down reason"`
+	Summary   string   `json:"summary" jsonschema:"one-line explanation"`
+	Evidence  []string `json:"evidence" jsonschema:"facts from Slurm that support the recommendation"`
 	// Preconditions must be true before acting (the tool can't verify them).
 	Preconditions []string `json:"preconditions,omitempty" jsonschema:"things a human must confirm before acting"`
 	NextSteps     []string `json:"next_steps,omitempty" jsonschema:"what to do, in order"`
@@ -94,10 +94,12 @@ type Policy struct {
 	NodeFailDrainThreshold int
 	// Drain/down events on one node (within the event window) that mark it as chronic.
 	ChronicEventThreshold int
+	// node-problem-detector kernel events on a Ready Kubernetes node before it's flagged.
+	KubeEventThreshold int
 }
 
 // DefaultPolicy is deliberately conservative for a small cluster.
-var DefaultPolicy = Policy{NodeFailDrainThreshold: 2, ChronicEventThreshold: 3}
+var DefaultPolicy = Policy{NodeFailDrainThreshold: 2, ChronicEventThreshold: 3, KubeEventThreshold: 3}
 
 func (p Policy) withDefaults() Policy {
 	if p.NodeFailDrainThreshold <= 0 {
@@ -105,6 +107,9 @@ func (p Policy) withDefaults() Policy {
 	}
 	if p.ChronicEventThreshold <= 0 {
 		p.ChronicEventThreshold = DefaultPolicy.ChronicEventThreshold
+	}
+	if p.KubeEventThreshold <= 0 {
+		p.KubeEventThreshold = DefaultPolicy.KubeEventThreshold
 	}
 	return p
 }
@@ -155,12 +160,7 @@ func AssessAll(s Snapshot, p Policy) []Recommendation {
 		r, _ := Assess(s, n.Name, p)
 		recs = append(recs, r)
 	}
-	slices.SortStableFunc(recs, func(a, b Recommendation) int {
-		if c := cmp.Compare(b.Severity.rank(), a.Severity.rank()); c != 0 {
-			return c
-		}
-		return cmp.Compare(a.Node, b.Node)
-	})
+	SortRecommendations(recs)
 	return recs
 }
 
@@ -172,7 +172,7 @@ type assessor struct {
 
 func (a assessor) assess() Recommendation {
 	n := a.n
-	r := Recommendation{Node: n.Name, Category: Classify(n.Reason)}
+	r := Recommendation{Node: n.Name, Scheduler: SchedulerSlurm, Category: Classify(n.Reason)}
 	r.Evidence = append(r.Evidence, a.stateLine())
 	if n.Reason != "" {
 		r.Evidence = append(r.Evidence, a.reasonLine())

@@ -12,6 +12,7 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/Versigable/slurm-k8s-lab/triage/internal/kube"
 	"github.com/Versigable/slurm-k8s-lab/triage/internal/slurm"
 )
 
@@ -151,5 +152,104 @@ func TestDrainNeedsReason(t *testing.T) {
 	}
 	if !res.IsError || len(fr.Writes()) != 0 {
 		t.Fatalf("an empty reason must be rejected without writing: isError=%v writes=%v", res.IsError, fr.Writes())
+	}
+}
+
+// connectBoth serves a Slurm scenario and a Kubernetes scenario together.
+func connectBoth(t *testing.T, slurmScenario, kubeScenario string, allowWrites bool) (*mcp.ClientSession, *slurm.FixtureRunner, *kube.FixtureSource) {
+	t.Helper()
+	ctx := context.Background()
+	loc, err := time.LoadLocation("America/Denver")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fr := &slurm.FixtureRunner{Dir: filepath.Join("..", "slurm", "testdata", slurmScenario)}
+	ks := &kube.FixtureSource{Dir: filepath.Join("..", "kube", "testdata", kubeScenario)}
+	at, err := (&slurm.FixtureRunner{Dir: ks.Dir}).CapturedAt()
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := New(Config{
+		Client:      &slurm.Client{Runner: fr, Location: loc},
+		Kube:        ks,
+		AllowWrites: allowWrites,
+		Now:         func() time.Time { return at },
+		Version:     "test",
+	})
+	st, ct := mcp.NewInMemoryTransports()
+	if _, err := srv.Connect(ctx, st, nil); err != nil {
+		t.Fatal(err)
+	}
+	cs, err := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "test"}, nil).Connect(ctx, ct, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { cs.Close() })
+	return cs, fr, ks
+}
+
+func TestTriageClusterAcrossSchedulers(t *testing.T) {
+	cs, _, _ := connectBoth(t, "gres-missing", "readonly-fs", false)
+	var out TriageClusterOutput
+	call(t, cs, "triage_cluster", nil, &out)
+	if out.TotalNodes != 5 || len(out.Recommendations) != 2 {
+		t.Fatalf("got %d nodes / %d recommendations, want 5 / 2: %+v", out.TotalNodes, len(out.Recommendations), out.Recommendations)
+	}
+	got := map[string]string{}
+	for _, r := range out.Recommendations {
+		if r.Severity != "critical" || r.Action != "escalate_hardware" {
+			t.Errorf("%s: %s/%s, want escalate_hardware/critical", r.Node, r.Action, r.Severity)
+		}
+		got[r.Node] = r.Scheduler
+	}
+	if got["slurm-c1"] != "slurm" || got["k8s-w1"] != "kubernetes" {
+		t.Errorf("schedulers = %v", got)
+	}
+
+	var nodes ListNodesOutput
+	call(t, cs, "list_nodes", nil, &nodes)
+	if len(nodes.Nodes) != 5 {
+		t.Errorf("list_nodes returned %d nodes, want 5 (2 Slurm + 3 Kubernetes)", len(nodes.Nodes))
+	}
+}
+
+func TestKubeNodeDetail(t *testing.T) {
+	cs, _, _ := connectBoth(t, "healthy", "readonly-fs", false)
+	var out NodeDetailOutput
+	call(t, cs, "node_detail", map[string]any{"node": "k8s-w1"}, &out)
+	if out.Node.Scheduler != "kubernetes" || !slices.Contains(out.Node.State, "ReadonlyFilesystem") {
+		t.Fatalf("node summary: %+v", out.Node)
+	}
+	if !slices.ContainsFunc(out.Conditions, func(c string) bool { return strings.HasPrefix(c, "ReadonlyFilesystem=True (FilesystemIsReadOnly)") }) {
+		t.Errorf("conditions: %v", out.Conditions)
+	}
+	if !slices.ContainsFunc(out.KubeEvents, func(e string) bool { return strings.Contains(e, "FilesystemIsReadOnly") }) {
+		t.Errorf("events: %v", out.KubeEvents)
+	}
+}
+
+func TestDrainNodeCordonsKubernetesNodes(t *testing.T) {
+	cs, fr, ks := connectBoth(t, "healthy", "healthy", true)
+	var out WriteOutput
+	call(t, cs, "drain_node", map[string]any{"node": "k8s-w2", "reason": "disk errors in dmesg"}, &out)
+	if !out.Done || len(fr.Writes()) != 0 {
+		t.Fatalf("done=%v slurm writes=%v", out.Done, fr.Writes())
+	}
+	w := ks.Writes()
+	if len(w) != 1 || !strings.Contains(w[0], `"unschedulable":true`) || !strings.Contains(w[0], `"triage: disk errors in dmesg"`) {
+		t.Errorf("want one cordon patch with the triage reason, got %v", w)
+	}
+}
+
+func TestResumeRefusesKubernetesHardwareFault(t *testing.T) {
+	cs, _, ks := connectBoth(t, "healthy", "readonly-fs", true)
+	var out WriteOutput
+	call(t, cs, "resume_node", map[string]any{"node": "k8s-w1"}, &out)
+	if out.Done || !strings.HasPrefix(out.Note, "refused") || len(ks.Writes()) != 0 {
+		t.Fatalf("uncordon of a read-only-filesystem node: done=%v note=%q writes=%v", out.Done, out.Note, ks.Writes())
+	}
+	call(t, cs, "resume_node", map[string]any{"node": "k8s-w1", "force": true}, &out)
+	if w := ks.Writes(); !out.Done || len(w) != 1 || !strings.Contains(w[0], `"unschedulable":false`) {
+		t.Fatalf("forced uncordon: done=%v writes=%v", out.Done, w)
 	}
 }

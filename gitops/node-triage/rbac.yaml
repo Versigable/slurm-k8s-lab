@@ -1,0 +1,68 @@
+# Identity for the node-triage MCP server, which runs off-cluster on slurm-ctl.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: node-triage
+  namespace: kube-system
+---
+# Long-lived token for that off-cluster client, filled in by the token
+# controller. ansible/triage.yml copies it to slurm-ctl; it never enters git.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: node-triage-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: node-triage
+type: kubernetes.io/service-account-token
+---
+# Everything triage reads: nodes (conditions, taints, cordon), pods (what a
+# drain would evict), node events (NPD kernel events), PDBs (what blocks a drain).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-triage-read
+rules:
+  - apiGroups: [""]
+    resources: [nodes, pods, events]
+    verbs: [get, list]
+  - apiGroups: [policy]
+    resources: [poddisruptionbudgets]
+    verbs: [list]
+---
+# The only write: cordon/uncordon (a merge patch on the node). The server
+# only calls it when started with -allow-writes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-triage-cordon
+rules:
+  - apiGroups: [""]
+    resources: [nodes]
+    verbs: [patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: node-triage-read
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: node-triage-read
+subjects:
+  - kind: ServiceAccount
+    name: node-triage
+    namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: node-triage-cordon
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: node-triage-cordon
+subjects:
+  - kind: ServiceAccount
+    name: node-triage
+    namespace: kube-system

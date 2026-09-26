@@ -29,7 +29,7 @@ scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 
 - [x] **0 — Foundations:** Terraform + Ansible, scoped Proxmox token, template; destroy → apply → converge → verify proven
 - [ ] **1 — Classic Slurm:** munge, slurmctld/slurmd, slurmdbd accounting, cgroup v2, fake GPU GRES, `burnin` → `batch` node flow, fairshare/QOS, node health checks, maintenance reservations
-- [~] **5 — Node-triage MCP server (Go):** Slurm side done (4 read-only tools, opt-in guarded writes, tested on 6 captured failure scenarios). Kubernetes side comes after phase 2
+- [x] **5 — Node-triage MCP server (Go):** Slurm and Kubernetes (4 read-only tools, opt-in guarded writes; tested on 6 Slurm and 6 Kubernetes captured scenarios)
 - [x] **GitOps + CI:** Argo CD (app of apps from `gitops/`, pulled from GitLab over the LAN with a read-only deploy token) owns the add-ons after bootstrap; GitLab CI runs on a Kubernetes-executor runner inside the cluster and `main` requires a green pipeline
 - [x] **2 — kubeadm Kubernetes:** v1.36.5 (pinned to Cilium 1.20's tested range, not the newer 1.37), Cilium as kube-proxy replacement + Hubble, Cilium LB-IPAM with L2 announcements on the LAN (`10.0.5.140–149`) instead of MetalLB, local-path storage, `k8s-verify.yml`. kube-prometheus-stack and node-problem-detector (v1.36.0) run as Argo CD apps
 - [ ] **3 — Slinky:** Slurm on Kubernetes; the same jobs run on classic and Slinky, with a comparison write-up
@@ -91,7 +91,7 @@ Both scripts pipe tokens from the GitLab API straight into Kubernetes Secrets; n
 
 *Claude Code with only the node-triage tools, on the real lab: a lost GPU is escalated, a resume is refused by the server's hardware guard, and an approved maintenance drain goes through. How it was recorded, and what varies between runs: [`demo/`](demo/README.md).*
 
-`triage/` is a Go MCP server that answers the on-call question *"what should I do with this node?"* for a Slurm cluster.
+`triage/` is a Go MCP server that answers the on-call question *"what should I do with this node?"* for a Slurm cluster and a Kubernetes cluster side by side. Slurm is read through its CLIs' JSON output; Kubernetes through the API server with a least-privilege ServiceAccount (read nodes/pods/events/PDBs, patch nodes for cordon only; `gitops/node-triage`).
 
 | Tool | What it does |
 |---|---|
@@ -99,11 +99,11 @@ Both scripts pipe tokens from the GitLab API straight into Kubernetes Secrets; n
 | `triage_node` | One node: action (`none` / `wait` / `drain` / `resume` / `investigate` / `escalate_hardware`), severity, evidence, preconditions, suggested commands |
 | `node_detail` | State, reason and who set it, running jobs, recent job outcomes, drain/down events |
 | `list_nodes` | Every node with state flags, CPU and GPU usage |
-| `drain_node` / `resume_node` | **Only with `-allow-writes`.** `resume_node` refuses nodes triage flags as hardware faults unless `force=true` |
+| `drain_node` / `resume_node` | **Only with `-allow-writes`.** Slurm drain/resume or Kubernetes cordon/uncordon. `resume_node` refuses nodes triage flags as hardware faults unless `force=true` |
 
 The decisions come from deterministic rules in `internal/triage`, not the model, so the same cluster state always gets the same answer and every answer cites the Slurm facts behind it. The LLM client picks what to look at and explains the result. [`skills/triage-slurm-node/SKILL.md`](skills/triage-slurm-node/SKILL.md) tells an agent how to use it and where to stop.
 
-The tests run against **real captures** from this lab. `triage/scripts/capture-scenarios.sh` breaks the cluster on purpose (health-check drain, maintenance drain with an unbounded job, a lost GPU, slurmd dying mid-job), saves what Slurm reports, and restores the cluster.
+The tests run against **real captures** from this lab. `triage/scripts/capture-scenarios.sh` breaks the Slurm cluster on purpose (health-check drain, maintenance drain with an unbounded job, a lost GPU, slurmd dying mid-job, a host powered off), and `capture-k8s-scenarios.sh` does the same for Kubernetes (a read-only filesystem and a hung task injected into the kernel log for node-problem-detector, a cordon blocked by a PodDisruptionBudget, a stopped kubelet, repeated kernel events). Both save what the scheduler reports and restore the cluster.
 
 ```bash
 cd triage && make build && cd ../ansible && ansible-playbook triage.yml   # installs on slurm-ctl

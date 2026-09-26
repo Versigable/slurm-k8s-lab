@@ -1,0 +1,62 @@
+{
+ "items": [
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:01:19Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:01:19Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:01:19Z",
+    "name": "k8s-w1.18d8d01dfe399a68",
+    "namespace": "default",
+    "resourceVersion": "284699",
+    "uid": "b127c835-2393-4414-b82e-34f392e27062"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "readonly-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "readonly-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:01:19Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:01:19Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:01:19Z",
+    "name": "k8s-w1.18d8d01dfe3a1812",
+    "namespace": "default",
+    "resourceVersion": "284700",
+    "uid": "5d7e86fc-583e-4687-9677-6056cd903b79"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  }
+ ]
+}

@@ -9,6 +9,7 @@ apps/          one Argo CD Application per add-on; the root app ("lab-root") syn
 lb-pool/                Cilium LoadBalancer IP pool + L2 announcement policy (10.0.5.140-149)
 local-path/             local-path-provisioner, pinned, patched to be the default StorageClass
 node-problem-detector/  upstream v1.36.0 manifests + metrics patch + PodMonitor
+node-triage/            ServiceAccount + RBAC for the node-triage MCP server (read; patch nodes only for cordon)
 ```
 
 Helm-chart apps keep their values inline in `apps/`: `gitlab-runner`, and

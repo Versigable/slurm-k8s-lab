@@ -1,0 +1,526 @@
+{
+ "items": [
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:01:19Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:01:19Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:01:19Z",
+    "name": "k8s-w1.18d8d01dfe399a68",
+    "namespace": "default",
+    "resourceVersion": "284699",
+    "uid": "b127c835-2393-4414-b82e-34f392e27062"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "readonly-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "readonly-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:01:19Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:01:19Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:01:19Z",
+    "name": "k8s-w1.18d8d01dfe3a1812",
+    "namespace": "default",
+    "resourceVersion": "284700",
+    "uid": "5d7e86fc-583e-4687-9677-6056cd903b79"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:01:30Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:01:30Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:01:30Z",
+    "name": "k8s-w1.18d8d02097e33bee",
+    "namespace": "default",
+    "resourceVersion": "284760",
+    "uid": "1e050f57-f971-4d47-a30a-35efdffa3833"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:01:30Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:01:30Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:01:30Z",
+    "name": "k8s-w1.18d8d020a3c9074f",
+    "namespace": "default",
+    "resourceVersion": "284766",
+    "uid": "0e1f70fa-aefc-420f-90f2-3b983f3fb924"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "readonly-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "readonly-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:09:21Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:09:21Z",
+   "message": "task docker:4242 blocked for more than 120 seconds.",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:09:21Z",
+    "name": "k8s-w1.18d8d08e45fdcac9",
+    "namespace": "default",
+    "resourceVersion": "286286",
+    "uid": "aa1188c6-a853-48d2-bd31-0b5485791db5"
+   },
+   "reason": "TaskHung",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:09:21Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:09:21Z",
+   "message": "Node condition KernelDeadlock is now: True, reason: DockerHung, message: \"task docker:4242 blocked for more than 120 seconds.\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:09:21Z",
+    "name": "k8s-w1.18d8d08e45fde8a5",
+    "namespace": "default",
+    "resourceVersion": "286287",
+    "uid": "a79a4ef7-0eb8-411c-b0d1-4622463741d5"
+   },
+   "reason": "DockerHung",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:14:50Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:14:50Z",
+   "message": "Node k8s-w2 status is now: NodeNotSchedulable",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:14:50Z",
+    "name": "k8s-w2.18d8d0dae4202b3c",
+    "namespace": "default",
+    "resourceVersion": "287408",
+    "uid": "df941d6e-f966-48d2-b01b-dfac96a977ca"
+   },
+   "reason": "NodeNotSchedulable",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w2"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:15:00Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:15:00Z",
+   "message": "Node k8s-w2 status is now: NodeSchedulable",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:15:00Z",
+    "name": "k8s-w2.18d8d0dd4b56f6be",
+    "namespace": "default",
+    "resourceVersion": "287444",
+    "uid": "9a49e728-3d71-4e75-8214-bf373e5dae00"
+   },
+   "reason": "NodeSchedulable",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w2"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:15:56Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2",
+    "uid": "2309f504-44f3-4030-986f-0dfbea1a9ac9"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:15:56Z",
+   "message": "Node k8s-w2 status is now: NodeNotReady",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:15:56Z",
+    "name": "k8s-w2.18d8d0ea3be84bd2",
+    "namespace": "default",
+    "resourceVersion": "287666",
+    "uid": "c1f15f5e-5d1d-4867-9709-91a6812607bd"
+   },
+   "reason": "NodeNotReady",
+   "reportingComponent": "node-controller",
+   "reportingInstance": "",
+   "source": {
+    "component": "node-controller"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:16:09Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:16:09Z",
+   "message": "Starting kubelet.",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:16:09Z",
+    "name": "k8s-w2.18d8d0ed3f0ff5e6",
+    "namespace": "default",
+    "resourceVersion": "287778",
+    "uid": "ef63955d-5089-4286-8c70-090bae27e372"
+   },
+   "reason": "Starting",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w2"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 2,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:16:09Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:16:09Z",
+   "message": "Node k8s-w2 status is now: NodeHasSufficientMemory",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:16:09Z",
+    "name": "k8s-w2.18d8d0ed4324eea8",
+    "namespace": "default",
+    "resourceVersion": "287787",
+    "uid": "b789f718-9c68-4475-9676-f8dc92384ada"
+   },
+   "reason": "NodeHasSufficientMemory",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w2"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 2,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:16:09Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:16:09Z",
+   "message": "Node k8s-w2 status is now: NodeHasNoDiskPressure",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:16:09Z",
+    "name": "k8s-w2.18d8d0ed432505fb",
+    "namespace": "default",
+    "resourceVersion": "287788",
+    "uid": "33c587a2-324f-47e5-98ec-3124a8c8dc0b"
+   },
+   "reason": "NodeHasNoDiskPressure",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w2"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 2,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:16:09Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:16:09Z",
+   "message": "Node k8s-w2 status is now: NodeHasSufficientPID",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:16:09Z",
+    "name": "k8s-w2.18d8d0ed43251123",
+    "namespace": "default",
+    "resourceVersion": "287789",
+    "uid": "c000944b-ae07-4bbe-a22c-086373be2918"
+   },
+   "reason": "NodeHasSufficientPID",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w2"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:16:09Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:16:09Z",
+   "message": "Node k8s-w2 status is now: NodeReady",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:16:09Z",
+    "name": "k8s-w2.18d8d0ed43252247",
+    "namespace": "default",
+    "resourceVersion": "287784",
+    "uid": "b3e7f32c-742a-46fe-b0c1-548045420626"
+   },
+   "reason": "NodeReady",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w2"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:16:09Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:16:09Z",
+   "message": "Updated Node Allocatable limit across pods",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:16:09Z",
+    "name": "k8s-w2.18d8d0ed432d915e",
+    "namespace": "default",
+    "resourceVersion": "287786",
+    "uid": "98c1674d-1769-4920-81dc-49c8ebe00395"
+   },
+   "reason": "NodeAllocatableEnforced",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w2"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:16:10Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:16:10Z",
+   "message": "task kworker/u8:2:117 blocked for more than 120 seconds.",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:16:10Z",
+    "name": "k8s-w2.18d8d0ed85c281ca",
+    "namespace": "default",
+    "resourceVersion": "287816",
+    "uid": "71bba993-f3cd-40f3-bb1f-7f6241adf120"
+   },
+   "reason": "TaskHung",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w2"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:16:13Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:16:13Z",
+   "message": "task kworker/u8:2:118 blocked for more than 120 seconds.",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:16:13Z",
+    "name": "k8s-w2.18d8d0ee23d386ab",
+    "namespace": "default",
+    "resourceVersion": "287850",
+    "uid": "a311c19f-604a-4ac7-83d5-cb07a5989134"
+   },
+   "reason": "TaskHung",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w2"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T08:16:15Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T08:16:15Z",
+   "message": "task kworker/u8:2:119 blocked for more than 120 seconds.",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T08:16:15Z",
+    "name": "k8s-w2.18d8d0eec03aa973",
+    "namespace": "default",
+    "resourceVersion": "287863",
+    "uid": "fe3dfc90-a934-411d-a9af-a375c44edefa"
+   },
+   "reason": "TaskHung",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w2"
+   },
+   "type": "Warning"
+  }
+ ]
+}

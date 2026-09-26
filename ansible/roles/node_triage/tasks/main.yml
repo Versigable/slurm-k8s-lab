@@ -21,6 +21,62 @@
   when: node_triage_adminlevel.stdout | trim != 'Administrator'
   changed_when: true
 
+# --- Kubernetes access (only when the lab has a K8s cluster) ---------------------------
+# The ServiceAccount, RBAC and token Secret come from gitops/node-triage (Argo CD).
+# Copy the API URL, CA and token to /etc/node-triage, where the server finds them
+# by default. The token only passes through Ansible memory.
+- name: Kubernetes access for node-triage
+  when: groups['k8s_control_plane'] | default([]) | length > 0
+  block:
+    - name: Read the node-triage ServiceAccount token and cluster CA
+      ansible.builtin.command: >
+        kubectl -n kube-system get secret node-triage-token -o jsonpath='{.data}'
+      delegate_to: "{{ groups['k8s_control_plane'][0] }}"
+      environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+      register: node_triage_k8s_secret
+      changed_when: false
+      no_log: true
+
+    - name: Stop if Argo CD hasn't created the token yet
+      ansible.builtin.fail:
+        msg: "kube-system/node-triage-token is missing or empty; is the node-triage Argo CD app synced?"
+      when: >-
+        node_triage_k8s_secret.stdout | length == 0 or
+        (node_triage_k8s_secret.stdout | from_json).token | default('') | length == 0
+
+    - name: Config directory
+      ansible.builtin.file:
+        path: /etc/node-triage
+        state: directory
+        owner: root
+        group: "{{ node_triage_user }}"
+        mode: "0750"
+
+    - name: API server URL
+      ansible.builtin.copy:
+        dest: /etc/node-triage/api-url
+        content: "https://{{ hostvars[groups['k8s_control_plane'][0]].ansible_host }}:6443\n"
+        owner: root
+        group: "{{ node_triage_user }}"
+        mode: "0640"
+
+    - name: Cluster CA certificate
+      ansible.builtin.copy:
+        dest: /etc/node-triage/ca.crt
+        content: "{{ (node_triage_k8s_secret.stdout | from_json)['ca.crt'] | b64decode }}"
+        owner: root
+        group: "{{ node_triage_user }}"
+        mode: "0640"
+
+    - name: ServiceAccount token
+      ansible.builtin.copy:
+        dest: /etc/node-triage/token
+        content: "{{ (node_triage_k8s_secret.stdout | from_json).token | b64decode }}"
+        owner: root
+        group: "{{ node_triage_user }}"
+        mode: "0640"
+      no_log: true
+
 - name: Smoke-test the binary
   ansible.builtin.command: /usr/local/bin/node-triage -version
   changed_when: false
