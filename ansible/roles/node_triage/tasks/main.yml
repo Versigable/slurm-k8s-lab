@@ -77,6 +77,95 @@
         mode: "0640"
       no_log: true
 
+# --- Slinky (Slurm on Kubernetes) through slurmrestd --------------------------------
+# Two Slurm JWTs, minted by slurmctld itself (`scontrol token`):
+#   token-read  for user nobody: reads nodes/jobs, can't change anything
+#               (verified: a drain as nobody gets "Invalid user id");
+#   token-admin for the SlurmUser, used only by drain/resume. Slinky runs
+#               without accounting, so Slurm has no admin levels to grant.
+# Re-minted when either has under 7 days left; they only pass through Ansible memory.
+- name: Slinky access for node-triage
+  when: groups['k8s_control_plane'] | default([]) | length > 0
+  block:
+    - name: Is there a Slinky cluster?
+      ansible.builtin.command: kubectl -n slurm get pod slurm-controller-0 -o name
+      delegate_to: "{{ groups['k8s_control_plane'][0] }}"
+      environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+      register: node_triage_slinky_present
+      changed_when: false
+      failed_when: false
+
+    - name: Configure Slinky access
+      when: node_triage_slinky_present.rc == 0
+      block:
+        - name: Read the slurmrestd LoadBalancer IP
+          ansible.builtin.command: kubectl -n slurm get svc slurm-restapi -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+          delegate_to: "{{ groups['k8s_control_plane'][0] }}"
+          environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+          register: node_triage_slinky_ip
+          changed_when: false
+          failed_when: node_triage_slinky_ip.stdout | length == 0
+
+        - name: Slinky config directory
+          ansible.builtin.file:
+            path: /etc/node-triage/slinky
+            state: directory
+            owner: root
+            group: "{{ node_triage_user }}"
+            mode: "0750"
+
+        - name: Write the slurmrestd URL
+          ansible.builtin.copy:
+            dest: /etc/node-triage/slinky/url
+            content: "http://{{ node_triage_slinky_ip.stdout }}:6820\n"
+            owner: root
+            group: "{{ node_triage_user }}"
+            mode: "0640"
+
+        - name: Days left on the current tokens (-1 if missing)
+          ansible.builtin.shell: |
+            set -o pipefail
+            python3 - <<'PY'
+            import base64, json, os, time
+            days = []
+            for f in ("token-read", "token-admin"):
+                p = "/etc/node-triage/slinky/" + f
+                try:
+                    payload = open(p).read().strip().split(".")[1]
+                    exp = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))["exp"]
+                    days.append((exp - time.time()) / 86400)
+                except Exception:
+                    days.append(-1)
+            print(int(min(days)))
+            PY
+          args:
+            executable: /bin/bash
+          register: node_triage_slinky_days
+          changed_when: false
+
+        - name: Mint Slinky tokens (30 days)
+          ansible.builtin.command: >
+            kubectl -n slurm exec slurm-controller-0 -c slurmctld --
+            scontrol token username={{ item }} lifespan=2592000
+          delegate_to: "{{ groups['k8s_control_plane'][0] }}"
+          environment: { KUBECONFIG: /etc/kubernetes/admin.conf }
+          loop: [nobody, slurm]
+          register: node_triage_slinky_tokens
+          when: node_triage_slinky_days.stdout | int < 7
+          changed_when: true
+          no_log: true
+
+        - name: Install Slinky tokens
+          ansible.builtin.copy:
+            dest: "/etc/node-triage/slinky/{{ item.0 }}"
+            content: "{{ item.1.stdout | regex_replace('^SLURM_JWT=', '') | trim }}\n"
+            owner: root
+            group: "{{ node_triage_user }}"
+            mode: "0640"
+          loop: "{{ ['token-read', 'token-admin'] | zip(node_triage_slinky_tokens.results) | list }}"
+          when: node_triage_slinky_days.stdout | int < 7
+          no_log: true
+
 - name: Smoke-test the binary
   ansible.builtin.command: /usr/local/bin/node-triage -version
   changed_when: false

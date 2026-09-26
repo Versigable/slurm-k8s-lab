@@ -1,0 +1,268 @@
+{
+  "nodes": [
+    {
+      "architecture": "x86_64",
+      "burstbuffer_network_address": "",
+      "boards": 1,
+      "boot_time": {
+        "set": true,
+        "infinite": false,
+        "number": 1790313870
+      },
+      "tls_cert_last_renewal": {
+        "set": true,
+        "infinite": false,
+        "number": 0
+      },
+      "cert_flags": [],
+      "cluster_name": "",
+      "cores": 4,
+      "specialized_cores": 0,
+      "cpu_binding": 0,
+      "cpu_load": 10,
+      "free_mem": {
+        "set": true,
+        "infinite": false,
+        "number": 702
+      },
+      "cpus": 4,
+      "effective_cpus": 4,
+      "specialized_cpus": "",
+      "energy": {
+        "average_watts": 0,
+        "base_consumed_energy": 0,
+        "consumed_energy": 0,
+        "current_watts": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "previous_consumed_energy": 0,
+        "last_collected": 0
+      },
+      "extra": "",
+      "features": [
+        "slinky"
+      ],
+      "active_features": [
+        "slinky"
+      ],
+      "gpu_spec": "",
+      "gres": "",
+      "gres_drained": "N\/A",
+      "gres_used": "",
+      "instance_id": "",
+      "instance_type": "",
+      "last_busy": {
+        "set": true,
+        "infinite": false,
+        "number": 1790461711
+      },
+      "mcs_label": "",
+      "specialized_memory": 0,
+      "name": "slinky-1",
+      "next_state_after_reboot": [
+        "INVALID"
+      ],
+      "address": "10.244.2.253",
+      "hostname": "slinky-1",
+      "state": [
+        "IDLE",
+        "DYNAMIC_NORM"
+      ],
+      "operating_system": "Linux 6.12.107+deb13-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.107-1 (2026-08-29)",
+      "owner": "",
+      "partitions": [
+        "all"
+      ],
+      "port": 6818,
+      "real_memory": 7947,
+      "res_cores_per_gpu": 0,
+      "comment": "{\"namespace\":\"slurm\",\"podName\":\"slurm-worker-slinky-1\",\"node\":\"k8s-w2\",\"nodeSetName\":\"slurm-worker-slinky\",\"nodeSetUID\":\"b5f67685-7b23-45e5-bdb2-da4d0baadfa3\"}",
+      "reason": "",
+      "reason_changed_at": {
+        "set": true,
+        "infinite": false,
+        "number": 0
+      },
+      "reason_set_by_user": "",
+      "resume_after": {
+        "set": true,
+        "infinite": false,
+        "number": 0
+      },
+      "reservation": "",
+      "suspend_time": {
+        "set": false,
+        "infinite": true,
+        "number": 0
+      },
+      "alloc_memory": 0,
+      "alloc_cpus": 0,
+      "alloc_idle_cpus": 4,
+      "tres_used": "",
+      "slurmd_start_time": {
+        "set": true,
+        "infinite": false,
+        "number": 1790458976
+      },
+      "sockets": 1,
+      "threads": 1,
+      "temporary_disk": 0,
+      "weight": 1,
+      "topology": "",
+      "tres": "cpu=4,mem=7947M,billing=4",
+      "version": "26.05.4"
+    },
+    {
+      "architecture": "x86_64",
+      "burstbuffer_network_address": "",
+      "boards": 1,
+      "boot_time": {
+        "set": true,
+        "infinite": false,
+        "number": 1790313875
+      },
+      "tls_cert_last_renewal": {
+        "set": true,
+        "infinite": false,
+        "number": 0
+      },
+      "cert_flags": [],
+      "cluster_name": "",
+      "cores": 4,
+      "specialized_cores": 0,
+      "cpu_binding": 0,
+      "cpu_load": 12,
+      "free_mem": {
+        "set": true,
+        "infinite": false,
+        "number": 1120
+      },
+      "cpus": 4,
+      "effective_cpus": 4,
+      "specialized_cpus": "",
+      "energy": {
+        "average_watts": 0,
+        "base_consumed_energy": 0,
+        "consumed_energy": 0,
+        "current_watts": {
+          "set": true,
+          "infinite": false,
+          "number": 0
+        },
+        "previous_consumed_energy": 0,
+        "last_collected": 0
+      },
+      "extra": "",
+      "features": [
+        "slinky"
+      ],
+      "active_features": [
+        "slinky"
+      ],
+      "gpu_spec": "",
+      "gres": "",
+      "gres_drained": "N\/A",
+      "gres_used": "",
+      "instance_id": "",
+      "instance_type": "",
+      "last_busy": {
+        "set": true,
+        "infinite": false,
+        "number": 1790460490
+      },
+      "mcs_label": "",
+      "specialized_memory": 0,
+      "name": "slinky-0",
+      "next_state_after_reboot": [
+        "INVALID"
+      ],
+      "address": "10.244.1.27",
+      "hostname": "slinky-0",
+      "state": [
+        "IDLE",
+        "DRAIN",
+        "DYNAMIC_NORM"
+      ],
+      "operating_system": "Linux 6.12.107+deb13-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.107-1 (2026-08-29)",
+      "owner": "",
+      "partitions": [
+        "all"
+      ],
+      "port": 6818,
+      "real_memory": 7947,
+      "res_cores_per_gpu": 0,
+      "comment": "{\"namespace\":\"slurm\",\"podName\":\"slurm-worker-slinky-0\",\"node\":\"k8s-w1\",\"nodeSetName\":\"slurm-worker-slinky\",\"nodeSetUID\":\"b5f67685-7b23-45e5-bdb2-da4d0baadfa3\"}",
+      "reason": "slurm-operator: (FilesystemIsReadOnly: EXT4-fs (vda1): Remounting filesystem read-only)",
+      "reason_changed_at": {
+        "set": true,
+        "infinite": false,
+        "number": 1790461745
+      },
+      "reason_set_by_user": "slurm",
+      "resume_after": {
+        "set": true,
+        "infinite": false,
+        "number": 0
+      },
+      "reservation": "",
+      "suspend_time": {
+        "set": false,
+        "infinite": true,
+        "number": 0
+      },
+      "alloc_memory": 0,
+      "alloc_cpus": 0,
+      "alloc_idle_cpus": 4,
+      "tres_used": "",
+      "slurmd_start_time": {
+        "set": true,
+        "infinite": false,
+        "number": 1790458982
+      },
+      "sockets": 1,
+      "threads": 1,
+      "temporary_disk": 0,
+      "weight": 1,
+      "topology": "",
+      "tres": "cpu=4,mem=7947M,billing=4",
+      "version": "26.05.4"
+    }
+  ],
+  "last_update": {
+    "set": true,
+    "infinite": false,
+    "number": 1790461753
+  },
+  "meta": {
+    "plugin": {
+      "type": "",
+      "name": "",
+      "data_parser": "data_parser\/v0.0.45",
+      "accounting_storage": ""
+    },
+    "client": {
+      "source": "",
+      "user": "slurm",
+      "group": "slurm"
+    },
+    "command": [
+      "scontrol",
+      "show",
+      "node",
+      "--json"
+    ],
+    "slurm": {
+      "version": {
+        "major": "26",
+        "micro": "4",
+        "minor": "05"
+      },
+      "release": "26.05.4",
+      "cluster": "slinky"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

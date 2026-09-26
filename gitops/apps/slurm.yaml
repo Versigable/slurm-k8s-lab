@@ -37,6 +37,11 @@ spec:
               requests: {cpu: 100m, memory: 256Mi}
         restapi:
           replicas: 1          # the operator drives Slurm through slurmrestd
+          # LAN IP (Cilium pool) so node-triage on slurm-ctl can read this cluster.
+          # Every request needs a Slurm JWT; see ansible/roles/node_triage.
+          service:
+            spec:
+              type: LoadBalancer
         nodesets:
           slinky:
             replicas: 2        # one slurmd pod per worker (anti-affinity by default)

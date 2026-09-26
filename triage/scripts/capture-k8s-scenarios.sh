@@ -15,6 +15,10 @@ W1=${W1:-labadmin@10.0.5.134}
 W2=${W2:-labadmin@10.0.5.135}
 KEY=${KEY:-$HOME/.ssh/slurm-lab}
 OUT=${OUT:-$(cd "$(dirname "$0")/.." && pwd)/internal/kube/testdata}
+# Slinky (Slurm on this cluster) is captured alongside, into the Slurm fixtures.
+# The CLI's --json output inside slurmctld is the same data_parser output that
+# slurmrestd serves, so the Slurm fixture runner can replay it.
+SLURM_OUT=${SLURM_OUT:-$(cd "$(dirname "$0")/.." && pwd)/internal/slurm/testdata}
 
 on() { local host=$1; shift; ssh -n -i "$KEY" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR "$host" "$@"; }
 log() { printf '\n==> %s\n' "$*"; }
@@ -51,6 +55,15 @@ capture() {
   on "$CP" "kubectl get events -A --field-selector involvedObject.kind=Node -o json | python3 -c '$TRIM' events" > "$dir/events.json"
   on "$CP" "kubectl get pdb -A -o json | python3 -c '$TRIM' pdbs" > "$dir/pdbs.json"
   on "$CP" 'date +%s' > "$dir/now.txt"
+  if on "$CP" 'kubectl -n slurm get pod slurm-controller-0' >/dev/null 2>&1; then
+    local sdir="$SLURM_OUT/$1"
+    mkdir -p "$sdir"
+    on "$CP" 'kubectl -n slurm exec slurm-controller-0 -c slurmctld -- scontrol show node --json' > "$sdir/nodes.json"
+    on "$CP" 'kubectl -n slurm exec slurm-controller-0 -c slurmctld -- squeue --json' > "$sdir/squeue.json"
+    echo '{"jobs":[]}' > "$sdir/sacct.json"   # no accounting on the Slinky cluster
+    : > "$sdir/events.txt"
+    cp "$dir/now.txt" "$sdir/now.txt"
+  fi
   on "$CP" 'kubectl get nodes -o custom-columns=NODE:.metadata.name,SCHED:.spec.unschedulable,READY:".status.conditions[?(@.type==\"Ready\")].status"' | sed "s/^/    /"
   log "captured $1"
 }
@@ -88,6 +101,30 @@ scenario_reset_w1() {
   reset_npd k8s-w1
   wait_condition k8s-w1 ReadonlyFilesystem False 60
   wait_condition k8s-w1 KernelDeadlock False 60
+}
+
+scenario_slinky_healthy() {
+  log "scenario: slinky-healthy (Kubernetes + Slinky Slurm, nothing wrong)"
+  capture slinky-healthy
+}
+
+# A kernel fault on the node under a Slinky worker, handled the way node-triage
+# does it: cordon with a reason. The operator drains the Slurm node itself, with
+# NPD's condition as the drain reason.
+scenario_slinky_cordoned_readonly() {
+  log "scenario: slinky-cordoned-readonly (read-only fs on k8s-w1, cordoned; operator drains slinky-0)"
+  kmsg "$W1" "EXT4-fs (vda1): Remounting filesystem read-only"
+  wait_condition k8s-w1 ReadonlyFilesystem True 60
+  on "$CP" 'kubectl cordon k8s-w1 >/dev/null; kubectl annotate node k8s-w1 --overwrite "slurm-k8s-lab/triage-reason=triage: read-only root filesystem" >/dev/null'
+  local deadline=$((SECONDS + 60))
+  until on "$CP" 'kubectl -n slurm exec slurm-controller-0 -c slurmctld -- sinfo -h -N -n slinky-0 -o %T' | grep -q drain; do
+    ((SECONDS < deadline)) || { echo "slinky-0 never drained" >&2; return 1; }
+    sleep 2
+  done
+  capture slinky-cordoned-readonly
+  reset_npd k8s-w1
+  wait_condition k8s-w1 ReadonlyFilesystem False 60
+  on "$CP" 'kubectl uncordon k8s-w1 >/dev/null; kubectl annotate node k8s-w1 slurm-k8s-lab/triage-reason- >/dev/null'
 }
 
 scenario_healthy() {

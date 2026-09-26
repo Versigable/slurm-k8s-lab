@@ -253,3 +253,76 @@ func TestResumeRefusesKubernetesHardwareFault(t *testing.T) {
 		t.Fatalf("forced uncordon: done=%v writes=%v", out.Done, w)
 	}
 }
+
+// connectAll serves the classic Slurm cluster, the Slinky cluster and
+// Kubernetes together (Slinky and Kubernetes captured in the same scenario).
+func connectAll(t *testing.T, classic, crossScenario string, allowWrites bool) (*mcp.ClientSession, *slurm.FixtureRunner, *slurm.FixtureRunner, *kube.FixtureSource) {
+	t.Helper()
+	ctx := context.Background()
+	loc, err := time.LoadLocation("America/Denver")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cl := &slurm.FixtureRunner{Dir: filepath.Join("..", "slurm", "testdata", classic)}
+	sl := &slurm.FixtureRunner{Dir: filepath.Join("..", "slurm", "testdata", crossScenario)}
+	ks := &kube.FixtureSource{Dir: filepath.Join("..", "kube", "testdata", crossScenario)}
+	at, err := sl.CapturedAt()
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := New(Config{
+		Client:      &slurm.Client{Runner: cl, Location: loc},
+		Slinky:      &slurm.Client{Runner: sl, Location: loc},
+		Kube:        ks,
+		AllowWrites: allowWrites,
+		Now:         func() time.Time { return at },
+		Version:     "test",
+	})
+	st, ct := mcp.NewInMemoryTransports()
+	if _, err := srv.Connect(ctx, st, nil); err != nil {
+		t.Fatal(err)
+	}
+	cs, err := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "test"}, nil).Connect(ctx, ct, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { cs.Close() })
+	return cs, cl, sl, ks
+}
+
+func TestTriageAcrossThreeClusters(t *testing.T) {
+	cs, _, _, _ := connectAll(t, "healthy", "slinky-cordoned-readonly", false)
+	var out TriageClusterOutput
+	call(t, cs, "triage_cluster", nil, &out)
+	if out.TotalNodes != 7 {
+		t.Fatalf("got %d nodes, want 7 (2 classic Slurm + 2 Slinky + 3 Kubernetes)", out.TotalNodes)
+	}
+	got := map[string]string{}
+	for _, r := range out.Recommendations {
+		got[r.Node] = r.Cluster + "/" + string(r.Category)
+	}
+	if got["slinky-0"] != "slinky/kubernetes_managed" || got["k8s-w1"] != "kubernetes/hardware" {
+		t.Errorf("recommendations = %v", got)
+	}
+	var nodes ListNodesOutput
+	call(t, cs, "list_nodes", nil, &nodes)
+	clusters := map[string]int{}
+	for _, n := range nodes.Nodes {
+		clusters[n.Cluster]++
+	}
+	if clusters["lab"] != 2 || clusters["slinky"] != 2 || clusters["kubernetes"] != 3 {
+		t.Errorf("nodes per cluster = %v", clusters)
+	}
+}
+
+func TestResumeOperatorDrainedSlinkyNodeRedirectsToKubernetes(t *testing.T) {
+	cs, cl, sl, ks := connectAll(t, "healthy", "slinky-cordoned-readonly", true)
+	var out WriteOutput
+	call(t, cs, "resume_node", map[string]any{"node": "slinky-0", "force": true}, &out)
+	if out.Done || !strings.Contains(out.Note, "Resume the Kubernetes node instead") {
+		t.Fatalf("done=%v note=%q, want a refusal pointing at the Kubernetes node (even with force)", out.Done, out.Note)
+	}
+	if len(cl.Writes())+len(sl.Writes())+len(ks.Writes()) != 0 {
+		t.Fatalf("nothing should have been written: %v %v %v", cl.Writes(), sl.Writes(), ks.Writes())
+	}
+}

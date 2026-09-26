@@ -1,0 +1,294 @@
+{
+ "items": [
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T21:44:17Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T21:44:17Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T21:44:17Z",
+    "name": "k8s-w1.18d8fd06b1bfb01c",
+    "namespace": "default",
+    "resourceVersion": "443814",
+    "uid": "e1649fd5-c4a7-433c-a93a-c0bdd67bffcd"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "readonly-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "readonly-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T21:44:17Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T21:44:17Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T21:44:17Z",
+    "name": "k8s-w1.18d8fd06b1c06f0f",
+    "namespace": "default",
+    "resourceVersion": "443813",
+    "uid": "277d93b9-01a9-40e8-8f08-f06ff8f19a88"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 2,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T21:48:16Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T22:03:23Z",
+   "message": "Node k8s-w1 status is now: NodeNotSchedulable",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T21:48:16Z",
+    "name": "k8s-w1.18d8fd3e86f65b71",
+    "namespace": "default",
+    "resourceVersion": "449504",
+    "uid": "c35b4609-b8a2-42b1-a9d0-f88545854769"
+   },
+   "reason": "NodeNotSchedulable",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w1"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 2,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T21:49:58Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T22:08:18Z",
+   "message": "Node k8s-w1 status is now: NodeSchedulable",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T21:49:58Z",
+    "name": "k8s-w1.18d8fd5631393992",
+    "namespace": "default",
+    "resourceVersion": "450822",
+    "uid": "af644eaf-163b-4c13-af78-49348273b2ea"
+   },
+   "reason": "NodeSchedulable",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w1"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T22:02:45Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T22:02:45Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T22:02:45Z",
+    "name": "k8s-w1.18d8fe08b077f7f1",
+    "namespace": "default",
+    "resourceVersion": "449320",
+    "uid": "38c520bb-b8bb-41c1-a37e-ef23e058b959"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "readonly-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "readonly-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T22:02:45Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T22:02:45Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T22:02:45Z",
+    "name": "k8s-w1.18d8fe08b0785933",
+    "namespace": "default",
+    "resourceVersion": "449321",
+    "uid": "fc654752-c0b3-4b51-aecb-a18c5c1c43af"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T22:29:03Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T22:29:03Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T22:29:03Z",
+    "name": "k8s-w1.18d8ff78290ba44b",
+    "namespace": "default",
+    "resourceVersion": "456689",
+    "uid": "40a00882-91df-4b09-9595-63db6e1d5441"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "readonly-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "readonly-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T22:29:03Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T22:29:03Z",
+   "message": "Node condition ReadonlyFilesystem is now: True, reason: FilesystemIsReadOnly, message: \"EXT4-fs (vda1): Remounting filesystem read-only\"",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T22:29:03Z",
+    "name": "k8s-w1.18d8ff78290c3895",
+    "namespace": "default",
+    "resourceVersion": "456688",
+    "uid": "53b5ee5d-0eff-4782-a777-18a061b2987c"
+   },
+   "reason": "FilesystemIsReadOnly",
+   "reportingComponent": "kernel-monitor",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kernel-monitor",
+    "host": "k8s-w1"
+   },
+   "type": "Warning"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T22:28:29Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T22:28:29Z",
+   "message": "Node k8s-w2 status is now: NodeNotSchedulable",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T22:28:29Z",
+    "name": "k8s-w2.18d8ff7055d8c910",
+    "namespace": "default",
+    "resourceVersion": "456535",
+    "uid": "eb17c0c7-1022-4c27-a468-325787f549cf"
+   },
+   "reason": "NodeNotSchedulable",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w2"
+   },
+   "type": "Normal"
+  },
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-09-26T22:28:39Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w2"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-09-26T22:28:39Z",
+   "message": "Node k8s-w2 status is now: NodeSchedulable",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T22:28:40Z",
+    "name": "k8s-w2.18d8ff72b46c7ffa",
+    "namespace": "default",
+    "resourceVersion": "456587",
+    "uid": "9505919a-4e68-4a7c-9808-dfab0322c480"
+   },
+   "reason": "NodeSchedulable",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w2",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w2"
+   },
+   "type": "Normal"
+  }
+ ]
+}
