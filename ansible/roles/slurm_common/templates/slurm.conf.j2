@@ -18,8 +18,17 @@ SlurmdLogFile=/var/log/slurm/slurmd.log
 SlurmctldTimeout=120
 SlurmdTimeout=300
 # 1 = a DOWN node returns to service when it registers with a valid config.
-# Phase 4 drills flip this to 0 to practise manual return-to-service.
 ReturnToService=1
+
+# --- node health and maintenance --------------------------------------------------
+# LBNL NHC on every compute node (slurm_compute role). A failing check drains the
+# node with an "NHC: ..." reason; NHC resumes nodes it drained itself.
+HealthCheckProgram=/usr/sbin/nhc
+HealthCheckInterval={{ slurm_health_check_interval }}
+HealthCheckNodeState=ANY
+# What slurmd runs for `scontrol reboot [ASAP] [nextstate=RESUME]`. The node must
+# register again within ResumeTimeout or it's marked DOWN.
+RebootProgram=/usr/sbin/reboot
 
 # --- process tracking & isolation (cgroup v2) -----------------------------------
 ProctrackType=proctrack/cgroup
@@ -52,7 +61,9 @@ NodeName={{ h }} NodeAddr={{ hostvars[h].ansible_host }} CPUs={{ hostvars[h].ans
 {% endfor %}
 
 # --- partitions -----------------------------------------------------------------
-# batch  = production. burnin = where new/repaired nodes prove themselves before
-# they rejoin batch (hidden, root-only). Models a compute-production bring-up flow.
-PartitionName=batch Nodes={{ groups['slurm_compute'] | sort | join(',') }} Default=YES MaxTime=INFINITE State=UP
+# batch  = production: compute nodes whose stage is "production".
+# burnin = every compute node (hidden, root-only). A new node starts with stage
+#          "burnin" (Terraform node table), so it's only here until a burn-in job
+#          qualifies it and its stage is changed to "production" (drills/: node-bringup).
+PartitionName=batch Nodes={% for h in groups['slurm_compute'] | sort if (hostvars[h].slurm_node_stage | default('production')) == 'production' %}{{ h }}{{ '' if loop.last else ',' }}{% endfor %} Default=YES MaxTime=INFINITE State=UP
 PartitionName=burnin Nodes={{ groups['slurm_compute'] | sort | join(',') }} Default=NO Hidden=YES RootOnly=YES MaxTime=04:00:00 State=UP

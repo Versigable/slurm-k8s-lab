@@ -1,13 +1,22 @@
 locals {
   # One authoritative list of lab nodes. Ansible's inventory is generated from it.
-  nodes = {
-    "slurm-ctl" = { vmid = 130, ip = "10.0.5.130", cores = 2, memory = 3072, disk = 30, group = "slurm_controller" }
-    "slurm-c1"  = { vmid = 131, ip = "10.0.5.131", cores = 2, memory = 2048, disk = 20, group = "slurm_compute" }
-    "slurm-c2"  = { vmid = 132, ip = "10.0.5.132", cores = 2, memory = 2048, disk = 20, group = "slurm_compute" }
-    "k8s-cp"    = { vmid = 133, ip = "10.0.5.133", cores = 4, memory = 6144, disk = 40, group = "k8s_control_plane" }
-    "k8s-w1"    = { vmid = 134, ip = "10.0.5.134", cores = 4, memory = 8192, disk = 40, group = "k8s_workers" }
-    "k8s-w2"    = { vmid = 135, ip = "10.0.5.135", cores = 4, memory = 8192, disk = 40, group = "k8s_workers" }
+  # stage (compute nodes): "production" nodes are in the batch partition; a
+  # "burnin" node is only in the hidden burnin partition until a burn-in job
+  # qualifies it. Promotion is changing its stage here (drills/: node-bringup).
+  base_nodes = {
+    "slurm-ctl" = { vmid = 130, ip = "10.0.5.130", cores = 2, memory = 3072, disk = 30, group = "slurm_controller", stage = "production" }
+    "slurm-c1"  = { vmid = 131, ip = "10.0.5.131", cores = 2, memory = 2048, disk = 20, group = "slurm_compute", stage = "production" }
+    "slurm-c2"  = { vmid = 132, ip = "10.0.5.132", cores = 2, memory = 2048, disk = 20, group = "slurm_compute", stage = "production" }
+    "k8s-cp"    = { vmid = 133, ip = "10.0.5.133", cores = 4, memory = 6144, disk = 40, group = "k8s_control_plane", stage = "production" }
+    "k8s-w1"    = { vmid = 134, ip = "10.0.5.134", cores = 4, memory = 8192, disk = 40, group = "k8s_workers", stage = "production" }
+    "k8s-w2"    = { vmid = 135, ip = "10.0.5.135", cores = 4, memory = 8192, disk = 40, group = "k8s_workers", stage = "production" }
   }
+
+  nodes = merge(local.base_nodes, {
+    for name, n in var.extra_compute_nodes : name => {
+      vmid = n.vmid, ip = n.ip, cores = 2, memory = 2048, disk = 20, group = "slurm_compute", stage = n.stage
+    }
+  })
 
   enabled_nodes = {
     for name, n in local.nodes : name => n
@@ -109,7 +118,12 @@ locals {
       children = merge(
         {
           for g in local.groups : g => {
-            hosts = { for name, n in local.enabled_nodes : name => { ansible_host = n.ip } if n.group == g }
+            hosts = {
+              for name, n in local.enabled_nodes : name => merge(
+                { ansible_host = n.ip },
+                { for k, v in { slurm_node_stage = n.stage } : k => v if n.group == "slurm_compute" },
+              ) if n.group == g
+            }
           }
         },
         {

@@ -99,6 +99,23 @@
     allow_change_held_packages: true
     state: present
 
+# crictl talks to containerd directly: the way to look at the control plane's
+# static pods when the API server itself is down (drills/: k8s-cert-renewal).
+- name: Install crictl
+  ansible.builtin.apt:
+    name: cri-tools
+    state: present
+
+- name: Point crictl at containerd
+  ansible.builtin.copy:
+    dest: /etc/crictl.yaml
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      runtime-endpoint: unix:///run/containerd/containerd.sock
+      image-endpoint: unix:///run/containerd/containerd.sock
+
 # Held so a routine `apt upgrade` can't skew versions across the cluster.
 - name: Hold Kubernetes packages
   ansible.builtin.dpkg_selections:

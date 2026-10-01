@@ -26,6 +26,9 @@
 - name: Create the fake GPU nodes before slurmd (re)starts
   ansible.builtin.meta: flush_handlers
 
+- name: Node Health Check and burn-in
+  ansible.builtin.import_tasks: nhc.yml
+
 # --- shared storage -----------------------------------------------------------------
 - name: Mount /shared from the controller
   ansible.posix.mount:
@@ -55,3 +58,7 @@
     name: slurmd
     state: restarted
   when: (slurm_common_config_changed | bool) or slurm_compute_fakegpu_tmpfiles.changed
+
+- name: NHC passes on this node (MARK_OFFLINE=0 keeps this check from touching Slurm)
+  ansible.builtin.command: nhc -t 60 MARK_OFFLINE=0
+  changed_when: false

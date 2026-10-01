@@ -50,7 +50,7 @@ shellcheck:
   stage: lint
   image: koalaman/shellcheck-alpine:stable
   script:
-    - shellcheck scripts/*.sh triage/scripts/*.sh
+    - shellcheck scripts/*.sh triage/scripts/*.sh ansible/roles/slurm_compute/files/lab-burnin
 
 # Argo CD renders gitops/ with kustomize; fail here instead of in the cluster.
 kustomize:
@@ -78,4 +78,4 @@ python:
   stage: lint
   image: python:3.13-slim
   script:
-    - python -m py_compile demo/*.py
+    - python -m py_compile demo/*.py drills/*.py

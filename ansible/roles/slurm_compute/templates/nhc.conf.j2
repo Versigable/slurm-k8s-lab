@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# Node Health Check for the lab's compute nodes; slurmd runs it every
+# HealthCheckInterval. A failing check drains the node with reason "NHC: ...".
+# NHC resumes nodes it drained itself once every check passes again, and never
+# touches a node drained for any other reason: to keep a node out after a
+# hardware fault (until burn-in), re-label the drain (drills/: nhc-gpu-lost).
+#
+# Format: <host match> || <check>
+* || check_fs_mount_rw -f /
+* || check_fs_free / {{ slurm_compute_nhc_min_free_root }}
+* || check_ps_service -u munge -d munged munge
+* || check_ps_service -u _chrony -d chronyd chrony
+* || check_gpu_count {{ fake_gpu_count }}

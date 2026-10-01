@@ -1,0 +1,7 @@
+# LBNL Node Health Check (https://github.com/mej/nhc). Pinned to the upstream
+# release tarball and its published SHA256.
+slurm_compute_nhc_version: "1.4.3"
+slurm_compute_nhc_sha256: d2d2108284eb7f833c13b70be1b33ba0115f598491e34ccb701df2a9eb0807b1
+
+# NHC drains the node when / has less free space than this.
+slurm_compute_nhc_min_free_root: "10%"

@@ -88,3 +88,18 @@ variable "started" {
   type        = bool
   default     = true
 }
+
+variable "extra_compute_nodes" {
+  description = "Extra Slurm compute nodes beyond the base table, e.g. one being brought up (drills/: node-bringup). name => { vmid, ip, stage }."
+  type = map(object({
+    vmid  = number
+    ip    = string
+    stage = optional(string, "burnin")
+  }))
+  default = {}
+
+  validation {
+    condition     = alltrue([for n in values(var.extra_compute_nodes) : contains(["burnin", "production"], n.stage)])
+    error_message = "stage must be \"burnin\" or \"production\"."
+  }
+}
