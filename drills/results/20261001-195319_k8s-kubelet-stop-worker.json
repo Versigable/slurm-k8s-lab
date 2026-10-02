@@ -1,0 +1,330 @@
+{
+ "drill": "k8s-kubelet-stop-worker",
+ "title": "kubelet dies on a plain Slurm worker node",
+ "teaches": "With Slinky's control plane elsewhere, Slurm keeps seeing the worker as fine while Kubernetes counts down to evicting it: triage has to join the two views.",
+ "started": "2026-10-01T19:53:19-06:00",
+ "repo": "dbbb4fb-dirty",
+ "finished": "2026-10-01T20:02:17-06:00",
+ "status": "GAP",
+ "error": null,
+ "duration_s": 537.8,
+ "triage_version": "dbbb4fb",
+ "metrics": {
+  "detect_s": 54.5,
+  "fix_to_recover_s": 2.0,
+  "inject_to_recover_s": 393.3
+ },
+ "events": [
+  {
+   "t": 24.9,
+   "at": "2026-10-01T19:53:44-06:00",
+   "kind": "note",
+   "text": "web placement",
+   "data": {
+    "pods": {
+     "k8s-w1": [
+      "Running",
+      "Running"
+     ],
+     "k8s-w2": [
+      "Running",
+      "Running"
+     ]
+    }
+   }
+  },
+  {
+   "t": 26.6,
+   "at": "2026-10-01T19:53:46-06:00",
+   "kind": "note",
+   "text": "Slinky placement",
+   "data": {
+    "pods": {
+     "slurm-controller-0": "k8s-w2",
+     "slurm-restapi-78d8574996-9ftqh": "k8s-w1",
+     "slurm-worker-slinky-0": "k8s-w1",
+     "slurm-worker-slinky-1": "k8s-w2"
+    }
+   }
+  },
+  {
+   "t": 29.8,
+   "at": "2026-10-01T19:53:49-06:00",
+   "kind": "observe",
+   "text": "Slinky job (job 8) running on slinky-0",
+   "data": {
+    "waited": 1.8
+   }
+  },
+  {
+   "t": 31.7,
+   "at": "2026-10-01T19:53:51-06:00",
+   "kind": "inject",
+   "text": "kubelet stopped on k8s-w1 (containers keep running)"
+  },
+  {
+   "t": 86.2,
+   "at": "2026-10-01T19:54:46-06:00",
+   "kind": "detect",
+   "text": "k8s-w1 Ready=Unknown",
+   "data": {
+    "waited": 54.5
+   }
+  },
+  {
+   "t": 121.3,
+   "at": "2026-10-01T19:55:21-06:00",
+   "kind": "decide",
+   "text": "kubelet silent, eviction countdown: k8s-w1 -> investigate/critical/unreachable (want investigate) OK",
+   "data": {
+    "summary": "The kubelet stopped reporting. 24 workload pod(s) will be evicted in 4m55s unless it comes back."
+   }
+  },
+  {
+   "t": 123.6,
+   "at": "2026-10-01T19:55:23-06:00",
+   "kind": "note",
+   "text": "Slurm's view at the same moment",
+   "data": {
+    "node": [
+     "DYNAMIC_NORM",
+     "MIXED"
+    ],
+    "job": [
+     "RUNNING"
+    ]
+   }
+  },
+  {
+   "t": 163.5,
+   "at": "2026-10-01T19:56:03-06:00",
+   "kind": "decide",
+   "text": "Slinky's control plane on the silent node: triage_cluster -> 2 recommendation(s) OK",
+   "data": {
+    "why": "k8s-w1: investigate; slurmrestd: Can't reach slurmrestd for cluster slinky: its control-plane pods run on Kubernetes node k8s-w1, which is in trouble. Fix that node first."
+   }
+  },
+  {
+   "t": 386.9,
+   "at": "2026-10-01T19:59:46-06:00",
+   "kind": "observe",
+   "text": "pods on the node marked for eviction (300 s toleration)",
+   "data": {
+    "waited": 223.4
+   }
+  },
+  {
+   "t": 390.7,
+   "at": "2026-10-01T19:59:50-06:00",
+   "kind": "observe",
+   "text": "replacement web pods running on k8s-w2",
+   "data": {
+    "waited": 3.7
+   }
+  },
+  {
+   "t": 397.0,
+   "at": "2026-10-01T19:59:56-06:00",
+   "kind": "note",
+   "text": "Slinky after the eviction",
+   "data": {
+    "pods": {
+     "slurm-controller-0": "Running@k8s-w2",
+     "slurm-restapi-78d8574996-9ftqh": "terminating@k8s-w1",
+     "slurm-restapi-78d8574996-t5l2m": "Running@k8s-w2",
+     "slurm-worker-slinky-0": "terminating@k8s-w1",
+     "slurm-worker-slinky-1": "Running@k8s-w2"
+    },
+    "node": [
+     "DYNAMIC_NORM",
+     "MIXED"
+    ],
+    "job": [
+     "RUNNING"
+    ]
+   }
+  },
+  {
+   "t": 421.3,
+   "at": "2026-10-01T20:00:21-06:00",
+   "kind": "decide",
+   "text": "after the eviction: triage_cluster -> 2 recommendation(s) GAP",
+   "data": {
+    "why": "slurmrestd traced to k8s-w1"
+   }
+  },
+  {
+   "t": 423.0,
+   "at": "2026-10-01T20:00:22-06:00",
+   "kind": "fix",
+   "text": "kubelet started on k8s-w1"
+  },
+  {
+   "t": 425.0,
+   "at": "2026-10-01T20:00:24-06:00",
+   "kind": "recover",
+   "text": "k8s-w1 Ready",
+   "data": {
+    "waited": 2.0
+   }
+  },
+  {
+   "t": 427.4,
+   "at": "2026-10-01T20:00:27-06:00",
+   "kind": "observe",
+   "text": "Slinky whole again",
+   "data": {
+    "waited": 2.4
+   }
+  },
+  {
+   "t": 429.9,
+   "at": "2026-10-01T20:00:29-06:00",
+   "kind": "note",
+   "text": "Slinky job fate",
+   "data": {
+    "job": {
+     "state": [
+      "PENDING"
+     ],
+     "reason": "BeginTime"
+    }
+   }
+  },
+  {
+   "t": 431.0,
+   "at": "2026-10-01T20:00:30-06:00",
+   "kind": "note",
+   "text": "web after recovery (no rebalancing)",
+   "data": {
+    "pods": {
+     "k8s-w2": [
+      "Running",
+      "Running",
+      "Running",
+      "Running"
+     ]
+    }
+   }
+  },
+  {
+   "t": 537.8,
+   "at": "2026-10-01T20:02:17-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 89.4
+   }
+  }
+ ],
+ "checks": [],
+ "decisions": [
+  {
+   "t": 102.5,
+   "label": "kubelet silent, eviction countdown",
+   "node": "k8s-w1",
+   "ok": true,
+   "latency": 16.27,
+   "expected": {
+    "action": [
+     "investigate"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "investigate",
+    "severity": "critical",
+    "category": "unreachable",
+    "summary": "The kubelet stopped reporting. 24 workload pod(s) will be evicted in 4m55s unless it comes back."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "investigate",
+    "category": "unreachable",
+    "cluster": "kubernetes",
+    "commands": [
+     "ping -c3 k8s-w1",
+     "ssh k8s-w1 'sudo systemctl restart kubelet && journalctl -u kubelet -n 20'"
+    ],
+    "evidence": [
+     "Ready=Unknown; taints node.kubernetes.io/unreachable:NoSchedule, node.kubernetes.io/unreachable:NoExecute, node.cilium.io/agent-not-ready:NoSchedule; kubelet v1.36.5",
+     "Ready=Unknown since 5s ago: the kubelet's node lease stopped renewing",
+     "unreachable:NoExecute taint added 5s ago; pods without their own toleration are evicted after 5m0s",
+     "workload pods on the node: argocd/argocd-application-controller-0, argocd/argocd-applicationset-controller-6c64d4fd54-qztzt, argocd/argocd-redis-c4fdd947-tnmj2, argocd/argocd-repo-server-7db6455597-szjdv, argocd/argocd-server-5475cb964b-mzvt5, and 19 more"
+    ],
+    "next_steps": [
+     "Check the host: power, console, network.",
+     "If it's up, restart the kubelet (and containerd if it's wedged). Running containers survive a kubelet restart.",
+     "If the host is gone, let the eviction happen and follow up on the hardware."
+    ],
+    "node": "k8s-w1",
+    "scheduler": "kubernetes",
+    "severity": "critical",
+    "summary": "The kubelet stopped reporting. 24 workload pod(s) will be evicted in 4m55s unless it comes back."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-195319_k8s-kubelet-stop-worker_fixtures/kubelet-silent--eviction-countdown"
+  },
+  {
+   "t": 141.3,
+   "label": "Slinky's control plane on the silent node",
+   "node": "*",
+   "ok": true,
+   "latency": 17.7,
+   "expected": {
+    "note": "The kubelet-less node is flagged, and the Slinky outage is traced to it."
+   },
+   "got": [
+    {
+     "node": "k8s-w1",
+     "cluster": "kubernetes",
+     "action": "investigate",
+     "severity": "critical",
+     "category": "unreachable",
+     "summary": "The kubelet stopped reporting. 24 workload pod(s) will be evicted in 4m16s unless it comes back."
+    },
+    {
+     "node": "slurmrestd",
+     "cluster": "slinky",
+     "action": "investigate",
+     "severity": "critical",
+     "category": "control_plane",
+     "summary": "Can't reach slurmrestd for cluster slinky: its control-plane pods run on Kubernetes node k8s-w1, which is in trouble. Fix that node first."
+    }
+   ],
+   "error": null,
+   "why": "k8s-w1: investigate; slurmrestd: Can't reach slurmrestd for cluster slinky: its control-plane pods run on Kubernetes node k8s-w1, which is in trouble. Fix that node first.",
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-195319_k8s-kubelet-stop-worker_fixtures/slinky-s-control-plane-on-the-silent-node"
+  },
+  {
+   "t": 398.9,
+   "label": "after the eviction",
+   "node": "*",
+   "ok": false,
+   "latency": 1.87,
+   "expected": {
+    "note": ""
+   },
+   "got": [
+    {
+     "node": "k8s-w1",
+     "cluster": "kubernetes",
+     "action": "investigate",
+     "severity": "critical",
+     "category": "unreachable",
+     "summary": "The kubelet stopped reporting and the 5m0s eviction window has passed; 24 pod(s) are being evicted."
+    },
+    {
+     "node": "slinky-0",
+     "cluster": "slinky",
+     "action": "investigate",
+     "severity": "critical",
+     "category": "kubernetes_node",
+     "summary": "Slurm still sees this node as fine, but its Kubernetes node k8s-w1 is in trouble. Its pod, and any job running in it, depends on that node. 1 job(s) are running here."
+    }
+   ],
+   "error": null,
+   "why": "slurmrestd traced to k8s-w1",
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-195319_k8s-kubelet-stop-worker_fixtures/after-the-eviction"
+  }
+ ]
+}

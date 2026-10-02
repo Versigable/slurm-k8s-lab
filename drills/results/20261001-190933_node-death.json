@@ -1,0 +1,374 @@
+{
+ "drill": "node-death",
+ "title": "Compute node loses power mid-job",
+ "teaches": "SlurmdTimeout is the price of not false-alarming: jobs sit on a dead node until it expires, and a requeued job waits another ~2 minutes. Requeue-safe jobs come back elsewhere; the rest end NODE_FAIL. A node that rebooted unasked comes back held DOWN for a human.",
+ "started": "2026-10-01T19:09:33-06:00",
+ "repo": "dbbb4fb-dirty",
+ "finished": "2026-10-01T19:19:39-06:00",
+ "status": "PASS",
+ "error": null,
+ "duration_s": 606.5,
+ "triage_version": "dbbb4fb",
+ "metrics": {
+  "detect_s": 70.5,
+  "fix_to_recover_s": 3.3,
+  "inject_to_recover_s": 568.0
+ },
+ "events": [
+  {
+   "t": 8.5,
+   "at": "2026-10-01T19:09:41-06:00",
+   "kind": "observe",
+   "text": "blocker (job 27) running on slurm-c1",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 13.2,
+   "at": "2026-10-01T19:09:46-06:00",
+   "kind": "observe",
+   "text": "requeue-safe job (job 28) running on slurm-c2",
+   "data": {
+    "waited": 3.3
+   }
+  },
+  {
+   "t": 13.8,
+   "at": "2026-10-01T19:09:46-06:00",
+   "kind": "observe",
+   "text": "no-requeue job (job 29) running on slurm-c2",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 14.7,
+   "at": "2026-10-01T19:09:47-06:00",
+   "kind": "inject",
+   "text": "slurm-c2 powered off mid-job (hard stop: no shutdown, no warning)"
+  },
+  {
+   "t": 85.2,
+   "at": "2026-10-01T19:10:58-06:00",
+   "kind": "detect",
+   "text": "slurmctld flags slurm-c2 NOT_RESPONDING",
+   "data": {
+    "waited": 70.5
+   }
+  },
+  {
+   "t": 94.2,
+   "at": "2026-10-01T19:11:07-06:00",
+   "kind": "decide",
+   "text": "not responding, jobs still listed: slurm-c2 -> investigate/critical/unreachable (want investigate) OK",
+   "data": {
+    "summary": "slurmd stopped responding; Slurm still lists 2 job(s) as running. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN and kills them."
+   }
+  },
+  {
+   "t": 415.6,
+   "at": "2026-10-01T19:16:28-06:00",
+   "kind": "observe",
+   "text": "slurm-c2 marked DOWN (SlurmdTimeout=300s)",
+   "data": {
+    "waited": 321.4
+   }
+  },
+  {
+   "t": 545.8,
+   "at": "2026-10-01T19:18:38-06:00",
+   "kind": "observe",
+   "text": "requeue-safe job 28 running again on slurm-c1",
+   "data": {
+    "waited": 130.2
+   }
+  },
+  {
+   "t": 546.5,
+   "at": "2026-10-01T19:18:39-06:00",
+   "kind": "observe",
+   "text": "no-requeue job 29 recorded",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 546.5,
+   "at": "2026-10-01T19:18:39-06:00",
+   "kind": "check",
+   "text": "PASS no-requeue job 29 ended NODE_FAIL",
+   "data": {
+    "detail": {
+     "state": "NODE_FAIL",
+     "exit": "1:0",
+     "nodes": "slurm-c2"
+    }
+   }
+  },
+  {
+   "t": 547.1,
+   "at": "2026-10-01T19:18:40-06:00",
+   "kind": "note",
+   "text": "slurm-c2 history",
+   "data": {
+    "incidents_7d": 4
+   }
+  },
+  {
+   "t": 555.8,
+   "at": "2026-10-01T19:18:48-06:00",
+   "kind": "decide",
+   "text": "down: slurm-c2 -> escalate_hardware/critical/unreachable (want escalate_hardware) OK",
+   "data": {
+    "summary": "Down again; this node keeps failing. Treat it as a hardware/platform problem, not a one-off."
+   }
+  },
+  {
+   "t": 557.1,
+   "at": "2026-10-01T19:18:50-06:00",
+   "kind": "note",
+   "text": "requeued job",
+   "data": {
+    "restarts": 1,
+    "node": "slurm-c1",
+    "eligible_after_requeue": "2026-10-01T19:18:27|BeginTime"
+   }
+  },
+  {
+   "t": 557.3,
+   "at": "2026-10-01T19:18:50-06:00",
+   "kind": "observe",
+   "text": "slurm-c2 powered back on"
+  },
+  {
+   "t": 568.8,
+   "at": "2026-10-01T19:19:01-06:00",
+   "kind": "observe",
+   "text": "slurm-c2 registers but is held DOWN",
+   "data": {
+    "waited": 11.6
+   }
+  },
+  {
+   "t": 568.8,
+   "at": "2026-10-01T19:19:01-06:00",
+   "kind": "note",
+   "text": "why it's held",
+   "data": {
+    "reason": "Node unexpectedly rebooted"
+   }
+  },
+  {
+   "t": 569.5,
+   "at": "2026-10-01T19:19:02-06:00",
+   "kind": "note",
+   "text": "slurm-c2 history",
+   "data": {
+    "incidents_7d": 4
+   }
+  },
+  {
+   "t": 578.1,
+   "at": "2026-10-01T19:19:11-06:00",
+   "kind": "decide",
+   "text": "back after an unexpected reboot: slurm-c2 -> escalate_hardware/critical/unexpected_reboot (want escalate_hardware/unexpected_reboot) OK",
+   "data": {
+    "summary": "Down again; this node keeps failing. Treat it as a hardware/platform problem, not a one-off."
+   }
+  },
+  {
+   "t": 578.8,
+   "at": "2026-10-01T19:19:11-06:00",
+   "kind": "note",
+   "text": "diagnosis: end of the previous boot's log (no shutdown sequence = power loss or hard hang)",
+   "data": {
+    "lines": [
+     "2026-10-01T19:04:34-06:00 slurm-c2 systemd-tmpfiles[1010]: /usr/lib/tmpfiles.d/legacy.conf:14: Duplicate line for path \"/run/lock\", ignoring.",
+     "2026-10-01T19:04:34-06:00 slurm-c2 systemd[1]: systemd-tmpfiles-clean.service: Deactivated successfully.",
+     "2026-10-01T19:04:34-06:00 slurm-c2 systemd[1]: Finished systemd-tmpfiles-clean.service - Cleanup of Temporary Directories."
+    ]
+   }
+  },
+  {
+   "t": 579.4,
+   "at": "2026-10-01T19:19:12-06:00",
+   "kind": "fix",
+   "text": "cause understood (power loss); slurm-c2 resumed"
+  },
+  {
+   "t": 582.7,
+   "at": "2026-10-01T19:19:15-06:00",
+   "kind": "recover",
+   "text": "slurm-c2 back in service",
+   "data": {
+    "waited": 3.3
+   }
+  },
+  {
+   "t": 606.5,
+   "at": "2026-10-01T19:19:39-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 22.3
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 546.5,
+   "text": "no-requeue job 29 ended NODE_FAIL",
+   "ok": true,
+   "detail": {
+    "state": "NODE_FAIL",
+    "exit": "1:0",
+    "nodes": "slurm-c2"
+   }
+  }
+ ],
+ "decisions": [
+  {
+   "t": 86.1,
+   "label": "not responding, jobs still listed",
+   "node": "slurm-c2",
+   "ok": true,
+   "latency": 0.86,
+   "expected": {
+    "action": [
+     "investigate"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "investigate",
+    "severity": "critical",
+    "category": "unreachable",
+    "summary": "slurmd stopped responding; Slurm still lists 2 job(s) as running. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN and kills them."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "investigate",
+    "category": "unreachable",
+    "cluster": "lab",
+    "commands": [
+     "ping -c3 slurm-c2",
+     "ssh slurm-c2 'systemctl is-active slurmd munge chrony; journalctl -u slurmd -n 20'",
+     "munge -n | ssh slurm-c2 unmunge   # 'Invalid credential' = key mismatch; 'Expired'/'Rewound' = clock skew",
+     "ssh slurm-c2 'sudo systemctl restart slurmd'   # if slurmd itself is down",
+     "scontrol show config | grep -i SlurmdTimeout"
+    ],
+    "evidence": [
+     "state ALLOCATED+NOT_RESPONDING; CPUs 2/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "3 separate drain/down incidents for this node in the event window (chronic threshold 3)",
+     "2 job(s) ended NODE_FAIL on this node recently: 11 (drill-no-requeue), 26 (drill-no-requeue) (2 of them when the node went DOWN, already counted as an outage)",
+     "job 28 \"drill-requeue-safe\" (labadmin) listed as RUNNING by slurmctld",
+     "job 29 \"drill-no-requeue\" (labadmin) listed as RUNNING by slurmctld"
+    ],
+    "next_steps": [
+     "Check whether the host is reachable at all.",
+     "If it is and slurmd is down, restart it; running jobs survive a slurmd restart.",
+     "If slurmd is running but still not answering, suspect authentication: a munge key that doesn't match the controller's, or a clock more than a few minutes off (munge credentials expire). Restarting slurmd won't fix either.",
+     "If the host is gone, the jobs are already lost. Let the timeout mark it DOWN and follow the down-node path."
+    ],
+    "node": "slurm-c2",
+    "scheduler": "slurm",
+    "severity": "critical",
+    "summary": "slurmd stopped responding; Slurm still lists 2 job(s) as running. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN and kills them."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-190933_node-death_fixtures/not-responding--jobs-still-listed"
+  },
+  {
+   "t": 547.9,
+   "label": "down",
+   "node": "slurm-c2",
+   "ok": true,
+   "latency": 0.83,
+   "expected": {
+    "action": [
+     "escalate_hardware"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "escalate_hardware",
+    "severity": "critical",
+    "category": "unreachable",
+    "summary": "Down again; this node keeps failing. Treat it as a hardware/platform problem, not a one-off."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "escalate_hardware",
+    "category": "unreachable",
+    "cluster": "lab",
+    "commands": [
+     "ping -c3 slurm-c2",
+     "ssh slurm-c2 'systemctl status slurmd; journalctl -u slurmd -n 50'",
+     "scontrol update nodename=slurm-c2 state=resume   # only if it doesn't rejoin on its own"
+    ],
+    "evidence": [
+     "state DOWN+NOT_RESPONDING; CPUs 0/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "reason \"Not responding\" set 2m15s ago by slurm",
+     "4 separate drain/down incidents for this node in the event window (chronic threshold 3)",
+     "3 job(s) ended NODE_FAIL on this node recently: 11 (drill-no-requeue), 26 (drill-no-requeue), 29 (drill-no-requeue) (3 of them when the node went DOWN, already counted as an outage)"
+    ],
+    "next_steps": [
+     "Keep it out of service.",
+     "Pull the event history into a hardware ticket.",
+     "Burn-in before return to service."
+    ],
+    "node": "slurm-c2",
+    "scheduler": "slurm",
+    "severity": "critical",
+    "summary": "Down again; this node keeps failing. Treat it as a hardware/platform problem, not a one-off."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-190933_node-death_fixtures/down"
+  },
+  {
+   "t": 570.3,
+   "label": "back after an unexpected reboot",
+   "node": "slurm-c2",
+   "ok": true,
+   "latency": 0.83,
+   "expected": {
+    "action": [
+     "escalate_hardware"
+    ],
+    "category": "unexpected_reboot"
+   },
+   "got": {
+    "action": "escalate_hardware",
+    "severity": "critical",
+    "category": "unexpected_reboot",
+    "summary": "Down again; this node keeps failing. Treat it as a hardware/platform problem, not a one-off."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "escalate_hardware",
+    "category": "unexpected_reboot",
+    "cluster": "lab",
+    "commands": [
+     "ping -c3 slurm-c2",
+     "ssh slurm-c2 'systemctl status slurmd; journalctl -u slurmd -n 50'",
+     "scontrol update nodename=slurm-c2 state=resume   # only if it doesn't rejoin on its own"
+    ],
+    "evidence": [
+     "state DOWN; CPUs 0/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "reason \"Node unexpectedly rebooted\" set 2s ago by slurm",
+     "4 separate drain/down incidents for this node in the event window (chronic threshold 3)",
+     "3 job(s) ended NODE_FAIL on this node recently: 11 (drill-no-requeue), 26 (drill-no-requeue), 29 (drill-no-requeue) (3 of them when the node went DOWN, already counted as an outage)"
+    ],
+    "next_steps": [
+     "Keep it out of service.",
+     "Pull the event history into a hardware ticket.",
+     "Burn-in before return to service."
+    ],
+    "node": "slurm-c2",
+    "scheduler": "slurm",
+    "severity": "critical",
+    "summary": "Down again; this node keeps failing. Treat it as a hardware/platform problem, not a one-off."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-190933_node-death_fixtures/back-after-an-unexpected-reboot"
+  }
+ ]
+}

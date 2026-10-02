@@ -1,0 +1,204 @@
+{
+ "drill": "munge-key-mismatch",
+ "title": "A node's munge key no longer matches",
+ "teaches": "Authentication faults look like a dead node to slurmctld. The host is up and slurmd is running; munge -n | unmunge names the cause. Fixed before SlurmdTimeout, the running job survives.",
+ "started": "2026-10-01T19:25:43-06:00",
+ "repo": "dbbb4fb-dirty",
+ "finished": "2026-10-01T19:33:00-06:00",
+ "status": "PASS",
+ "error": null,
+ "duration_s": 437.0,
+ "triage_version": "dbbb4fb",
+ "metrics": {
+  "detect_s": 52.0,
+  "fix_to_recover_s": 0.7,
+  "inject_to_recover_s": 65.1
+ },
+ "events": [
+  {
+   "t": 8.5,
+   "at": "2026-10-01T19:25:52-06:00",
+   "kind": "observe",
+   "text": "running job (job 34) running on slurm-c2",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 9.2,
+   "at": "2026-10-01T19:25:53-06:00",
+   "kind": "inject",
+   "text": "slurm-c2 has a different munge key"
+  },
+  {
+   "t": 61.2,
+   "at": "2026-10-01T19:26:45-06:00",
+   "kind": "detect",
+   "text": "slurmctld flags it NOT_RESPONDING",
+   "data": {
+    "waited": 52.1
+   }
+  },
+  {
+   "t": 70.1,
+   "at": "2026-10-01T19:26:54-06:00",
+   "kind": "decide",
+   "text": "not responding: auth: slurm-c2 -> investigate/critical/unreachable (want investigate) OK",
+   "data": {
+    "summary": "slurmd stopped responding; Slurm still lists 1 job(s) as running. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN and kills them."
+   }
+  },
+  {
+   "t": 70.8,
+   "at": "2026-10-01T19:26:54-06:00",
+   "kind": "note",
+   "text": "diagnosis: host reachable, slurmd running",
+   "data": {
+    "slurmd": "active"
+   }
+  },
+  {
+   "t": 72.2,
+   "at": "2026-10-01T19:26:56-06:00",
+   "kind": "note",
+   "text": "diagnosis: munge -n on slurm-ctl | unmunge on node",
+   "data": {
+    "result": "unmunge: Error: Invalid credential"
+   }
+  },
+  {
+   "t": 72.8,
+   "at": "2026-10-01T19:26:56-06:00",
+   "kind": "note",
+   "text": "slurmctld log",
+   "data": {
+    "lines": [
+     "[2026-10-01T16:58:55.476] error: Munge decode failed: Rewound credential",
+     "[2026-10-01T16:58:55.476] auth/munge: _print_cred: ENCODED: Thu Oct 01 17:08:55 2026",
+     "[2026-10-01T16:58:55.476] auth/munge: _print_cred: DECODED: Thu Oct 01 16:58:55 2026"
+    ]
+   }
+  },
+  {
+   "t": 73.6,
+   "at": "2026-10-01T19:26:57-06:00",
+   "kind": "fix",
+   "text": "munge key restored; munge and slurmd restarted"
+  },
+  {
+   "t": 74.3,
+   "at": "2026-10-01T19:26:58-06:00",
+   "kind": "recover",
+   "text": "slurm-c2 back in service",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 75.9,
+   "at": "2026-10-01T19:26:59-06:00",
+   "kind": "check",
+   "text": "PASS munge round-trip works again"
+  },
+  {
+   "t": 428.7,
+   "at": "2026-10-01T19:32:52-06:00",
+   "kind": "observe",
+   "text": "job 34 finished",
+   "data": {
+    "waited": 352.9
+   }
+  },
+  {
+   "t": 428.7,
+   "at": "2026-10-01T19:32:52-06:00",
+   "kind": "check",
+   "text": "PASS job 34 survived the outage",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c2"
+    }
+   }
+  },
+  {
+   "t": 437.0,
+   "at": "2026-10-01T19:33:00-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 6.9
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 75.9,
+   "text": "munge round-trip works again",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "t": 428.7,
+   "text": "job 34 survived the outage",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c2"
+   }
+  }
+ ],
+ "decisions": [
+  {
+   "t": 62.1,
+   "label": "not responding: auth",
+   "node": "slurm-c2",
+   "ok": true,
+   "latency": 0.85,
+   "expected": {
+    "action": [
+     "investigate"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "investigate",
+    "severity": "critical",
+    "category": "unreachable",
+    "summary": "slurmd stopped responding; Slurm still lists 1 job(s) as running. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN and kills them."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "investigate",
+    "category": "unreachable",
+    "cluster": "lab",
+    "commands": [
+     "ping -c3 slurm-c2",
+     "ssh slurm-c2 'systemctl is-active slurmd munge chrony; journalctl -u slurmd -n 20'",
+     "munge -n | ssh slurm-c2 unmunge   # 'Invalid credential' = key mismatch; 'Expired'/'Rewound' = clock skew",
+     "ssh slurm-c2 'sudo systemctl restart slurmd'   # if slurmd itself is down",
+     "scontrol show config | grep -i SlurmdTimeout"
+    ],
+    "evidence": [
+     "state MIXED+NOT_RESPONDING; CPUs 1/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "4 separate drain/down incidents for this node in the event window (chronic threshold 3)",
+     "3 job(s) ended NODE_FAIL on this node recently: 11 (drill-no-requeue), 26 (drill-no-requeue), 29 (drill-no-requeue) (3 of them when the node went DOWN, already counted as an outage)",
+     "job 34 \"drill-munge-survivor\" (labadmin) listed as RUNNING by slurmctld"
+    ],
+    "next_steps": [
+     "Check whether the host is reachable at all.",
+     "If it is and slurmd is down, restart it; running jobs survive a slurmd restart.",
+     "If slurmd is running but still not answering, suspect authentication: a munge key that doesn't match the controller's, or a clock more than a few minutes off (munge credentials expire). Restarting slurmd won't fix either.",
+     "If the host is gone, the jobs are already lost. Let the timeout mark it DOWN and follow the down-node path."
+    ],
+    "node": "slurm-c2",
+    "scheduler": "slurm",
+    "severity": "critical",
+    "summary": "slurmd stopped responding; Slurm still lists 1 job(s) as running. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN and kills them."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-192543_munge-key-mismatch_fixtures/not-responding--auth"
+  }
+ ]
+}

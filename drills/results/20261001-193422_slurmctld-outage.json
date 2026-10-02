@@ -1,0 +1,181 @@
+{
+ "drill": "slurmctld-outage",
+ "title": "The Slurm controller goes down",
+ "teaches": "Running jobs don't need slurmctld; new work and every Slurm query do. Triage has to keep working for the clusters it can still see.",
+ "started": "2026-10-01T19:34:22-06:00",
+ "repo": "dbbb4fb-dirty",
+ "finished": "2026-10-01T19:37:09-06:00",
+ "status": "PASS",
+ "error": null,
+ "duration_s": 167.5,
+ "triage_version": "dbbb4fb",
+ "metrics": {
+  "detect_s": 9.7,
+  "fix_to_recover_s": 0.7,
+  "inject_to_recover_s": 87.2
+ },
+ "events": [
+  {
+   "t": 8.2,
+   "at": "2026-10-01T19:34:30-06:00",
+   "kind": "observe",
+   "text": "running job (job 35) running on slurm-c1",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 8.8,
+   "at": "2026-10-01T19:34:31-06:00",
+   "kind": "inject",
+   "text": "slurmctld stopped"
+  },
+  {
+   "t": 18.5,
+   "at": "2026-10-01T19:34:40-06:00",
+   "kind": "detect",
+   "text": "squeue fails",
+   "data": {
+    "output": "slurm_load_jobs error: Unable to contact slurm controller (connect failure)"
+   }
+  },
+  {
+   "t": 28.1,
+   "at": "2026-10-01T19:34:50-06:00",
+   "kind": "check",
+   "text": "PASS new work is refused",
+   "data": {
+    "detail": "sbatch: error: Batch job submission failed: Unable to contact slurm controller (connect failure)"
+   }
+  },
+  {
+   "t": 28.8,
+   "at": "2026-10-01T19:34:51-06:00",
+   "kind": "check",
+   "text": "PASS the running job keeps running on its node"
+  },
+  {
+   "t": 64.7,
+   "at": "2026-10-01T19:35:27-06:00",
+   "kind": "decide",
+   "text": "controller down: triage_cluster -> 1 recommendation(s) OK",
+   "data": {
+    "why": "unavailable: ['lab']"
+   }
+  },
+  {
+   "t": 95.3,
+   "at": "2026-10-01T19:35:57-06:00",
+   "kind": "fix",
+   "text": "slurmctld started"
+  },
+  {
+   "t": 96.0,
+   "at": "2026-10-01T19:35:58-06:00",
+   "kind": "recover",
+   "text": "squeue works again",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 96.7,
+   "at": "2026-10-01T19:35:59-06:00",
+   "kind": "check",
+   "text": "PASS job 35 recovered from saved state, still running",
+   "data": {
+    "detail": [
+     "RUNNING"
+    ]
+   }
+  },
+  {
+   "t": 159.5,
+   "at": "2026-10-01T19:37:01-06:00",
+   "kind": "observe",
+   "text": "job 35 finished",
+   "data": {
+    "waited": 62.8
+   }
+  },
+  {
+   "t": 159.5,
+   "at": "2026-10-01T19:37:01-06:00",
+   "kind": "check",
+   "text": "PASS job 35 completed",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c1"
+    }
+   }
+  },
+  {
+   "t": 167.5,
+   "at": "2026-10-01T19:37:09-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 6.7
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 28.1,
+   "text": "new work is refused",
+   "ok": true,
+   "detail": "sbatch: error: Batch job submission failed: Unable to contact slurm controller (connect failure)"
+  },
+  {
+   "t": 28.8,
+   "text": "the running job keeps running on its node",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "t": 96.7,
+   "text": "job 35 recovered from saved state, still running",
+   "ok": true,
+   "detail": [
+    "RUNNING"
+   ]
+  },
+  {
+   "t": 159.5,
+   "text": "job 35 completed",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c1"
+   }
+  }
+ ],
+ "decisions": [
+  {
+   "t": 38.6,
+   "label": "controller down",
+   "node": "*",
+   "ok": true,
+   "latency": 9.82,
+   "expected": {
+    "note": "The other clusters are still triaged and the lab cluster is reported unavailable."
+   },
+   "got": [
+    {
+     "node": "slurmctld",
+     "cluster": "lab",
+     "action": "investigate",
+     "severity": "critical",
+     "category": "control_plane",
+     "summary": "Can't get node and job state for cluster lab from slurmctld. Running jobs keep running, but nothing new starts and node health can't be checked until it's back."
+    }
+   ],
+   "error": null,
+   "why": "unavailable: ['lab']",
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-193422_slurmctld-outage_fixtures/controller-down"
+  }
+ ]
+}
