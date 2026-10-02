@@ -2,7 +2,13 @@
 # Burn-in for a new or repaired compute node. Runs as a Slurm job that owns the
 # whole node and every GPU:
 #
-#   sbatch -p burnin -w <node> --gres=gpu:4 --exclusive -J burnin /usr/local/sbin/lab-burnin
+#   sbatch -p burnin -w <node> --gres=gpu:4 --exclusive -J burnin \
+#     -o /var/tmp/burnin-%j.out --wrap /usr/local/sbin/lab-burnin
+#
+# --wrap, because sbatch reads a script file on the submit host and this one is
+# installed on compute nodes (each node burns in with its own copy). Output goes
+# to node-local disk: burn-in runs as root, and root can't write the
+# root_squash NFS share (slurmstepd fails the job before it starts).
 #
 # The job's exit code is the verdict (0 = qualified); node-triage reads it from
 # accounting to decide whether the node can be promoted to production.
@@ -48,7 +54,16 @@ done | grep -vc "$want"; wait)
 if [[ $bad -eq 0 ]]; then pass "cpu: $cpus CPUs x 8 rounds, all digests agree"; else fail "cpu: $bad wrong digests"; fi
 
 # 3. Memory: fill half the job's memory with a pattern and read it back.
-mem_mb=${SLURM_MEM_PER_NODE:-512}
+#    --exclusive jobs get no SLURM_MEM_PER_NODE; the job's cgroup, a few levels
+#    above this task's, has the real limit.
+mem_mb=${SLURM_MEM_PER_NODE:-}
+dir="/sys/fs/cgroup$(cut -d: -f3 /proc/self/cgroup)"
+while [[ -z $mem_mb && $dir == /sys/fs/cgroup/* ]]; do
+  limit=$(cat "$dir/memory.max" 2>/dev/null)
+  if [[ $limit =~ ^[0-9]+$ ]]; then mem_mb=$((limit >> 20)); fi
+  dir=${dir%/*}
+done
+mem_mb=${mem_mb:-512}
 if python3 - "$((mem_mb / 2))" <<'PY'; then pass "memory: $((mem_mb / 2)) MiB pattern written and verified"; else fail "memory: pattern mismatch"; fi
 import sys
 n = int(sys.argv[1]) << 20
@@ -61,16 +76,23 @@ sys.exit(0 if all(buf[off:off + len(block)] == block for off in offsets) else 1)
 PY
 
 # 4. Local disk and the shared filesystem: write, flush, read back, compare.
-for target in /var/tmp /shared; do
-  f="$target/burnin-$NODE-${SLURM_JOB_ID:-x}"
-  if head -c 128M /dev/urandom | tee "$f" | sha256sum >"$f.sum" && sync "$f" &&
-     [[ $(sha256sum <"$f") == "$(cat "$f.sum")" ]]; then
-    pass "disk: 128 MiB round trip on $target"
-  else
-    fail "disk: round trip on $target"
-  fi
+roundtrip() { # directory
+  local f rc
+  f="$1/burnin-$(hostname -s)-${SLURM_JOB_ID:-x}"
+  head -c 128M /dev/urandom | tee "$f" | sha256sum >"$f.sum" && sync "$f" &&
+    [[ $(sha256sum <"$f") == "$(cat "$f.sum")" ]]
+  rc=$?
   rm -f "$f" "$f.sum"
-done
+  return $rc
+}
+if roundtrip /var/tmp; then pass "disk: 128 MiB round trip on /var/tmp"; else fail "disk: round trip on /var/tmp"; fi
+# The share is root_squash: root can't open what it creates there, so check it
+# as an unprivileged user, which is how jobs use it.
+if runuser -u nobody -- env SLURM_JOB_ID="${SLURM_JOB_ID:-x}" bash -c "$(declare -f roundtrip); roundtrip /shared"; then
+  pass "disk: 128 MiB round trip on /shared (as nobody)"
+else
+  fail "disk: round trip on /shared"
+fi
 
 # 5. Time: munge credentials and job accounting need a synced clock.
 offset=$(chronyc tracking 2>/dev/null | awk '/^System time/ {print $4}')

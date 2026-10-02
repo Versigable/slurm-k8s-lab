@@ -257,12 +257,12 @@ def nhc_gpu_lost(r):
     CLASSIC(f"sudo scontrol update nodename={node} state=resume")
     r.mark("observe", "maintenance reservation on the node, node resumed for burn-in only")
     burn = lab.sbatch(CLASSIC, f"-p burnin --reservation=drill-burnin -w {node} --gres=gpu:4 --exclusive "
-                               f"-o /shared/burnin-%j.out -J burnin /usr/local/sbin/lab-burnin", sudo=True)
+                               f"-o /var/tmp/burnin-%j.out -J burnin --wrap /usr/local/sbin/lab-burnin", sudo=True)
     user = lab.sbatch(CLASSIC, "-n1 --mem=200M -J drill-user-during-burnin --wrap 'sleep 5'")
     acct = r.wait(f"user job {user} ran", lambda: (a := lab.accounted(user)) and a["state"] == "COMPLETED" and a, 120)
     r.check(f"user work stayed off {node} during burn-in", acct["nodes"] != node, acct)
     acct = r.wait(f"burn-in job {burn} finished", lambda: (a := lab.accounted(burn)) and a["state"] not in ("PENDING", "RUNNING") and a, 300, every=5)
-    r.note("burn-in output", output=CLASSIC(f"cat /shared/burnin-{burn}.out", check=False).out.strip().splitlines()[-8:])
+    r.note("burn-in output", output=lab.ssh(node, f"sudo cat /var/tmp/burnin-{burn}.out", check=False).out.strip().splitlines()[-12:])
     r.check("burn-in passed", acct["state"] == "COMPLETED" and acct["exit"] == "0:0", acct)
     CLASSIC("sudo scontrol delete reservation=drill-burnin")
     r.wait(f"{node} back in batch", lambda: lab.in_service(classic(node)), 60, kind="recover")
@@ -634,9 +634,9 @@ def node_bringup(r):
     res = CLASSIC(f"sbatch -p batch -w {node} --mem=200M -J drill-sneak --wrap true", check=False)
     r.check(f"production work can't reach {node}", res.rc != 0, (res.err or res.out).strip()[-160:])
 
-    burn = lab.sbatch(CLASSIC, f"-p burnin -w {node} --gres=gpu:4 --exclusive -o /shared/burnin-%j.out -J burnin /usr/local/sbin/lab-burnin", sudo=True)
+    burn = lab.sbatch(CLASSIC, f"-p burnin -w {node} --gres=gpu:4 --exclusive -o /var/tmp/burnin-%j.out -J burnin --wrap /usr/local/sbin/lab-burnin", sudo=True)
     acct = r.wait(f"burn-in job {burn} finished", lambda: (a := lab.accounted(burn)) and a["state"] not in ("PENDING", "RUNNING") and a, 300, every=5)
-    r.note("burn-in output", output=CLASSIC(f"cat /shared/burnin-{burn}.out", check=False).out.strip().splitlines()[-8:])
+    r.note("burn-in output", output=lab.ssh(node, f"sudo cat /var/tmp/burnin-{burn}.out", check=False).out.strip().splitlines()[-12:])
     r.check("burn-in passed", acct["state"] == "COMPLETED" and acct["exit"] == "0:0", acct)
     r.decide(node, ["promote"], "burn-in passed")
 
