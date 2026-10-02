@@ -18,7 +18,7 @@ Measured on the lab: classic Slurm 24.11 (`SlurmdTimeout=300`), Slinky Slurm
 
 | What happened | How long |
 |---|---|
-| Compute node loses power: until slurmctld flags it NOT_RESPONDING | 161 s |
+| Compute node loses power: until slurmctld flags it NOT_RESPONDING | 15-161 s (where the node was in slurmctld's ~100 s ping cycle) |
 | ...until it's marked DOWN and its jobs fail or requeue | 458 s (SlurmdTimeout counts from the last contact) |
 | ...until the requeued job runs again on another node | 585 s (requeued jobs wait ~120 s, reason `BeginTime`) |
 | Munge key mismatch on a node: until NOT_RESPONDING | 125 s |
@@ -106,7 +106,15 @@ now a regression test in `triage/internal/*/testdata/`.
    `munge -n | ssh <node> unmunge` ("Invalid credential" = key, "Expired" or
    "Rewound" = clock). *(munge-key-mismatch, clock-skew)*
 
-10. **New nodes looked healthy.** A node in the burn-in partition that had never
+10. **One outage, two rules.** Each drilled power loss killed a no-requeue job
+    (NODE_FAIL at the second the node went DOWN). With the node back and healthy,
+    triage said "2 jobs failed on it with NODE_FAIL; drain it". The NODE_FAIL rule
+    is for a node that kills jobs *while looking healthy*; a NODE_FAIL that ended
+    as the node went DOWN is that outage's casualty, already counted as an
+    incident. Those are now shown as evidence but don't trigger the drain.
+    *(node-death, run twice)*
+
+11. **New nodes looked healthy.** A node in the burn-in partition that had never
     run a job was "healthy, leave it alone". Triage now runs a qualification
     rule: `burn_in` until a burn-in job passes since the node last booted, then
     `promote`, or `escalate_hardware` if it failed. *(node-bringup)*
@@ -146,6 +154,13 @@ now a regression test in `triage/internal/*/testdata/`.
 
 ## Where the drills were wrong
 
+- **History.** Running drills back to back on the same few nodes builds real
+  history: by the re-run, slurm-c2 had lost power twice and filled its disk in
+  one afternoon. Three separate incidents in a week is node-triage's chronic
+  threshold, so escalating it as hardware was the *right* answer, and the
+  drill's fixed "investigate" was wrong. The drills now count incidents
+  themselves (independently of node-triage) and expect `escalate_hardware`
+  when the node is chronic.
 - **node-death** expected the node to rejoin by itself after power returned
   (`ReturnToService=1`). It doesn't after an unexpected reboot; see finding 5.
 - **k8s-cert-renewal** expected kube-apiserver to keep serving the old

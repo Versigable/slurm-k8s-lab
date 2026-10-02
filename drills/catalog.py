@@ -41,6 +41,37 @@ def wait_running(r, sched, jobid, node, what):
     return r.wait(f"{what} (job {jobid}) running on {node}", lambda: lab.running_on(sched, jobid, node), 90)
 
 
+def incidents(node):
+    """Separate drain/down incidents on a classic node in the last 7 days, counted
+    independently of node-triage: events less than 10 minutes apart are one
+    incident (an outage logs "Not responding", then "Node unexpectedly
+    rebooted"), and planned maintenance doesn't count."""
+    out = CLASSIC(f"sacctmgr -n -P show event event=node nodes={node} start=now-7days format=TimeStart,TimeEnd,Reason").out
+    spans = []
+    for line in out.splitlines():
+        start, end, reason = (line.split("|") + ["", "", ""])[:3]
+        if reason.lower().startswith("maint") or "kernel update" in reason.lower():
+            continue
+        t0 = time.mktime(time.strptime(start, "%Y-%m-%dT%H:%M:%S"))
+        t1 = t0 if end in ("", "Unknown") else time.mktime(time.strptime(end, "%Y-%m-%dT%H:%M:%S"))
+        spans.append((t0, t1))
+    n, last_end = 0, None
+    for t0, t1 in sorted(spans):
+        if last_end is None or t0 - last_end > 600:
+            n += 1
+        last_end = max(last_end or t1, t1)
+    return n
+
+
+def unless_chronic(r, node, normal):
+    """The expected action, given the node's history: node-triage escalates a node
+    with 3+ separate incidents in a week. Drills run back to back on the same
+    few nodes make that history real, so the expectation follows it."""
+    n = incidents(node)
+    r.note(f"{node} history", incidents_7d=n)
+    return ["escalate_hardware"] if n >= 3 else normal
+
+
 def drained_by(node, prefix):
     n = lab.node(CLASSIC, node)
     return "DRAIN" in n["state"] and n["reason"].startswith(prefix) and n
@@ -151,7 +182,7 @@ def node_death(r):
     r.wait(f"requeue-safe job {safe} running again on slurm-c1", lambda: lab.running_on(CLASSIC, safe, "slurm-c1"), 180)
     acct = r.wait(f"no-requeue job {unsafe} recorded", lambda: lab.accounted(unsafe), 60)
     r.check(f"no-requeue job {unsafe} ended NODE_FAIL", acct["state"] == "NODE_FAIL", acct)
-    r.decide("slurm-c2", ["investigate", "escalate_hardware"], "down")
+    r.decide("slurm-c2", unless_chronic(r, "slurm-c2", ["investigate"]), "down")
 
     j = lab.job(CLASSIC, safe)
     r.note("requeued job", restarts=j["restarts"], node=j["nodes"],
@@ -165,7 +196,7 @@ def node_death(r):
     n = r.wait("slurm-c2 registers but is held DOWN", lambda: (x := lab.node(CLASSIC, "slurm-c2")) and "DOWN" in x["state"]
                and "NOT_RESPONDING" not in x["state"] and x, 300, every=3)
     r.note("why it's held", reason=n["reason"])
-    r.decide("slurm-c2", ["investigate"], "back after an unexpected reboot", category="unexpected_reboot")
+    r.decide("slurm-c2", unless_chronic(r, "slurm-c2", ["investigate"]), "back after an unexpected reboot", category="unexpected_reboot")
     r.note("diagnosis: end of the previous boot's log (no shutdown sequence = power loss or hard hang)",
            lines=lab.ssh("slurm-c2", "sudo journalctl -b -1 -n 3 --no-pager -o short-iso", check=False).out.strip().splitlines())
     CLASSIC("sudo scontrol update nodename=slurm-c2 state=resume")
@@ -217,7 +248,7 @@ def nhc_disk_full(r):
     r.mark("inject", f"/ on {node} filled to 95% ({fill / 2**30:.1f} GiB fallocate)")
     n = r.wait("NHC drains it", lambda: drained_by(node, "NHC"), NHC_INTERVAL * 3, kind="detect")
     r.note("drain reason", reason=n["reason"])
-    r.decide(node, ["investigate"], "drained by NHC: disk", category="health_check")
+    r.decide(node, unless_chronic(r, node, ["investigate"]), "drained by NHC: disk", category="health_check")
     lab.ssh(node, "sudo rm -f /var/tmp/drill-fill")
     r.mark("fix", "fill file removed")
     r.wait("NHC resumes it by itself", lambda: lab.in_service(classic(node)), NHC_INTERVAL * 3, kind="recover")
