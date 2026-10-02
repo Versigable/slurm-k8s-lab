@@ -1,0 +1,284 @@
+{
+ "drill": "slinky-pod-kill",
+ "title": "Slurm worker pod deleted mid-job (vs slurmd killed on a VM)",
+ "teaches": "On a VM, slurmd can die and the job lives on (slurmstepd is separate). In Slinky the pod is the node: lose the pod and you lose the job.",
+ "started": "2026-10-01T17:15:00-06:00",
+ "repo": "e953ccf-dirty",
+ "finished": "2026-10-01T17:21:12-06:00",
+ "status": "GAP",
+ "error": null,
+ "duration_s": 371.7,
+ "triage_version": "1a9f389",
+ "metrics": {
+  "detect_s": 0.7,
+  "fix_to_recover_s": 3.6,
+  "inject_to_recover_s": 151.2
+ },
+ "events": [
+  {
+   "t": 10.7,
+   "at": "2026-10-01T17:15:11-06:00",
+   "kind": "observe",
+   "text": "classic job (job 12) running on slurm-c1",
+   "data": {
+    "waited": 3.3
+   }
+  },
+  {
+   "t": 11.4,
+   "at": "2026-10-01T17:15:12-06:00",
+   "kind": "observe",
+   "text": "classic: slurmd SIGKILLed on slurm-c1"
+  },
+  {
+   "t": 15.0,
+   "at": "2026-10-01T17:15:15-06:00",
+   "kind": "check",
+   "text": "PASS classic: the job outlives slurmd"
+  },
+  {
+   "t": 17.3,
+   "at": "2026-10-01T17:15:18-06:00",
+   "kind": "observe",
+   "text": "Slinky job (job 2) running on slinky-0",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 18.6,
+   "at": "2026-10-01T17:15:19-06:00",
+   "kind": "inject",
+   "text": "Slinky: worker pod slurm-worker-slinky-0 deleted under a running job",
+   "data": {
+    "pod_was_on": "k8s-w1"
+   }
+  },
+  {
+   "t": 19.3,
+   "at": "2026-10-01T17:15:20-06:00",
+   "kind": "detect",
+   "text": "Slurm notices",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 20.9,
+   "at": "2026-10-01T17:15:21-06:00",
+   "kind": "note",
+   "text": "Slinky's view",
+   "data": {
+    "node": [
+     "DOWN",
+     "DYNAMIC_NORM"
+    ],
+    "job": [
+     "PENDING"
+    ]
+   }
+  },
+  {
+   "t": 29.3,
+   "at": "2026-10-01T17:15:30-06:00",
+   "kind": "decide",
+   "text": "worker pod gone: slinky-0 -> wait/info/kubernetes_managed (want investigate|wait) OK",
+   "data": {
+    "summary": "Kubernetes node k8s-w1 is back in service; the Slinky operator should undrain this node within seconds."
+   }
+  },
+  {
+   "t": 35.4,
+   "at": "2026-10-01T17:15:36-06:00",
+   "kind": "observe",
+   "text": "operator recreated the worker pod",
+   "data": {
+    "waited": 6.1
+   }
+  },
+  {
+   "t": 157.2,
+   "at": "2026-10-01T17:17:38-06:00",
+   "kind": "note",
+   "text": "slinky-0 back in service by itself: not within 120s"
+  },
+  {
+   "t": 165.5,
+   "at": "2026-10-01T17:17:46-06:00",
+   "kind": "decide",
+   "text": "pod back, node still out: slinky-0 -> wait/info/kubernetes_managed (want resume|investigate) GAP",
+   "data": {
+    "summary": "Kubernetes node k8s-w1 is back in service; the Slinky operator should undrain this node within seconds."
+   }
+  },
+  {
+   "t": 166.2,
+   "at": "2026-10-01T17:17:47-06:00",
+   "kind": "fix",
+   "text": "slinky-0 resumed by hand (Slinky runs ReturnToService=0)"
+  },
+  {
+   "t": 169.8,
+   "at": "2026-10-01T17:17:50-06:00",
+   "kind": "recover",
+   "text": "slinky-0 in service",
+   "data": {
+    "waited": 3.6
+   }
+  },
+  {
+   "t": 170.6,
+   "at": "2026-10-01T17:17:51-06:00",
+   "kind": "note",
+   "text": "what happened to the Slinky job",
+   "data": {
+    "state": [
+     "RUNNING"
+    ],
+    "restarts": 1,
+    "reason": "None"
+   }
+  },
+  {
+   "t": 171.2,
+   "at": "2026-10-01T17:17:52-06:00",
+   "kind": "observe",
+   "text": "classic job 12 finished",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 171.2,
+   "at": "2026-10-01T17:17:52-06:00",
+   "kind": "check",
+   "text": "PASS classic: job completed despite the slurmd kill",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c1"
+    }
+   }
+  },
+  {
+   "t": 371.7,
+   "at": "2026-10-01T17:21:12-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 196.8
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 15.0,
+   "text": "classic: the job outlives slurmd",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "t": 171.2,
+   "text": "classic: job completed despite the slurmd kill",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c1"
+   }
+  }
+ ],
+ "decisions": [
+  {
+   "t": 21.7,
+   "label": "worker pod gone",
+   "node": "slinky-0",
+   "ok": true,
+   "latency": 0.84,
+   "expected": {
+    "action": [
+     "investigate",
+     "wait"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "wait",
+    "severity": "info",
+    "category": "kubernetes_managed",
+    "summary": "Kubernetes node k8s-w1 is back in service; the Slinky operator should undrain this node within seconds."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "wait",
+    "category": "kubernetes_managed",
+    "cluster": "slinky",
+    "commands": [
+     "kubectl uncordon k8s-w1   # after the fix; the operator then undrains slinky-0"
+    ],
+    "evidence": [
+     "state DOWN+DYNAMIC_NORM; CPUs 0/4 allocated",
+     "reason \"slurm-operator: Pod is terminating\" set 3s ago by root",
+     "Slinky node: runs as pod slurm/slurm-worker-slinky-0 on Kubernetes node k8s-w1",
+     "Kubernetes node k8s-w1: none/info: Healthy."
+    ],
+    "next_steps": [
+     "Work the problem on Kubernetes node k8s-w1 (triage_node k8s-w1).",
+     "Once k8s-w1 is fixed, uncordon it; the operator undrains slinky-0 by itself.",
+     "Don't resume this node in Slurm: while the Kubernetes node is cordoned, the operator re-drains it within seconds."
+    ],
+    "node": "slinky-0",
+    "scheduler": "slurm",
+    "severity": "info",
+    "summary": "Kubernetes node k8s-w1 is back in service; the Slinky operator should undrain this node within seconds."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-171500_slinky-pod-kill_fixtures/worker-pod-gone"
+  },
+  {
+   "t": 158.0,
+   "label": "pod back, node still out",
+   "node": "slinky-0",
+   "ok": false,
+   "latency": 0.85,
+   "expected": {
+    "action": [
+     "resume",
+     "investigate"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "wait",
+    "severity": "info",
+    "category": "kubernetes_managed",
+    "summary": "Kubernetes node k8s-w1 is back in service; the Slinky operator should undrain this node within seconds."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "wait",
+    "category": "kubernetes_managed",
+    "cluster": "slinky",
+    "commands": [
+     "kubectl uncordon k8s-w1   # after the fix; the operator then undrains slinky-0"
+    ],
+    "evidence": [
+     "state DOWN+DYNAMIC_NORM; CPUs 0/4 allocated",
+     "reason \"slurm-operator: Pod is terminating\" set 2m20s ago by root",
+     "Slinky node: runs as pod slurm/slurm-worker-slinky-0 on Kubernetes node k8s-w1",
+     "Kubernetes node k8s-w1: none/info: Healthy."
+    ],
+    "next_steps": [
+     "Work the problem on Kubernetes node k8s-w1 (triage_node k8s-w1).",
+     "Once k8s-w1 is fixed, uncordon it; the operator undrains slinky-0 by itself.",
+     "Don't resume this node in Slurm: while the Kubernetes node is cordoned, the operator re-drains it within seconds."
+    ],
+    "node": "slinky-0",
+    "scheduler": "slurm",
+    "severity": "info",
+    "summary": "Kubernetes node k8s-w1 is back in service; the Slinky operator should undrain this node within seconds."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-171500_slinky-pod-kill_fixtures/pod-back--node-still-out"
+  }
+ ]
+}

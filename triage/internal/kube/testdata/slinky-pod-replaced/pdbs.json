@@ -1,0 +1,51 @@
+{
+ "items": [
+  {
+   "apiVersion": "policy/v1",
+   "kind": "PodDisruptionBudget",
+   "metadata": {
+    "creationTimestamp": "2026-09-26T23:51:40Z",
+    "generation": 1,
+    "name": "slurm-workers-pdb-slurm",
+    "namespace": "slurm",
+    "ownerReferences": [
+     {
+      "apiVersion": "slinky.slurm.net/v1beta1",
+      "blockOwnerDeletion": true,
+      "kind": "NodeSet",
+      "name": "slurm-worker-slinky",
+      "uid": "52cb1387-9551-47a2-8ea8-faf0d4d28f85"
+     }
+    ],
+    "resourceVersion": "3543",
+    "uid": "21ab459a-7ec1-41c7-bbbe-4edaa0a152dd"
+   },
+   "spec": {
+    "maxUnavailable": 0,
+    "selector": {
+     "matchLabels": {
+      "nodeset.slinky.slurm.net/pod-protect": "true",
+      "slinky.slurm.net/cluster": "slurm"
+     }
+    }
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastTransitionTime": "2026-09-26T23:51:40Z",
+      "message": "",
+      "observedGeneration": 1,
+      "reason": "InsufficientPods",
+      "status": "False",
+      "type": "DisruptionAllowed"
+     }
+    ],
+    "currentHealthy": 0,
+    "desiredHealthy": 0,
+    "disruptionsAllowed": 0,
+    "expectedPods": 0,
+    "observedGeneration": 1
+   }
+  }
+ ]
+}

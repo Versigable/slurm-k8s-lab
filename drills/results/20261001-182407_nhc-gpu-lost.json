@@ -1,0 +1,283 @@
+{
+ "drill": "nhc-gpu-lost",
+ "title": "GPU falls off the bus: escalate, repair, burn in, return",
+ "teaches": "A health check can find hardware faults; those must not auto-resume after repair. Take the drain away from NHC, repair, burn in behind a reservation, then return.",
+ "started": "2026-10-01T18:24:07-06:00",
+ "repo": "34e61a7-dirty",
+ "finished": "2026-10-01T18:26:59-06:00",
+ "status": "GAP",
+ "error": null,
+ "duration_s": 171.9,
+ "triage_version": "1a9f389",
+ "metrics": {
+  "detect_s": 40.4,
+  "fix_to_recover_s": 103.8,
+  "inject_to_recover_s": 154.3
+ },
+ "events": [
+  {
+   "t": 8.2,
+   "at": "2026-10-01T18:24:16-06:00",
+   "kind": "inject",
+   "text": "/dev/fakegpu3 vanished (GPU fell off the bus)"
+  },
+  {
+   "t": 48.6,
+   "at": "2026-10-01T18:24:56-06:00",
+   "kind": "detect",
+   "text": "NHC drains it",
+   "data": {
+    "waited": 40.4
+   }
+  },
+  {
+   "t": 48.6,
+   "at": "2026-10-01T18:24:56-06:00",
+   "kind": "note",
+   "text": "drain reason",
+   "data": {
+    "reason": "NHC: check_gpu_count:  GPU missing: 3 of 4 devices present"
+   }
+  },
+  {
+   "t": 57.4,
+   "at": "2026-10-01T18:25:05-06:00",
+   "kind": "decide",
+   "text": "drained by NHC: GPU missing: slurm-c1 -> escalate_hardware/critical/hardware (want escalate_hardware/hardware) OK",
+   "data": {
+    "summary": "Hardware fault: the node registered with less hardware than configured. Keep it out of service."
+   }
+  },
+  {
+   "t": 58.1,
+   "at": "2026-10-01T18:25:06-06:00",
+   "kind": "observe",
+   "text": "drain taken over from NHC (reason no longer starts with NHC:)"
+  },
+  {
+   "t": 58.7,
+   "at": "2026-10-01T18:25:06-06:00",
+   "kind": "fix",
+   "text": "GPU replaced (device node restored)"
+  },
+  {
+   "t": 140.0,
+   "at": "2026-10-01T18:26:27-06:00",
+   "kind": "check",
+   "text": "PASS NHC passed but left the hardware drain alone",
+   "data": {
+    "detail": "triage: hardware: GPU missing, RMA-DRILL-1"
+   }
+  },
+  {
+   "t": 148.7,
+   "at": "2026-10-01T18:26:36-06:00",
+   "kind": "decide",
+   "text": "repaired, not burned in yet: slurm-c1 -> investigate/warning/triage (want escalate_hardware) GAP",
+   "data": {
+    "summary": "Drained with a reason triage doesn't recognize. Ask whoever drained it before resuming."
+   }
+  },
+  {
+   "t": 150.0,
+   "at": "2026-10-01T18:26:37-06:00",
+   "kind": "observe",
+   "text": "maintenance reservation on the node, node resumed for burn-in only"
+  },
+  {
+   "t": 159.9,
+   "at": "2026-10-01T18:26:47-06:00",
+   "kind": "observe",
+   "text": "user job 18 ran",
+   "data": {
+    "waited": 8.6
+   }
+  },
+  {
+   "t": 159.9,
+   "at": "2026-10-01T18:26:47-06:00",
+   "kind": "check",
+   "text": "PASS user work stayed off slurm-c1 during burn-in",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c2"
+    }
+   }
+  },
+  {
+   "t": 160.6,
+   "at": "2026-10-01T18:26:48-06:00",
+   "kind": "observe",
+   "text": "burn-in job 17 finished",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 161.2,
+   "at": "2026-10-01T18:26:49-06:00",
+   "kind": "note",
+   "text": "burn-in output",
+   "data": {
+    "output": [
+     "burn-in: node slurm-c1, job 17, 2026-10-01T18:26:41-06:00",
+     "PASS  gpu: 4 of 4 allocated (0,1,2,3)",
+     "PASS  gpu0: reachable",
+     "PASS  gpu1: reachable",
+     "PASS  gpu2: reachable",
+     "PASS  gpu3: reachable",
+     "PASS  cpu: 2 CPUs x 8 rounds, all digests agree",
+     "PASS  memory: 859 MiB pattern written and verified",
+     "PASS  disk: 128 MiB round trip on /var/tmp",
+     "PASS  disk: 128 MiB round trip on /shared (as nobody)",
+     "PASS  clock: 0.000203208s from NTP",
+     "burn-in passed on slurm-c1"
+    ]
+   }
+  },
+  {
+   "t": 161.2,
+   "at": "2026-10-01T18:26:49-06:00",
+   "kind": "check",
+   "text": "PASS burn-in passed",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c1"
+    }
+   }
+  },
+  {
+   "t": 162.5,
+   "at": "2026-10-01T18:26:50-06:00",
+   "kind": "recover",
+   "text": "slurm-c1 back in batch",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 171.9,
+   "at": "2026-10-01T18:26:59-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 6.8
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 140.0,
+   "text": "NHC passed but left the hardware drain alone",
+   "ok": true,
+   "detail": "triage: hardware: GPU missing, RMA-DRILL-1"
+  },
+  {
+   "t": 159.9,
+   "text": "user work stayed off slurm-c1 during burn-in",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c2"
+   }
+  },
+  {
+   "t": 161.2,
+   "text": "burn-in passed",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c1"
+   }
+  }
+ ],
+ "decisions": [
+  {
+   "t": 49.5,
+   "label": "drained by NHC: GPU missing",
+   "node": "slurm-c1",
+   "ok": true,
+   "latency": 0.89,
+   "expected": {
+    "action": [
+     "escalate_hardware"
+    ],
+    "category": "hardware"
+   },
+   "got": {
+    "action": "escalate_hardware",
+    "severity": "critical",
+    "category": "hardware",
+    "summary": "Hardware fault: the node registered with less hardware than configured. Keep it out of service."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "escalate_hardware",
+    "category": "hardware",
+    "cluster": "lab",
+    "commands": [
+     "scontrol show node slurm-c1",
+     "ssh slurm-c1 'journalctl -u slurmd -n 50; dmesg | tail -50'",
+     "sbatch -p burnin -w slurm-c1 --gres=gpu:4 burnin.sh   # after repair"
+    ],
+    "evidence": [
+     "state IDLE+DRAIN; CPUs 0/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "reason \"NHC: check_gpu_count:  GPU missing: 3 of 4 devices present\" set 2s ago by root"
+    ],
+    "next_steps": [
+     "Keep the node drained; don't resume it until the hardware is fixed.",
+     "Open a hardware ticket with the reason text and node serial; on real GPUs, pull `nvidia-smi -q` and dmesg Xid lines first.",
+     "After repair, run a burn-in job in the burnin partition before returning it to batch."
+    ],
+    "node": "slurm-c1",
+    "scheduler": "slurm",
+    "severity": "critical",
+    "summary": "Hardware fault: the node registered with less hardware than configured. Keep it out of service."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-182407_nhc-gpu-lost_fixtures/drained-by-nhc--gpu-missing"
+  },
+  {
+   "t": 140.9,
+   "label": "repaired, not burned in yet",
+   "node": "slurm-c1",
+   "ok": false,
+   "latency": 0.84,
+   "expected": {
+    "action": [
+     "escalate_hardware"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "investigate",
+    "severity": "warning",
+    "category": "triage",
+    "summary": "Drained with a reason triage doesn't recognize. Ask whoever drained it before resuming."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "investigate",
+    "category": "triage",
+    "cluster": "lab",
+    "evidence": [
+     "state IDLE+DRAIN; CPUs 0/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "reason \"triage: hardware: GPU missing, RMA-DRILL-1\" set 1m24s ago by root"
+    ],
+    "next_steps": [
+     "Check with root, who set the reason."
+    ],
+    "node": "slurm-c1",
+    "scheduler": "slurm",
+    "severity": "warning",
+    "summary": "Drained with a reason triage doesn't recognize. Ask whoever drained it before resuming."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-182407_nhc-gpu-lost_fixtures/repaired--not-burned-in-yet"
+  }
+ ]
+}

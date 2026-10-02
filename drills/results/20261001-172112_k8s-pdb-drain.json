@@ -1,0 +1,340 @@
+{
+ "drill": "k8s-pdb-drain",
+ "title": "Drain a Kubernetes worker under PDBs, with a busy Slurm pod on it",
+ "teaches": "Drains stop at PodDisruptionBudgets, including the one Slinky puts on workers running jobs. Node-local volumes pin pods: what lived on the drained node waits for it.",
+ "started": "2026-10-01T17:21:12-06:00",
+ "repo": "e953ccf-dirty",
+ "finished": "2026-10-01T17:28:14-06:00",
+ "status": "FAIL",
+ "error": "timed out: slinky-0 in service",
+ "duration_s": 422.4,
+ "triage_version": "1a9f389",
+ "metrics": {
+  "detect_s": 45.8,
+  "fix_to_recover_s": null,
+  "inject_to_recover_s": null
+ },
+ "events": [
+  {
+   "t": 8.8,
+   "at": "2026-10-01T17:21:21-06:00",
+   "kind": "note",
+   "text": "checkout-api placement",
+   "data": {
+    "pods": {
+     "k8s-w2": [
+      "Running"
+     ],
+     "k8s-w1": [
+      "Running"
+     ]
+    }
+   }
+  },
+  {
+   "t": 10.2,
+   "at": "2026-10-01T17:21:22-06:00",
+   "kind": "observe",
+   "text": "Slinky job (job 3) running on slinky-0",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 35.3,
+   "at": "2026-10-01T17:21:47-06:00",
+   "kind": "observe",
+   "text": "operator protects the busy worker pod",
+   "data": {
+    "waited": 25.1
+   }
+  },
+  {
+   "t": 36.0,
+   "at": "2026-10-01T17:21:48-06:00",
+   "kind": "inject",
+   "text": "kubectl drain k8s-w1 for maintenance (45 s timeout)"
+  },
+  {
+   "t": 81.8,
+   "at": "2026-10-01T17:22:34-06:00",
+   "kind": "detect",
+   "text": "drain blocked by disruption budgets",
+   "data": {
+    "pods": [
+     "drill/checkout-api-cd867887b-d5nvs",
+     "slurm/slurm-worker-slinky-0"
+    ]
+   }
+  },
+  {
+   "t": 81.8,
+   "at": "2026-10-01T17:22:34-06:00",
+   "kind": "check",
+   "text": "PASS drain did not complete"
+  },
+  {
+   "t": 90.2,
+   "at": "2026-10-01T17:22:42-06:00",
+   "kind": "decide",
+   "text": "cordoned, drain blocked: k8s-w1 -> investigate/warning/maintenance (want investigate) OK",
+   "data": {
+    "summary": "Cordoned, but its drain is blocked: 2 PodDisruptionBudget(s) allow no disruptions."
+   }
+  },
+  {
+   "t": 98.4,
+   "at": "2026-10-01T17:22:50-06:00",
+   "kind": "decide",
+   "text": "operator-drained, job running: slinky-0 -> investigate/warning/kubernetes_managed (want wait) GAP",
+   "data": {
+    "summary": "Drained by the Slinky operator because Kubernetes node k8s-w1 is cordoned. Handle it on the Kubernetes side; resuming this node in Slurm gets reverted."
+   }
+  },
+  {
+   "t": 99.9,
+   "at": "2026-10-01T17:22:52-06:00",
+   "kind": "fix",
+   "text": "checkout-api scaled to 3 so one replica can move; draining again (waits for the Slurm job)"
+  },
+  {
+   "t": 201.7,
+   "at": "2026-10-01T17:24:34-06:00",
+   "kind": "check",
+   "text": "PASS drain completed",
+   "data": {
+    "detail": [
+     "error when evicting pods/\"slurm-worker-slinky-0\" -n \"slurm\" (will retry after 5s): Cannot evict pod as it would violate the pod's disruption budget.",
+     "error when evicting pods/\"slurm-worker-slinky-0\" -n \"slurm\" (will retry after 5s): Cannot evict pod as it would violate the pod's disruption budget.",
+     "error when evicting pods/\"slurm-worker-slinky-0\" -n \"slurm\" (will retry after 5s): Cannot evict pod as it would violate the pod's disruption budget."
+    ]
+   }
+  },
+  {
+   "t": 201.7,
+   "at": "2026-10-01T17:24:34-06:00",
+   "kind": "observe",
+   "text": "k8s-w1 empty"
+  },
+  {
+   "t": 202.4,
+   "at": "2026-10-01T17:24:34-06:00",
+   "kind": "note",
+   "text": "Slinky job when the drain finished",
+   "data": {
+    "state": [
+     "COMPLETED"
+    ]
+   }
+  },
+  {
+   "t": 204.7,
+   "at": "2026-10-01T17:24:37-06:00",
+   "kind": "note",
+   "text": "where things went",
+   "data": {
+    "checkout": {
+     "k8s-w2": [
+      "Running",
+      "Running",
+      "Running"
+     ]
+    },
+    "slinky0": null,
+    "pending": [
+     "monitoring/prometheus-kube-prometheus-stack-prometheus-0",
+     "slurm/slurm-worker-slinky-0"
+    ]
+   }
+  },
+  {
+   "t": 213.2,
+   "at": "2026-10-01T17:24:45-06:00",
+   "kind": "decide",
+   "text": "cordoned for maintenance, empty: k8s-w1 -> resume/info/maintenance (want resume) OK",
+   "data": {
+    "summary": "Cordoned for maintenance and empty. Uncordon once the work is done."
+   }
+  },
+  {
+   "t": 214.5,
+   "at": "2026-10-01T17:24:47-06:00",
+   "kind": "observe",
+   "text": "maintenance done; k8s-w1 uncordoned"
+  },
+  {
+   "t": 221.2,
+   "at": "2026-10-01T17:24:53-06:00",
+   "kind": "observe",
+   "text": "nothing Pending any more",
+   "data": {
+    "waited": 6.7
+   }
+  },
+  {
+   "t": 402.7,
+   "at": "2026-10-01T17:27:55-06:00",
+   "kind": "timeout",
+   "text": "slinky-0 in service: not within 180s"
+  },
+  {
+   "t": 422.4,
+   "at": "2026-10-01T17:28:14-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 6.6
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 81.8,
+   "text": "drain did not complete",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "t": 201.7,
+   "text": "drain completed",
+   "ok": true,
+   "detail": [
+    "error when evicting pods/\"slurm-worker-slinky-0\" -n \"slurm\" (will retry after 5s): Cannot evict pod as it would violate the pod's disruption budget.",
+    "error when evicting pods/\"slurm-worker-slinky-0\" -n \"slurm\" (will retry after 5s): Cannot evict pod as it would violate the pod's disruption budget.",
+    "error when evicting pods/\"slurm-worker-slinky-0\" -n \"slurm\" (will retry after 5s): Cannot evict pod as it would violate the pod's disruption budget."
+   ]
+  }
+ ],
+ "decisions": [
+  {
+   "t": 82.6,
+   "label": "cordoned, drain blocked",
+   "node": "k8s-w1",
+   "ok": true,
+   "latency": 0.83,
+   "expected": {
+    "action": [
+     "investigate"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "investigate",
+    "severity": "warning",
+    "category": "maintenance",
+    "summary": "Cordoned, but its drain is blocked: 2 PodDisruptionBudget(s) allow no disruptions."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "investigate",
+    "category": "maintenance",
+    "cluster": "kubernetes",
+    "commands": [
+     "kubectl get pdb -A",
+     "kubectl drain k8s-w1 --ignore-daemonsets --delete-emptydir-data --timeout=2m   # will wait on the PDB"
+    ],
+    "evidence": [
+     "Ready=True, cordoned; taints node.kubernetes.io/unschedulable:NoSchedule; kubelet v1.36.5",
+     "cordon reason \"maint: kernel update CHG-3002\" (annotation slurm-k8s-lab/triage-reason)",
+     "hosts Slinky Slurm node slinky-0 (MIXED+DRAIN+DYNAMIC_NORM): \"slurm-operator: Node (k8s-w1) was cordoned, Pod (slurm/slurm-worker-slinky-0) must be cordoned\"; cordoning this node drains it in Slurm",
+     "PDB drill/checkout-api allows 0 disruptions (healthy 2/2 desired) and covers drill/checkout-api-cd867887b-d5nvs on this node",
+     "PDB slurm/slurm-workers-pdb-slurm allows 0 disruptions (healthy 1/2 desired) and covers slurm/slurm-worker-slinky-0 on this node"
+    ],
+    "next_steps": [
+     "A drain here would hang. Either add capacity elsewhere so the PDB's pods can reschedule, or agree a disruption with the owner.",
+     "Don't delete pods by hand to get past a PDB; that's the outage the PDB exists to prevent."
+    ],
+    "node": "k8s-w1",
+    "scheduler": "kubernetes",
+    "severity": "warning",
+    "summary": "Cordoned, but its drain is blocked: 2 PodDisruptionBudget(s) allow no disruptions."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-172112_k8s-pdb-drain_fixtures/cordoned--drain-blocked"
+  },
+  {
+   "t": 91.0,
+   "label": "operator-drained, job running",
+   "node": "slinky-0",
+   "ok": false,
+   "latency": 0.83,
+   "expected": {
+    "action": [
+     "wait"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "investigate",
+    "severity": "warning",
+    "category": "kubernetes_managed",
+    "summary": "Drained by the Slinky operator because Kubernetes node k8s-w1 is cordoned. Handle it on the Kubernetes side; resuming this node in Slurm gets reverted."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "investigate",
+    "category": "kubernetes_managed",
+    "cluster": "slinky",
+    "commands": [
+     "kubectl uncordon k8s-w1   # after the fix; the operator then undrains slinky-0"
+    ],
+    "evidence": [
+     "state MIXED+DRAIN+DYNAMIC_NORM; CPUs 1/4 allocated",
+     "reason \"slurm-operator: Node (k8s-w1) was cordoned, Pod (slurm/slurm-worker-slinky-0) must be cordoned\" set 50s ago by slurm",
+     "Slinky node: runs as pod slurm/slurm-worker-slinky-0 on Kubernetes node k8s-w1",
+     "Kubernetes node k8s-w1: investigate/warning: Cordoned, but its drain is blocked: 2 PodDisruptionBudget(s) allow no disruptions."
+    ],
+    "next_steps": [
+     "Work the problem on Kubernetes node k8s-w1 (triage_node k8s-w1).",
+     "Once k8s-w1 is fixed, uncordon it; the operator undrains slinky-0 by itself.",
+     "Don't resume this node in Slurm: while the Kubernetes node is cordoned, the operator re-drains it within seconds."
+    ],
+    "node": "slinky-0",
+    "scheduler": "slurm",
+    "severity": "warning",
+    "summary": "Drained by the Slinky operator because Kubernetes node k8s-w1 is cordoned. Handle it on the Kubernetes side; resuming this node in Slurm gets reverted."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-172112_k8s-pdb-drain_fixtures/operator-drained--job-running"
+  },
+  {
+   "t": 205.5,
+   "label": "cordoned for maintenance, empty",
+   "node": "k8s-w1",
+   "ok": true,
+   "latency": 0.83,
+   "expected": {
+    "action": [
+     "resume"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "resume",
+    "severity": "info",
+    "category": "maintenance",
+    "summary": "Cordoned for maintenance and empty. Uncordon once the work is done."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "resume",
+    "category": "maintenance",
+    "cluster": "kubernetes",
+    "commands": [
+     "kubectl uncordon k8s-w1"
+    ],
+    "evidence": [
+     "Ready=True, cordoned; taints node.kubernetes.io/unschedulable:NoSchedule; kubelet v1.36.5",
+     "cordon reason \"maint: kernel update CHG-3002\" (annotation slurm-k8s-lab/triage-reason)",
+     "hosts Slinky Slurm node slinky-0 (DOWN+DRAIN+DYNAMIC_NORM): \"slurm-operator: Pod is terminating\"; cordoning this node drains it in Slurm"
+    ],
+    "node": "k8s-w1",
+    "preconditions": [
+     "The maintenance in \"maint: kernel update CHG-3002\" is complete and verified."
+    ],
+    "scheduler": "kubernetes",
+    "severity": "info",
+    "summary": "Cordoned for maintenance and empty. Uncordon once the work is done."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-172112_k8s-pdb-drain_fixtures/cordoned-for-maintenance--empty"
+  }
+ ]
+}

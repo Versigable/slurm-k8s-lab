@@ -1,0 +1,33 @@
+{
+ "items": [
+  {
+   "apiVersion": "v1",
+   "count": 1,
+   "eventTime": null,
+   "firstTimestamp": "2026-10-01T23:21:53Z",
+   "involvedObject": {
+    "apiVersion": "v1",
+    "kind": "Node",
+    "name": "k8s-w1"
+   },
+   "kind": "Event",
+   "lastTimestamp": "2026-10-01T23:21:53Z",
+   "message": "Node k8s-w1 status is now: NodeNotSchedulable",
+   "metadata": {
+    "creationTimestamp": "2026-10-01T23:21:53Z",
+    "name": "k8s-w1.18da8b40feb981b0",
+    "namespace": "default",
+    "resourceVersion": "2091085",
+    "uid": "381e454d-2e7f-4989-918b-f9dac4df48d8"
+   },
+   "reason": "NodeNotSchedulable",
+   "reportingComponent": "kubelet",
+   "reportingInstance": "k8s-w1",
+   "source": {
+    "component": "kubelet",
+    "host": "k8s-w1"
+   },
+   "type": "Normal"
+  }
+ ]
+}

@@ -28,6 +28,8 @@ const (
 	ActionResume           Action = "resume"            // return it to service (check preconditions first)
 	ActionInvestigate      Action = "investigate"       // needs a human look before any state change
 	ActionEscalateHardware Action = "escalate_hardware" // keep it out; hardware ticket / RMA path
+	ActionBurnIn           Action = "burn_in"           // not in production yet: run the burn-in job
+	ActionPromote          Action = "promote"           // burn-in passed: add it to production
 )
 
 // Severity orders recommendations for an on-call view.
@@ -64,6 +66,18 @@ const (
 	// Drained by the Slinky operator because its Kubernetes node is cordoned.
 	// The fix lives on the Kubernetes side.
 	CategoryKubernetesManaged Category = "kubernetes_managed"
+	// A cluster's scheduler or the Kubernetes API couldn't be read (see ComponentUnavailable).
+	CategoryControlPlane Category = "control_plane"
+	// Accounting (slurmdbd) couldn't be read; history-based checks are off.
+	CategoryAccounting Category = "accounting"
+	// A Slinky node whose pod was deleted and replaced; Slurm holds it DOWN until resumed.
+	CategoryPodRestarted Category = "pod_restarted"
+	// The node rebooted without being asked; Slurm holds it DOWN until a human returns it.
+	CategoryUnexpectedReboot Category = "unexpected_reboot"
+	// A Slinky node whose Kubernetes node is in trouble, while Slurm still sees it as fine.
+	CategoryKubernetesNode Category = "kubernetes_node"
+	// A node that isn't in production yet: burn-in decides whether it gets there.
+	CategoryQualification Category = "qualification"
 )
 
 // Recommendation is the answer for one node.
@@ -71,7 +85,7 @@ type Recommendation struct {
 	Node      string   `json:"node" jsonschema:"node name"`
 	Scheduler string   `json:"scheduler" jsonschema:"slurm or kubernetes"`
 	Cluster   string   `json:"cluster,omitempty" jsonschema:"which cluster: e.g. lab (classic Slurm), slinky (Slurm on Kubernetes), kubernetes"`
-	Action    Action   `json:"action" jsonschema:"one of none, wait, drain, resume, investigate, escalate_hardware"`
+	Action    Action   `json:"action" jsonschema:"one of none, wait, drain, resume, investigate, escalate_hardware, burn_in, promote"`
 	Severity  Severity `json:"severity" jsonschema:"info, warning or critical"`
 	Category  Category `json:"category" jsonschema:"classification of the node's drain/down reason"`
 	Summary   string   `json:"summary" jsonschema:"one-line explanation"`
@@ -93,20 +107,29 @@ type Snapshot struct {
 	Jobs    []slurm.Job
 	History []slurm.HistoricalJob // recent sacct records
 	Events  []slurm.Event         // recent node drain/down events
+	// AccountingError is set when History and Events couldn't be read; triage
+	// then works from live state and says what it didn't check.
+	AccountingError string
 }
 
 // Policy holds the thresholds. Zero values fall back to DefaultPolicy.
 type Policy struct {
 	// NODE_FAIL jobs on a healthy node (within the history window) before recommending a drain.
 	NodeFailDrainThreshold int
-	// Drain/down events on one node (within the event window) that mark it as chronic.
+	// Separate drain/down incidents on one node (within the event window) that
+	// mark it as chronic. Back-to-back events count once; maintenance doesn't count.
 	ChronicEventThreshold int
 	// node-problem-detector kernel events on a Ready Kubernetes node before it's flagged.
 	KubeEventThreshold int
+	// Partitions of the node lifecycle: a node in BurninPartition but not in
+	// ProductionPartition is still being qualified.
+	ProductionPartition string
+	BurninPartition     string
 }
 
 // DefaultPolicy is deliberately conservative for a small cluster.
-var DefaultPolicy = Policy{NodeFailDrainThreshold: 2, ChronicEventThreshold: 3, KubeEventThreshold: 3}
+var DefaultPolicy = Policy{NodeFailDrainThreshold: 2, ChronicEventThreshold: 3, KubeEventThreshold: 3,
+	ProductionPartition: "batch", BurninPartition: "burnin"}
 
 func (p Policy) withDefaults() Policy {
 	if p.NodeFailDrainThreshold <= 0 {
@@ -118,6 +141,12 @@ func (p Policy) withDefaults() Policy {
 	if p.KubeEventThreshold <= 0 {
 		p.KubeEventThreshold = DefaultPolicy.KubeEventThreshold
 	}
+	if p.ProductionPartition == "" {
+		p.ProductionPartition = DefaultPolicy.ProductionPartition
+	}
+	if p.BurninPartition == "" {
+		p.BurninPartition = DefaultPolicy.BurninPartition
+	}
 	return p
 }
 
@@ -127,9 +156,10 @@ var categoryPatterns = []struct {
 }{
 	{CategoryKubernetesManaged, regexp.MustCompile(`^slurm-operator:`)},
 	{CategoryTriage, regexp.MustCompile(`(?i)^triage:`)},
-	{CategoryHardware, regexp.MustCompile(`(?i)gres/\S+ count|xid|ecc|nvlink|pcie|fell off the bus|gpu (missing|lost)`)},
+	{CategoryHardware, regexp.MustCompile(`(?i)^hardware\b|gres/\S+ count|xid|ecc|nvlink|pcie|fell off the bus|gpu (missing|lost)`)},
 	{CategoryStuckProcess, regexp.MustCompile(`(?i)kill task failed`)},
 	{CategoryUnreachable, regexp.MustCompile(`(?i)not responding`)},
+	{CategoryUnexpectedReboot, regexp.MustCompile(`(?i)unexpectedly rebooted`)},
 	{CategoryHealthCheck, regexp.MustCompile(`(?i)^nhc|health ?check`)},
 	{CategoryMaintenance, regexp.MustCompile(`(?i)^maint|\bchg-\d+|kernel update|firmware|scheduled reboot`)},
 }
@@ -137,9 +167,20 @@ var categoryPatterns = []struct {
 var gresShortfall = regexp.MustCompile(`gres/(\S+) count reported lower than configured \((\d+) < (\d+)\)`)
 
 // Classify maps a free-text Slurm reason to a Category.
+//
+// A drain triage made ("triage: ...") keeps the category of what it's about:
+// re-labelling a health-check drain as "triage: hardware: GPU missing" (so NHC
+// can't auto-resume it after the repair) must not turn a hardware fault into
+// an unknown reason. Found by drills/: nhc-gpu-lost.
 func Classify(reason string) Category {
 	if strings.TrimSpace(reason) == "" {
 		return CategoryNone
+	}
+	if len(reason) >= 7 && strings.EqualFold(reason[:7], "triage:") {
+		if c := Classify(strings.TrimSpace(reason[7:])); c != CategoryNone && c != CategoryOther {
+			return c
+		}
+		return CategoryTriage
 	}
 	for _, p := range categoryPatterns {
 		if p.re.MatchString(reason) {
@@ -186,17 +227,23 @@ func (a assessor) assess() Recommendation {
 		r.Evidence = append(r.Evidence, a.reasonLine())
 	}
 
+	var kubeTrouble *Recommendation
 	if pod, ok := n.SlinkyPod(); ok {
 		r.Evidence = append(r.Evidence, fmt.Sprintf("Slinky node: runs as pod %s/%s on Kubernetes node %s", pod.Namespace, pod.PodName, pod.Node))
 		if r.Category == CategoryKubernetesManaged {
 			a.kubernetesManaged(&r, pod)
 			return r
 		}
+		if kr, ok := a.kubeNodeTrouble(pod.Node); ok {
+			r.Evidence = append(r.Evidence, fmt.Sprintf("Kubernetes node %s: %s/%s: %s", pod.Node, kr.Action, kr.Severity, kr.Summary))
+			kubeTrouble = &kr
+		}
 	}
 
-	chronic := a.events()
-	if len(chronic) >= a.p.ChronicEventThreshold {
-		r.Evidence = append(r.Evidence, fmt.Sprintf("%d drain/down events for this node in the event window (chronic threshold %d)", len(chronic), a.p.ChronicEventThreshold))
+	incidents := a.incidents()
+	chronic := incidents >= a.p.ChronicEventThreshold
+	if chronic {
+		r.Evidence = append(r.Evidence, fmt.Sprintf("%d separate drain/down incidents for this node in the event window (chronic threshold %d)", incidents, a.p.ChronicEventThreshold))
 	}
 	waiting := a.waitingJobs()
 	for _, j := range waiting {
@@ -210,16 +257,25 @@ func (a assessor) assess() Recommendation {
 	if len(nodeFails) > 0 {
 		r.Evidence = append(r.Evidence, fmt.Sprintf("%d job(s) ended NODE_FAIL on this node recently: %s", len(nodeFails), jobList(nodeFails)))
 	}
+	if a.s.AccountingError != "" {
+		r.Evidence = append(r.Evidence, "accounting unavailable, so recent NODE_FAIL jobs and drain/down history weren't checked")
+	}
 
 	switch {
 	case n.Has("INVALID") || n.Has("INVALID_REG") || r.Category == CategoryHardware:
 		a.hardware(&r)
+	case n.Has("REBOOT_REQUESTED") || n.Has("REBOOT_ISSUED"):
+		a.reboot(&r)
 	case n.Has("DOWN"):
-		a.down(&r, len(chronic) >= a.p.ChronicEventThreshold)
+		a.down(&r, chronic)
 	case n.Has("NOT_RESPONDING"):
 		a.unresponsive(&r)
 	case n.Has("DRAIN"):
-		a.drain(&r, len(chronic) >= a.p.ChronicEventThreshold)
+		a.drain(&r, chronic)
+	case a.inQualification():
+		a.qualify(&r)
+	case kubeTrouble != nil:
+		a.onTroubledKubeNode(&r, *kubeTrouble)
 	case len(nodeFails) >= a.p.NodeFailDrainThreshold:
 		r.Action, r.Severity = ActionDrain, SeverityWarning
 		reason := fmt.Sprintf("triage: %d NODE_FAIL jobs recently", len(nodeFails))
@@ -250,6 +306,10 @@ func (a assessor) assess() Recommendation {
 // lab). So the recommendation follows the Kubernetes node's.
 func (a assessor) kubernetesManaged(r *Recommendation, pod slurm.SlinkyPod) {
 	n := a.n
+	if strings.Contains(n.Reason, "Pod is terminating") {
+		a.podReplaced(r, pod)
+		return
+	}
 	r.Action, r.Severity = ActionInvestigate, SeverityWarning
 	r.Summary = fmt.Sprintf("Drained by the Slinky operator because Kubernetes node %s is cordoned. Handle it on the Kubernetes side; resuming this node in Slurm gets reverted.", pod.Node)
 	if a.s.Kube != nil {
@@ -258,14 +318,22 @@ func (a assessor) kubernetesManaged(r *Recommendation, pod slurm.SlinkyPod) {
 			// Mirror the problem class (hardware, investigate), not actions that
 			// are performed on the Kubernetes node: "drain" or "resume" here would
 			// read as instructions for this already-drained Slurm node.
-			switch kr.Action {
-			case ActionNone:
+			switch {
+			case kr.Action == ActionNone:
 				r.Action, r.Severity = ActionWait, SeverityInfo
 				r.Summary = fmt.Sprintf("Kubernetes node %s is back in service; the Slinky operator should undrain this node within seconds.", pod.Node)
-			case ActionEscalateHardware, ActionInvestigate:
+			case kr.Action == ActionEscalateHardware || (kr.Action == ActionInvestigate && nodeFault(kr.Category)):
 				r.Action, r.Severity = kr.Action, kr.Severity
 			default:
-				r.Action, r.Severity = ActionWait, kr.Severity
+				// Planned work on the Kubernetes node (a maintenance cordon, a drain
+				// waiting on a PodDisruptionBudget): nothing is wrong with this node.
+				// Found by drills/: k8s-pdb-drain (triage mirrored the blocked
+				// drain's "investigate" onto a Slurm node that was simply busy).
+				r.Action, r.Severity = ActionWait, SeverityInfo
+				r.Summary = fmt.Sprintf("Drained by the Slinky operator because Kubernetes node %s is cordoned for planned work. Nothing to do on the Slurm side.", pod.Node)
+				if running := a.runningJobs(); len(running) > 0 {
+					r.Summary += fmt.Sprintf(" %d job(s) running here finish first.", len(running))
+				}
 			}
 		}
 	}
@@ -277,17 +345,46 @@ func (a assessor) kubernetesManaged(r *Recommendation, pod slurm.SlinkyPod) {
 	r.Commands = []string{fmt.Sprintf("kubectl uncordon %s   # after the fix; the operator then undrains %s", pod.Node, n.Name)}
 }
 
+// podReplaced: the operator set the node DOWN ("slurm-operator: Pod is
+// terminating") when its pod was deleted, and requeued or failed its jobs. The
+// replacement pod comes up within seconds, but Slurm keeps holding the node
+// DOWN: Slinky's slurm.conf has ReturnToService=0, so the new slurmd
+// registering doesn't clear it, and the operator doesn't either. Slurm's own
+// timestamps say which moment this is. Found by drills/: slinky-pod-kill
+// (triage said "wait" and the node stayed out for minutes).
+func (a assessor) podReplaced(r *Recommendation, pod slurm.SlinkyPod) {
+	n := a.n
+	r.Category = CategoryPodRestarted
+	down, started := n.ReasonChangedAt.Time(), n.SlurmdStartTime.Time()
+	if down.IsZero() || started.IsZero() || !started.After(down) {
+		r.Action, r.Severity = ActionWait, SeverityInfo
+		r.Summary = "Its pod is being replaced; the operator recreates it. Jobs that were running here were requeued or failed."
+		r.NextSteps = []string{"Wait for the new pod's slurmd to register, then resume the node: Slurm won't do it by itself."}
+		return
+	}
+	r.Action, r.Severity = ActionResume, SeverityInfo
+	r.Summary = "Its pod was replaced and the new slurmd has registered, but Slurm still holds the node DOWN from the old pod's termination (Slinky runs ReturnToService=0). Resume it."
+	r.Evidence = append(r.Evidence, fmt.Sprintf("slurmd restarted %s after the node was marked DOWN", started.Sub(down).Round(time.Second)))
+	r.Commands = []string{fmt.Sprintf("kubectl -n %s exec slurm-controller-0 -c slurmctld -- scontrol update nodename=%s state=resume", pod.Namespace, n.Name)}
+}
+
 func (a assessor) hardware(r *Recommendation) {
 	n := a.n
 	r.Action, r.Severity = ActionEscalateHardware, SeverityCritical
 	r.Category = CategoryHardware
-	r.Summary = "Hardware fault: the node registered with less hardware than configured. Keep it out of service."
+	r.Summary = "Hardware fault reported in the drain reason. Keep it out of service."
 	// e.g. "gres/gpu count reported lower than configured (3 < 4)". After such a
 	// registration the node's gres field shows the reported count, not the configured one.
 	configured := slurm.GresCount(n.Gres)
 	if m := gresShortfall.FindStringSubmatch(n.Reason); m != nil {
 		r.Evidence = append(r.Evidence, fmt.Sprintf("slurmd registered %s %s of %s configured", m[2], m[1], m[3]))
 		configured, _ = strconv.Atoi(m[3])
+	}
+	switch {
+	case n.Has("INVALID") || n.Has("INVALID_REG") || gresShortfall.MatchString(n.Reason):
+		r.Summary = "Hardware fault: the node registered with less hardware than configured. Keep it out of service."
+	case strings.HasPrefix(n.Reason, "NHC:"):
+		r.Summary = "Hardware fault found by the health check (NHC). Keep it out of service; NHC would resume it as soon as its check passes, so take the drain over before the repair."
 	}
 	r.NextSteps = []string{
 		"Keep the node drained; don't resume it until the hardware is fixed.",
@@ -297,7 +394,11 @@ func (a assessor) hardware(r *Recommendation) {
 	r.Commands = []string{
 		fmt.Sprintf("scontrol show node %s", n.Name),
 		fmt.Sprintf("ssh %s 'journalctl -u slurmd -n 50; dmesg | tail -50'", n.Name),
-		fmt.Sprintf("sbatch -p burnin -w %s --gres=gpu:%d burnin.sh   # after repair", n.Name, max(configured, 1)),
+		burnInCommand(a.p.BurninPartition, n.Name, configured) + "   # after repair",
+	}
+	if strings.HasPrefix(n.Reason, "NHC:") {
+		// Found by drills/: nhc-gpu-lost.
+		r.Commands = append([]string{fmt.Sprintf("scontrol update nodename=%s state=drain reason=\"triage: hardware: <ticket>\"   # NHC never resumes a drain it didn't set", n.Name)}, r.Commands...)
 	}
 }
 
@@ -307,6 +408,23 @@ func (a assessor) down(r *Recommendation, chronic bool) {
 		r.Action, r.Severity = ActionEscalateHardware, SeverityCritical
 		r.Summary = "Down again; this node keeps failing. Treat it as a hardware/platform problem, not a one-off."
 		r.NextSteps = []string{"Keep it out of service.", "Pull the event history into a hardware ticket.", "Burn-in before return to service."}
+	} else if r.Category == CategoryUnexpectedReboot && !n.Has("NOT_RESPONDING") {
+		// The node is back and slurmd is answering, but it rebooted without being
+		// asked, so Slurm holds it DOWN (ReturnToService=1 only returns nodes that
+		// went DOWN for not responding). Found by drills/: node-death.
+		r.Action, r.Severity = ActionInvestigate, SeverityWarning
+		r.Summary = "Back after rebooting without being asked (crash, power loss or watchdog); Slurm is holding it DOWN. Find out why before returning it."
+		r.NextSteps = []string{
+			"Read the end of the previous boot's log: a clean shutdown sequence means someone rebooted it; nothing at all means power loss or a hard hang.",
+			"On real hardware, check the BMC event log (SEL) and any kernel crash dump.",
+			"Resume it once the cause is understood and the health check passes. If it has happened before, escalate instead.",
+		}
+		r.Commands = []string{
+			fmt.Sprintf("ssh %s 'journalctl -b -1 -n 30 --no-pager'", n.Name),
+			fmt.Sprintf("ssh %s 'sudo nhc -t 60'", n.Name),
+			fmt.Sprintf("scontrol update nodename=%s state=resume   # once the cause is understood", n.Name),
+		}
+		return
 	} else {
 		r.Action, r.Severity = ActionInvestigate, SeverityCritical
 		r.Summary = "slurmd is unreachable. Find out whether the host, the network or just slurmd is gone."
@@ -347,12 +465,15 @@ func (a assessor) unresponsive(r *Recommendation) {
 	}
 	r.NextSteps = []string{
 		"Check whether the host is reachable at all.",
-		"If it is, restart slurmd; running jobs survive a slurmd restart.",
+		"If it is and slurmd is down, restart it; running jobs survive a slurmd restart.",
+		"If slurmd is running but still not answering, suspect authentication: a munge key that doesn't match the controller's, or a clock more than a few minutes off (munge credentials expire). Restarting slurmd won't fix either.",
 		"If the host is gone, the jobs are already lost. Let the timeout mark it DOWN and follow the down-node path.",
 	}
 	r.Commands = []string{
 		fmt.Sprintf("ping -c3 %s", n.Name),
-		fmt.Sprintf("ssh %s 'sudo systemctl restart slurmd && journalctl -u slurmd -n 20'", n.Name),
+		fmt.Sprintf("ssh %s 'systemctl is-active slurmd munge chrony; journalctl -u slurmd -n 20'", n.Name),
+		fmt.Sprintf("munge -n | ssh %s unmunge   # 'Invalid credential' = key mismatch; 'Expired'/'Rewound' = clock skew", n.Name),
+		fmt.Sprintf("ssh %s 'sudo systemctl restart slurmd'   # if slurmd itself is down", n.Name),
 		"scontrol show config | grep -i SlurmdTimeout",
 	}
 }
@@ -403,6 +524,21 @@ func (a assessor) drain(r *Recommendation, chronic bool) {
 		r.Commands = []string{fmt.Sprintf("scontrol update nodename=%s state=resume", n.Name)}
 	case CategoryHealthCheck:
 		r.Action, r.Severity = ActionInvestigate, SeverityWarning
+		if strings.HasPrefix(n.Reason, "NHC:") {
+			// NHC resumes the nodes it drained itself (reason starting "NHC:") as
+			// soon as every check passes, and never touches other drains.
+			r.Summary = "Drained by NHC. Fix what failed; NHC returns the node to service itself at its next run once every check passes."
+			r.NextSteps = []string{
+				"Fix the failing condition named in the reason.",
+				"Wait one health-check interval: NHC resumes the node itself when the checks pass. No manual resume needed.",
+				"To keep it out regardless (you suspect hardware), re-drain it with your own reason; NHC never resumes a drain it didn't set.",
+			}
+			r.Commands = []string{
+				fmt.Sprintf("ssh %s 'sudo nhc -t 60'   # run the checks now; resumes the node if they pass", n.Name),
+				"scontrol show config | grep -i HealthCheckInterval",
+			}
+			break
+		}
 		r.Summary = "Drained by a health check. Fix what failed, re-run the check, and resume only if it passes."
 		r.NextSteps = []string{"Fix the failing condition named in the reason.", "Re-run the health check on the node.", "Resume only if it passes."}
 		r.Commands = []string{
@@ -423,6 +559,141 @@ func (a assessor) drain(r *Recommendation, chronic bool) {
 		if n.ReasonSetBy != "" {
 			r.NextSteps = []string{fmt.Sprintf("Check with %s, who set the reason.", n.ReasonSetBy)}
 		}
+	}
+}
+
+// reboot: someone asked Slurm to reboot the node (scontrol reboot). That's
+// planned work, not an outage: REBOOT_REQUESTED drains it and waits for its
+// jobs (ASAP) or for it to go idle; REBOOT_ISSUED reads as DOWN while it boots.
+// If it misses ResumeTimeout, Slurm marks it DOWN ("reboot timed out") and the
+// down-node path takes over. Found by drills/: maintenance-reboot.
+func (a assessor) reboot(r *Recommendation) {
+	n := a.n
+	if r.Category == CategoryNone || r.Category == CategoryOther {
+		r.Category = CategoryMaintenance
+	}
+	if n.Has("REBOOT_ISSUED") {
+		r.Action, r.Severity = ActionWait, SeverityInfo
+		r.Summary = "Rebooting on request (scontrol reboot). It rejoins by itself once slurmd registers; Slurm marks it DOWN if it misses ResumeTimeout."
+		r.NextSteps = []string{"Wait for the node to come back. Investigate only if it's marked DOWN with \"reboot timed out\"."}
+		r.Commands = []string{fmt.Sprintf("scontrol show node %s | grep -E 'State|Reason|BootTime'", n.Name)}
+		return
+	}
+	if len(a.runningJobs()) > 0 {
+		a.drain(r, false) // the same job checks as any drain: bounded jobs mean wait, unbounded ones block the reboot
+		r.Summary = "Reboot requested; " + strings.ToLower(r.Summary[:1]) + r.Summary[1:]
+	} else {
+		r.Action, r.Severity = ActionWait, SeverityInfo
+		r.Summary = "Reboot requested; the node reboots as soon as slurmd acts on it."
+	}
+	r.NextSteps = append(r.NextSteps, "Nothing else to do: Slurm drains it, reboots it, and with nextstate=RESUME returns it to service.")
+	r.Commands = append(r.Commands, fmt.Sprintf("scontrol cancel_reboot %s   # only to call the reboot off", n.Name))
+}
+
+// burnInCommand submits the burn-in job: the whole node and every GPU, the
+// node's own copy of the script (--wrap), output kept on the node (it runs as
+// root, and root can't write the root_squash share).
+func burnInCommand(partition, node string, gpus int) string {
+	return fmt.Sprintf("sbatch -p %s -w %s --gres=gpu:%d --exclusive -J burnin -o /var/tmp/burnin-%%j.out --wrap /usr/local/sbin/lab-burnin",
+		partition, node, max(gpus, 1))
+}
+
+// inQualification: the node is in the burn-in partition but not in production.
+func (a assessor) inQualification() bool {
+	return slices.Contains(a.n.Partitions, a.p.BurninPartition) && !slices.Contains(a.n.Partitions, a.p.ProductionPartition)
+}
+
+// qualify: a new or repaired node earns its way into production by passing
+// burn-in: a job named "burnin" in the burn-in partition, run since the node
+// last booted. Found by drills/: node-bringup (triage called a node that had
+// never run a job "healthy, leave it alone").
+func (a assessor) qualify(r *Recommendation) {
+	n := a.n
+	r.Category = CategoryQualification
+	r.Evidence = append(r.Evidence, fmt.Sprintf("in partition %s but not %s: not in production yet", a.p.BurninPartition, a.p.ProductionPartition))
+	burnCmd := burnInCommand(a.p.BurninPartition, n.Name, slurm.GresCount(n.Gres))
+	for _, j := range a.runningJobs() {
+		if j.Name == "burnin" {
+			r.Action, r.Severity = ActionWait, SeverityInfo
+			r.Summary = fmt.Sprintf("Burn-in job %d is running.", j.ID)
+			return
+		}
+	}
+	var last *slurm.HistoricalJob
+	for i, j := range a.s.History {
+		if j.Name == "burnin" && j.Partition == a.p.BurninPartition && j.OnNode(n.Name) && j.Time.End > 0 && (last == nil || j.Time.End > last.Time.End) {
+			last = &a.s.History[i]
+		}
+	}
+	booted := n.BootTime.Time()
+	switch {
+	case a.s.AccountingError != "":
+		r.Action, r.Severity = ActionInvestigate, SeverityWarning
+		r.Summary = "Not in production yet, and accounting is unavailable, so its burn-in result can't be checked."
+	case last == nil || (!booted.IsZero() && time.Unix(last.Time.End, 0).Before(booted)):
+		r.Action, r.Severity = ActionBurnIn, SeverityInfo
+		r.Summary = "Not in production yet and no burn-in since it last booted. Run the burn-in job."
+		r.Commands = []string{burnCmd}
+	case !last.Succeeded():
+		r.Action, r.Severity = ActionEscalateHardware, SeverityCritical
+		r.Summary = fmt.Sprintf("Burn-in failed: job %d ended %s (exit %d). Keep it out of production.", last.ID, strings.Join(last.State.Current, "+"), last.ExitCode.ReturnCode.Number)
+		r.Evidence = append(r.Evidence, fmt.Sprintf("burn-in job %d ended %s", last.ID, time.Unix(last.Time.End, 0).Format(time.RFC3339)))
+		r.NextSteps = []string{"Read the burn-in output for the failing check.", "Fix or replace the part, reboot, and burn in again."}
+		r.Commands = []string{burnCmd + "   # after the repair"}
+	default:
+		r.Action, r.Severity = ActionPromote, SeverityInfo
+		r.Summary = fmt.Sprintf("Burn-in passed (job %d). Promote it to production.", last.ID)
+		r.Evidence = append(r.Evidence, fmt.Sprintf("burn-in job %d completed with exit 0 at %s, after the node last booted", last.ID, time.Unix(last.Time.End, 0).Format(time.RFC3339)))
+		r.NextSteps = []string{
+			fmt.Sprintf("Add it to the %s partition. In this lab: set its stage to \"production\" in the Terraform node table, apply, and run site.yml --limit slurm.", a.p.ProductionPartition),
+			"Check that the first production job lands and completes.",
+		}
+	}
+}
+
+// kubeNodeTrouble returns the assessment of the Kubernetes node a Slinky node
+// runs on, if that node has a problem of its own (not just a cordon).
+func (a assessor) kubeNodeTrouble(kubeNode string) (Recommendation, bool) {
+	if a.s.Kube == nil {
+		return Recommendation{}, false
+	}
+	kr, err := AssessKube(*a.s.Kube, kubeNode, a.p)
+	if err != nil || !nodeFault(kr.Category) || (kr.Action != ActionInvestigate && kr.Action != ActionEscalateHardware) {
+		return Recommendation{}, false
+	}
+	return kr, true
+}
+
+// nodeFault reports whether a Kubernetes recommendation is about the node
+// itself being unhealthy, as opposed to planned work on it.
+func nodeFault(c Category) bool {
+	switch c {
+	case CategoryHardware, CategoryUnreachable, CategoryKubelet, CategoryStuckProcess, CategoryResourcePressure, CategoryKernelEvents:
+		return true
+	}
+	return false
+}
+
+// onTroubledKubeNode: Slurm sees the node as fine, but the Kubernetes node its
+// pod runs on is in trouble (kubelet gone, hardware fault). The pod, and every
+// job in it, lives or dies with that node. Found by drills/: k8s-kubelet-stop
+// (triage said "healthy" while Kubernetes was about to evict the pod).
+func (a assessor) onTroubledKubeNode(r *Recommendation, kr Recommendation) {
+	pod, _ := a.n.SlinkyPod()
+	r.Action, r.Severity, r.Category = ActionInvestigate, kr.Severity, CategoryKubernetesNode
+	if kr.Action == ActionEscalateHardware {
+		r.Action = ActionEscalateHardware
+	}
+	r.Summary = fmt.Sprintf("Slurm still sees this node as fine, but its Kubernetes node %s is in trouble. Its pod, and any job running in it, depends on that node.", pod.Node)
+	if running := a.runningJobs(); len(running) > 0 {
+		r.Summary += fmt.Sprintf(" %d job(s) are running here.", len(running))
+	}
+	r.NextSteps = []string{
+		fmt.Sprintf("Work the Kubernetes node first (triage_node %s).", pod.Node),
+		"If Kubernetes evicts the pod or the node dies, jobs running here end NODE_FAIL or are requeued. Warn their owners, or requeue the requeue-safe ones now.",
+	}
+	r.Commands = []string{
+		fmt.Sprintf("kubectl get node %s; kubectl -n %s get pod %s -o wide", pod.Node, pod.Namespace, pod.PodName),
 	}
 }
 
@@ -478,6 +749,35 @@ func (a assessor) nodeFailJobs() []slurm.HistoricalJob {
 		}
 	}
 	return out
+}
+
+// incidentGap: drain/down events closer together than this are one incident.
+const incidentGap = 10 * time.Minute
+
+// incidents counts this node's drain/down incidents in the event window. One
+// outage often logs several events ("Not responding", then "Node unexpectedly
+// rebooted" when it comes back), and planned maintenance isn't a failure.
+// Found by drills/: nhc-disk-full (one power loss counted twice, plus the
+// current drain, made a node "chronic").
+func (a assessor) incidents() int {
+	evs := slices.Clone(a.events())
+	slices.SortFunc(evs, func(x, y slurm.Event) int { return x.Start.Compare(y.Start) })
+	n := 0
+	var lastEnd time.Time
+	for _, e := range evs {
+		if Classify(e.Reason) == CategoryMaintenance {
+			continue
+		}
+		if n == 0 || e.Start.Sub(lastEnd) > incidentGap {
+			n++
+		}
+		end := e.End
+		if end.IsZero() {
+			end = e.Start
+		}
+		lastEnd = maxTime(lastEnd, end)
+	}
+	return n
 }
 
 func (a assessor) events() []slurm.Event {

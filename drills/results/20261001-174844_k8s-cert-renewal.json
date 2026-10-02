@@ -1,0 +1,76 @@
+{
+ "drill": "k8s-cert-renewal",
+ "title": "Renew the control-plane certificates",
+ "teaches": "kubeadm certs renew is half the job: the static pods must restart to load the new certs. On one control-plane node that's an API outage, so time it.",
+ "started": "2026-10-01T17:48:44-06:00",
+ "repo": "e953ccf-dirty",
+ "finished": "2026-10-01T17:51:24-06:00",
+ "status": "FAIL",
+ "error": "timed out: control-plane containers stopped",
+ "duration_s": 160.7,
+ "triage_version": "",
+ "metrics": {
+  "detect_s": null,
+  "fix_to_recover_s": null,
+  "inject_to_recover_s": null
+ },
+ "events": [
+  {
+   "t": 7.2,
+   "at": "2026-10-01T17:48:51-06:00",
+   "kind": "note",
+   "text": "apiserver certificate before",
+   "data": {
+    "notAfter": "notAfter=Sep 26 23:47:02 2027 GMT"
+   }
+  },
+  {
+   "t": 13.8,
+   "at": "2026-10-01T17:48:57-06:00",
+   "kind": "inject",
+   "text": "kubeadm certs renew all"
+  },
+  {
+   "t": 15.5,
+   "at": "2026-10-01T17:48:59-06:00",
+   "kind": "check",
+   "text": "FAIL renewed on disk but the API still serves the old cert (needs a restart)",
+   "data": {
+    "detail": {
+     "disk": "notAfter=Oct  1 23:48:56 2027 GMT",
+     "served": "notAfter=Oct  1 23:48:56 2027 GMT"
+    }
+   }
+  },
+  {
+   "t": 138.3,
+   "at": "2026-10-01T17:51:02-06:00",
+   "kind": "timeout",
+   "text": "control-plane containers stopped: not within 120s",
+   "data": {
+    "last_error": "k8s-cp: sudo crictl ps -q --name 'kube-apiserver|etcd': rc=1: sudo: crictl: command not found"
+   }
+  },
+  {
+   "t": 160.7,
+   "at": "2026-10-01T17:51:24-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 21.7
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 15.5,
+   "text": "renewed on disk but the API still serves the old cert (needs a restart)",
+   "ok": false,
+   "detail": {
+    "disk": "notAfter=Oct  1 23:48:56 2027 GMT",
+    "served": "notAfter=Oct  1 23:48:56 2027 GMT"
+   }
+  }
+ ],
+ "decisions": []
+}

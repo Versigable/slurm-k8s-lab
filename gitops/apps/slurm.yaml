@@ -26,6 +26,13 @@ spec:
           create: false
           secretRef: {name: slurm-auth-jwt, key: jwt.key}
         controller:
+          # Slurm's default ReturnToService=0 left a Slurm node DOWN ("slurm-operator:
+          # Pod is terminating") after every pod replacement, a Kubernetes drain
+          # included, until someone resumed it (drills/: slinky-pod-kill, k8s-pdb-drain).
+          # 2 returns a DOWN node once its new slurmd registers. It never clears a
+          # DRAIN, and node faults reach Slinky as operator drains, so they stay put.
+          extraConfMap:
+            ReturnToService: 2
           persistence:
             enabled: true      # default StorageClass (local-path)
           metrics:

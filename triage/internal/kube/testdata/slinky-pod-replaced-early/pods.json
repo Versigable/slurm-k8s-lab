@@ -1,0 +1,1337 @@
+{
+ "items": [
+  {
+   "metadata": {
+    "name": "argocd-application-controller-0",
+    "namespace": "argocd",
+    "labels": {
+     "app.kubernetes.io/component": "application-controller",
+     "app.kubernetes.io/instance": "argocd",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "argocd-application-controller",
+     "app.kubernetes.io/part-of": "argocd",
+     "app.kubernetes.io/version": "v3.5.3",
+     "apps.kubernetes.io/pod-index": "0",
+     "controller-revision-hash": "argocd-application-controller-f456d6f76",
+     "helm.sh/chart": "argo-cd-10.9.2",
+     "statefulset.kubernetes.io/pod-name": "argocd-application-controller-0"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "StatefulSet",
+      "name": "argocd-application-controller",
+      "uid": "4342e09c-4ff9-41fc-b5ec-354b04f517d0"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "argocd-applicationset-controller-6c64d4fd54-xmz9j",
+    "namespace": "argocd",
+    "labels": {
+     "app.kubernetes.io/component": "applicationset-controller",
+     "app.kubernetes.io/instance": "argocd",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "argocd-applicationset-controller",
+     "app.kubernetes.io/part-of": "argocd",
+     "app.kubernetes.io/version": "v3.5.3",
+     "helm.sh/chart": "argo-cd-10.9.2",
+     "pod-template-hash": "6c64d4fd54"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "argocd-applicationset-controller-6c64d4fd54",
+      "uid": "779a3402-2b1a-4358-977b-c5ae14fe779f"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "argocd-redis-c4fdd947-jcpqr",
+    "namespace": "argocd",
+    "labels": {
+     "app.kubernetes.io/component": "redis",
+     "app.kubernetes.io/instance": "argocd",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "argocd-redis",
+     "app.kubernetes.io/part-of": "argocd",
+     "app.kubernetes.io/version": "v3.5.3",
+     "helm.sh/chart": "argo-cd-10.9.2",
+     "pod-template-hash": "c4fdd947"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "argocd-redis-c4fdd947",
+      "uid": "6ea53e33-91fa-4752-9c42-9c143eecee30"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "argocd-repo-server-7db6455597-q9t62",
+    "namespace": "argocd",
+    "labels": {
+     "app.kubernetes.io/component": "repo-server",
+     "app.kubernetes.io/instance": "argocd",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "argocd-repo-server",
+     "app.kubernetes.io/part-of": "argocd",
+     "app.kubernetes.io/version": "v3.5.3",
+     "helm.sh/chart": "argo-cd-10.9.2",
+     "pod-template-hash": "7db6455597"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "argocd-repo-server-7db6455597",
+      "uid": "2e40da99-335b-462e-a85b-fd0b27af5de7"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "argocd-server-5475cb964b-cjt6f",
+    "namespace": "argocd",
+    "labels": {
+     "app.kubernetes.io/component": "server",
+     "app.kubernetes.io/instance": "argocd",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "argocd-server",
+     "app.kubernetes.io/part-of": "argocd",
+     "app.kubernetes.io/version": "v3.5.3",
+     "helm.sh/chart": "argo-cd-10.9.2",
+     "pod-template-hash": "5475cb964b"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "argocd-server-5475cb964b",
+      "uid": "df52e89d-e166-4a36-bd15-0346f5ef189e"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "cert-manager-7cdf966dc4-b5tlp",
+    "namespace": "cert-manager",
+    "labels": {
+     "app": "cert-manager",
+     "app.kubernetes.io/component": "controller",
+     "app.kubernetes.io/instance": "cert-manager",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "cert-manager",
+     "app.kubernetes.io/version": "v1.21.2",
+     "helm.sh/chart": "cert-manager-v1.21.2",
+     "pod-template-hash": "7cdf966dc4"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "cert-manager-7cdf966dc4",
+      "uid": "29614460-468f-42bf-8e24-ac9f4967e2c2"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "cert-manager-cainjector-6468bc96c7-v98dq",
+    "namespace": "cert-manager",
+    "labels": {
+     "app": "cainjector",
+     "app.kubernetes.io/component": "cainjector",
+     "app.kubernetes.io/instance": "cert-manager",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "cainjector",
+     "app.kubernetes.io/version": "v1.21.2",
+     "helm.sh/chart": "cert-manager-v1.21.2",
+     "pod-template-hash": "6468bc96c7"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "cert-manager-cainjector-6468bc96c7",
+      "uid": "11d9e44f-f05a-4c07-95ad-aa26aecf1544"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "cert-manager-webhook-558c6d4f4d-vhwkv",
+    "namespace": "cert-manager",
+    "labels": {
+     "app": "webhook",
+     "app.kubernetes.io/component": "webhook",
+     "app.kubernetes.io/instance": "cert-manager",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "webhook",
+     "app.kubernetes.io/version": "v1.21.2",
+     "helm.sh/chart": "cert-manager-v1.21.2",
+     "pod-template-hash": "558c6d4f4d"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "cert-manager-webhook-558c6d4f4d",
+      "uid": "10464276-f110-4148-ae1c-253fbf02a005"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "gitlab-runner-5b9c8bfb8b-tt7tk",
+    "namespace": "gitlab-ci",
+    "labels": {
+     "app": "gitlab-runner",
+     "chart": "gitlab-runner-0.85.0",
+     "heritage": "Helm",
+     "pod-template-hash": "5b9c8bfb8b",
+     "release": "gitlab-runner"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "gitlab-runner-5b9c8bfb8b",
+      "uid": "1687368d-30fd-460b-994f-875f7e28abe2"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "cilium-ct5zm",
+    "namespace": "kube-system",
+    "labels": {
+     "app.kubernetes.io/name": "cilium-agent",
+     "app.kubernetes.io/part-of": "cilium",
+     "controller-revision-hash": "575456999b",
+     "helm.sh/chart": "cilium-1.20.2",
+     "k8s-app": "cilium",
+     "pod-template-generation": "1"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "cilium",
+      "uid": "d42b412c-4b29-4f1e-8a93-7175c15b66de"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-cp"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "cilium-envoy-2hg4b",
+    "namespace": "kube-system",
+    "labels": {
+     "app.kubernetes.io/name": "cilium-envoy",
+     "app.kubernetes.io/part-of": "cilium",
+     "controller-revision-hash": "664c9d9bd8",
+     "helm.sh/chart": "cilium-1.20.2",
+     "k8s-app": "cilium-envoy",
+     "name": "cilium-envoy",
+     "pod-template-generation": "1"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "cilium-envoy",
+      "uid": "478aa7a4-6d36-4675-bab2-6e34efcbe5e6"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "cilium-envoy-pt7g5",
+    "namespace": "kube-system",
+    "labels": {
+     "app.kubernetes.io/name": "cilium-envoy",
+     "app.kubernetes.io/part-of": "cilium",
+     "controller-revision-hash": "664c9d9bd8",
+     "helm.sh/chart": "cilium-1.20.2",
+     "k8s-app": "cilium-envoy",
+     "name": "cilium-envoy",
+     "pod-template-generation": "1"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "cilium-envoy",
+      "uid": "478aa7a4-6d36-4675-bab2-6e34efcbe5e6"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-cp"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "cilium-envoy-wrfxg",
+    "namespace": "kube-system",
+    "labels": {
+     "app.kubernetes.io/name": "cilium-envoy",
+     "app.kubernetes.io/part-of": "cilium",
+     "controller-revision-hash": "664c9d9bd8",
+     "helm.sh/chart": "cilium-1.20.2",
+     "k8s-app": "cilium-envoy",
+     "name": "cilium-envoy",
+     "pod-template-generation": "1"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "cilium-envoy",
+      "uid": "478aa7a4-6d36-4675-bab2-6e34efcbe5e6"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "cilium-jlr4w",
+    "namespace": "kube-system",
+    "labels": {
+     "app.kubernetes.io/name": "cilium-agent",
+     "app.kubernetes.io/part-of": "cilium",
+     "controller-revision-hash": "575456999b",
+     "helm.sh/chart": "cilium-1.20.2",
+     "k8s-app": "cilium",
+     "pod-template-generation": "1"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "cilium",
+      "uid": "d42b412c-4b29-4f1e-8a93-7175c15b66de"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "cilium-operator-99878dd6c-z8l4q",
+    "namespace": "kube-system",
+    "labels": {
+     "app.kubernetes.io/name": "cilium-operator",
+     "app.kubernetes.io/part-of": "cilium",
+     "helm.sh/chart": "cilium-1.20.2",
+     "io.cilium/app": "operator",
+     "name": "cilium-operator",
+     "pod-template-hash": "99878dd6c"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "cilium-operator-99878dd6c",
+      "uid": "a81d479d-331b-433b-a98f-61941565cd41"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "cilium-vmxhr",
+    "namespace": "kube-system",
+    "labels": {
+     "app.kubernetes.io/name": "cilium-agent",
+     "app.kubernetes.io/part-of": "cilium",
+     "controller-revision-hash": "575456999b",
+     "helm.sh/chart": "cilium-1.20.2",
+     "k8s-app": "cilium",
+     "pod-template-generation": "1"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "cilium",
+      "uid": "d42b412c-4b29-4f1e-8a93-7175c15b66de"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "coredns-589f44dc88-hlh55",
+    "namespace": "kube-system",
+    "labels": {
+     "k8s-app": "kube-dns",
+     "pod-template-hash": "589f44dc88"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "coredns-589f44dc88",
+      "uid": "a2c9b969-23f2-488f-a547-0e520c82bae1"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "coredns-589f44dc88-mhg6g",
+    "namespace": "kube-system",
+    "labels": {
+     "k8s-app": "kube-dns",
+     "pod-template-hash": "589f44dc88"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "coredns-589f44dc88",
+      "uid": "a2c9b969-23f2-488f-a547-0e520c82bae1"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "etcd-k8s-cp",
+    "namespace": "kube-system",
+    "labels": {
+     "component": "etcd",
+     "tier": "control-plane"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "v1",
+      "controller": true,
+      "kind": "Node",
+      "name": "k8s-cp",
+      "uid": "ec650ede-1b01-4366-8d04-50c122bccd4b"
+     }
+    ],
+    "annotations": {
+     "kubernetes.io/config.mirror": "def4428678cb32e7e817115eb7c39658"
+    }
+   },
+   "spec": {
+    "nodeName": "k8s-cp"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "hubble-relay-59cc868d4d-sm8d6",
+    "namespace": "kube-system",
+    "labels": {
+     "app.kubernetes.io/name": "hubble-relay",
+     "app.kubernetes.io/part-of": "cilium",
+     "helm.sh/chart": "cilium-1.20.2",
+     "k8s-app": "hubble-relay",
+     "pod-template-hash": "59cc868d4d"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "hubble-relay-59cc868d4d",
+      "uid": "c352d9bd-9373-4ba0-b9df-f4a6a327a591"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "hubble-ui-5d55f5dcbf-rf44z",
+    "namespace": "kube-system",
+    "labels": {
+     "app.kubernetes.io/name": "hubble-ui",
+     "app.kubernetes.io/part-of": "cilium",
+     "helm.sh/chart": "cilium-1.20.2",
+     "k8s-app": "hubble-ui",
+     "pod-template-hash": "5d55f5dcbf"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "hubble-ui-5d55f5dcbf",
+      "uid": "8cc28207-3069-4d79-a941-92517904fffe"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "kube-apiserver-k8s-cp",
+    "namespace": "kube-system",
+    "labels": {
+     "component": "kube-apiserver",
+     "tier": "control-plane"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "v1",
+      "controller": true,
+      "kind": "Node",
+      "name": "k8s-cp",
+      "uid": "ec650ede-1b01-4366-8d04-50c122bccd4b"
+     }
+    ],
+    "annotations": {
+     "kubernetes.io/config.mirror": "4c6f0bbe947367b74577c27a51c00fb3"
+    }
+   },
+   "spec": {
+    "nodeName": "k8s-cp"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "kube-controller-manager-k8s-cp",
+    "namespace": "kube-system",
+    "labels": {
+     "component": "kube-controller-manager",
+     "tier": "control-plane"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "v1",
+      "controller": true,
+      "kind": "Node",
+      "name": "k8s-cp",
+      "uid": "ec650ede-1b01-4366-8d04-50c122bccd4b"
+     }
+    ],
+    "annotations": {
+     "kubernetes.io/config.mirror": "a20a3941eea4d770f25f09611a945770"
+    }
+   },
+   "spec": {
+    "nodeName": "k8s-cp"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "kube-scheduler-k8s-cp",
+    "namespace": "kube-system",
+    "labels": {
+     "component": "kube-scheduler",
+     "tier": "control-plane"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "v1",
+      "controller": true,
+      "kind": "Node",
+      "name": "k8s-cp",
+      "uid": "ec650ede-1b01-4366-8d04-50c122bccd4b"
+     }
+    ],
+    "annotations": {
+     "kubernetes.io/config.mirror": "5397cb5c316beb180aa966643ba81cfc"
+    }
+   },
+   "spec": {
+    "nodeName": "k8s-cp"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "node-problem-detector-kxxkq",
+    "namespace": "kube-system",
+    "labels": {
+     "app": "node-problem-detector",
+     "controller-revision-hash": "c59b595b",
+     "pod-template-generation": "1"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "node-problem-detector",
+      "uid": "01d8fbba-6006-4b14-a068-ed5564b455e4"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "node-problem-detector-p6xgc",
+    "namespace": "kube-system",
+    "labels": {
+     "app": "node-problem-detector",
+     "controller-revision-hash": "c59b595b",
+     "pod-template-generation": "1"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "node-problem-detector",
+      "uid": "01d8fbba-6006-4b14-a068-ed5564b455e4"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-cp"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "node-problem-detector-t2jrf",
+    "namespace": "kube-system",
+    "labels": {
+     "app": "node-problem-detector",
+     "controller-revision-hash": "c59b595b",
+     "pod-template-generation": "1"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "node-problem-detector",
+      "uid": "01d8fbba-6006-4b14-a068-ed5564b455e4"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "local-path-provisioner-54745b98cf-fszz2",
+    "namespace": "local-path-storage",
+    "labels": {
+     "app": "local-path-provisioner",
+     "pod-template-hash": "54745b98cf"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "local-path-provisioner-54745b98cf",
+      "uid": "e110ff00-310c-4776-9e24-a5512967e64b"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "alertmanager-kube-prometheus-stack-alertmanager-0",
+    "namespace": "monitoring",
+    "labels": {
+     "alertmanager": "kube-prometheus-stack-alertmanager",
+     "app.kubernetes.io/instance": "kube-prometheus-stack-alertmanager",
+     "app.kubernetes.io/managed-by": "prometheus-operator",
+     "app.kubernetes.io/name": "alertmanager",
+     "app.kubernetes.io/version": "0.34.1",
+     "apps.kubernetes.io/pod-index": "0",
+     "controller-revision-hash": "alertmanager-kube-prometheus-stack-alertmanager-5b867755db",
+     "statefulset.kubernetes.io/pod-name": "alertmanager-kube-prometheus-stack-alertmanager-0"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "StatefulSet",
+      "name": "alertmanager-kube-prometheus-stack-alertmanager",
+      "uid": "815d22b3-a326-4f09-9388-7b43c5b953f5"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "kube-prometheus-stack-grafana-677579cc49-6mtc6",
+    "namespace": "monitoring",
+    "labels": {
+     "app.kubernetes.io/instance": "kube-prometheus-stack",
+     "app.kubernetes.io/name": "grafana",
+     "app.kubernetes.io/version": "13.2.2",
+     "helm.sh/chart": "grafana-13.2.5",
+     "pod-template-hash": "677579cc49"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "kube-prometheus-stack-grafana-677579cc49",
+      "uid": "e3b70ebf-9ee4-4def-884b-0d5d58bca3a9"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "kube-prometheus-stack-kube-state-metrics-687686d88b-kjkxm",
+    "namespace": "monitoring",
+    "labels": {
+     "app.kubernetes.io/component": "metrics",
+     "app.kubernetes.io/instance": "kube-prometheus-stack",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "kube-state-metrics",
+     "app.kubernetes.io/part-of": "kube-state-metrics",
+     "app.kubernetes.io/version": "2.20.0",
+     "pod-template-hash": "687686d88b",
+     "release": "kube-prometheus-stack"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "kube-prometheus-stack-kube-state-metrics-687686d88b",
+      "uid": "4022ee62-8109-4be8-88ba-85dde2942bff"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "kube-prometheus-stack-operator-7d85b486b6-t96m6",
+    "namespace": "monitoring",
+    "labels": {
+     "app": "kube-prometheus-stack-operator",
+     "app.kubernetes.io/component": "prometheus-operator",
+     "app.kubernetes.io/instance": "kube-prometheus-stack",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "kube-prometheus-stack-prometheus-operator",
+     "app.kubernetes.io/part-of": "kube-prometheus-stack",
+     "app.kubernetes.io/version": "91.5.2",
+     "chart": "kube-prometheus-stack-91.5.2",
+     "heritage": "Helm",
+     "pod-template-hash": "7d85b486b6",
+     "release": "kube-prometheus-stack"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "kube-prometheus-stack-operator-7d85b486b6",
+      "uid": "79a2568b-0362-4e54-a41b-dd70f7314e6b"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "kube-prometheus-stack-prometheus-node-exporter-fdmtr",
+    "namespace": "monitoring",
+    "labels": {
+     "app.kubernetes.io/component": "metrics",
+     "app.kubernetes.io/instance": "kube-prometheus-stack",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "prometheus-node-exporter",
+     "app.kubernetes.io/part-of": "prometheus-node-exporter",
+     "app.kubernetes.io/version": "1.12.1",
+     "controller-revision-hash": "599c7bcffc",
+     "jobLabel": "node-exporter",
+     "pod-template-generation": "1",
+     "release": "kube-prometheus-stack"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "kube-prometheus-stack-prometheus-node-exporter",
+      "uid": "c31ef0c9-d880-4338-a763-f8aea53e9b19"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "kube-prometheus-stack-prometheus-node-exporter-mlp4r",
+    "namespace": "monitoring",
+    "labels": {
+     "app.kubernetes.io/component": "metrics",
+     "app.kubernetes.io/instance": "kube-prometheus-stack",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "prometheus-node-exporter",
+     "app.kubernetes.io/part-of": "prometheus-node-exporter",
+     "app.kubernetes.io/version": "1.12.1",
+     "controller-revision-hash": "599c7bcffc",
+     "jobLabel": "node-exporter",
+     "pod-template-generation": "1",
+     "release": "kube-prometheus-stack"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "kube-prometheus-stack-prometheus-node-exporter",
+      "uid": "c31ef0c9-d880-4338-a763-f8aea53e9b19"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-cp"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "kube-prometheus-stack-prometheus-node-exporter-wlkvq",
+    "namespace": "monitoring",
+    "labels": {
+     "app.kubernetes.io/component": "metrics",
+     "app.kubernetes.io/instance": "kube-prometheus-stack",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "prometheus-node-exporter",
+     "app.kubernetes.io/part-of": "prometheus-node-exporter",
+     "app.kubernetes.io/version": "1.12.1",
+     "controller-revision-hash": "599c7bcffc",
+     "jobLabel": "node-exporter",
+     "pod-template-generation": "1",
+     "release": "kube-prometheus-stack"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "DaemonSet",
+      "name": "kube-prometheus-stack-prometheus-node-exporter",
+      "uid": "c31ef0c9-d880-4338-a763-f8aea53e9b19"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "prometheus-kube-prometheus-stack-prometheus-0",
+    "namespace": "monitoring",
+    "labels": {
+     "app.kubernetes.io/instance": "kube-prometheus-stack-prometheus",
+     "app.kubernetes.io/managed-by": "prometheus-operator",
+     "app.kubernetes.io/name": "prometheus",
+     "app.kubernetes.io/version": "3.14.0-distroless",
+     "apps.kubernetes.io/pod-index": "0",
+     "controller-revision-hash": "prometheus-kube-prometheus-stack-prometheus-5ddbd459df",
+     "operator.prometheus.io/name": "kube-prometheus-stack-prometheus",
+     "operator.prometheus.io/shard": "0",
+     "prometheus": "kube-prometheus-stack-prometheus",
+     "statefulset.kubernetes.io/pod-name": "prometheus-kube-prometheus-stack-prometheus-0"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "StatefulSet",
+      "name": "prometheus-kube-prometheus-stack-prometheus",
+      "uid": "12b2b5d9-bae5-4b96-a796-60159cd2265f"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "slurm-operator-bc684dcd-v4kbf",
+    "namespace": "slinky",
+    "labels": {
+     "app.kubernetes.io/instance": "slurm-operator",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "slurm-operator",
+     "app.kubernetes.io/part-of": "slurm-operator",
+     "app.kubernetes.io/version": "1.2.2",
+     "helm.sh/chart": "slurm-operator-1.2.2",
+     "pod-template-hash": "bc684dcd"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "slurm-operator-bc684dcd",
+      "uid": "646db8f9-efd0-4661-9f78-887aa93958b1"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "slurm-operator-webhook-77bc9b9868-n9j7q",
+    "namespace": "slinky",
+    "labels": {
+     "app.kubernetes.io/instance": "slurm-operator",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "slurm-operator-webhook",
+     "app.kubernetes.io/part-of": "slurm-operator",
+     "app.kubernetes.io/version": "1.2.2",
+     "helm.sh/chart": "slurm-operator-1.2.2",
+     "pod-template-hash": "77bc9b9868"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "slurm-operator-webhook-77bc9b9868",
+      "uid": "cd57227b-c247-4c7b-a6c5-524731dff25c"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "slurm-controller-0",
+    "namespace": "slurm",
+    "labels": {
+     "app.kubernetes.io/component": "controller",
+     "app.kubernetes.io/instance": "slurm",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "slurmctld",
+     "app.kubernetes.io/part-of": "slurm",
+     "app.kubernetes.io/version": "26.05",
+     "apps.kubernetes.io/pod-index": "0",
+     "controller-revision-hash": "slurm-controller-7c4889fbd6",
+     "helm.sh/chart": "slurm-1.2.2",
+     "statefulset.kubernetes.io/pod-name": "slurm-controller-0"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "StatefulSet",
+      "name": "slurm-controller",
+      "uid": "bd75ef6a-2f61-43ab-82f7-cffea083e058"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "slurm-restapi-78d8574996-88vn5",
+    "namespace": "slurm",
+    "labels": {
+     "app.kubernetes.io/component": "restapi",
+     "app.kubernetes.io/instance": "slurm",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "slurmrestd",
+     "app.kubernetes.io/part-of": "slurm",
+     "app.kubernetes.io/version": "26.05",
+     "helm.sh/chart": "slurm-1.2.2",
+     "pod-template-hash": "78d8574996"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "apps/v1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "ReplicaSet",
+      "name": "slurm-restapi-78d8574996",
+      "uid": "be38863e-c1a0-44e2-8f6b-1cc4ba528a84"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "slurm-worker-slinky-0",
+    "namespace": "slurm",
+    "labels": {
+     "app.kubernetes.io/component": "worker",
+     "app.kubernetes.io/instance": "slurm-worker-slinky",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "slurmd",
+     "app.kubernetes.io/part-of": "slurm",
+     "app.kubernetes.io/version": "26.05",
+     "controller.kubernetes.io/hash": "64f78574b9",
+     "helm.sh/chart": "slurm-1.2.2",
+     "nodeset.slinky.slurm.net/pod-hostname": "slinky-0",
+     "nodeset.slinky.slurm.net/pod-index": "0",
+     "nodeset.slinky.slurm.net/pod-name": "slurm-worker-slinky-0",
+     "nodeset.slinky.slurm.net/scaling-mode": "StatefulSet",
+     "slinky.slurm.net/cluster": "slurm"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "slinky.slurm.net/v1beta1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "NodeSet",
+      "name": "slurm-worker-slinky",
+      "uid": "52cb1387-9551-47a2-8ea8-faf0d4d28f85"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w1"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  },
+  {
+   "metadata": {
+    "name": "slurm-worker-slinky-1",
+    "namespace": "slurm",
+    "labels": {
+     "app.kubernetes.io/component": "worker",
+     "app.kubernetes.io/instance": "slurm-worker-slinky",
+     "app.kubernetes.io/managed-by": "Helm",
+     "app.kubernetes.io/name": "slurmd",
+     "app.kubernetes.io/part-of": "slurm",
+     "app.kubernetes.io/version": "26.05",
+     "controller.kubernetes.io/hash": "64f78574b9",
+     "helm.sh/chart": "slurm-1.2.2",
+     "nodeset.slinky.slurm.net/pod-hostname": "slinky-1",
+     "nodeset.slinky.slurm.net/pod-index": "1",
+     "nodeset.slinky.slurm.net/pod-name": "slurm-worker-slinky-1",
+     "nodeset.slinky.slurm.net/scaling-mode": "StatefulSet",
+     "slinky.slurm.net/cluster": "slurm"
+    },
+    "ownerReferences": [
+     {
+      "apiVersion": "slinky.slurm.net/v1beta1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "NodeSet",
+      "name": "slurm-worker-slinky",
+      "uid": "52cb1387-9551-47a2-8ea8-faf0d4d28f85"
+     }
+    ],
+    "annotations": {}
+   },
+   "spec": {
+    "nodeName": "k8s-w2"
+   },
+   "status": {
+    "phase": "Running"
+   }
+  }
+ ]
+}

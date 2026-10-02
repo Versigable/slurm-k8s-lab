@@ -246,7 +246,8 @@ def report():
     latest = {}
     for f in sorted(RESULTS.glob("*.json")):
         r = json.loads(f.read_text())
-        latest[r["drill"]] = r
+        if "drill" in r:  # skip the tfvars files node-bringup keeps next to its results
+            latest[r["drill"]] = r
     lines = [
         "# Drill scorecard",
         "",
@@ -271,7 +272,12 @@ def report():
         lines += ["", "## Open decision gaps", ""]
         for n, d in gaps:
             got = d["got"]["summary"] if isinstance(d["got"], dict) else (d["error"] or d.get("why"))
-            lines.append(f"- **{n} / {d['label']}** ({d['node']}): wanted {d['expected']}, got: {got}")
+            got = " / ".join(line.strip() for line in str(got).splitlines() if line.strip())
+            exp = d["expected"]
+            wanted = exp.get("note") or "|".join(exp.get("action") or []) + (f" ({exp['category']})" if exp.get("category") else "")
+            if isinstance(d["got"], dict):
+                got = f"{d['got']['action']}: {got}"
+            lines.append(f"- **{n} / {d['label']}** ({d['node']}): wanted {wanted}; got {got}")
     SCORECARD.write_text("\n".join(lines) + "\n")
     print(SCORECARD.read_text())
 

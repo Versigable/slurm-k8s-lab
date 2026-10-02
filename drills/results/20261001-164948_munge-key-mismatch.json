@@ -1,0 +1,195 @@
+{
+ "drill": "munge-key-mismatch",
+ "title": "A node's munge key no longer matches",
+ "teaches": "Authentication faults look like a dead node to slurmctld. The host is up and slurmd is running; munge -n | unmunge names the cause. Fixed before SlurmdTimeout, the running job survives.",
+ "started": "2026-10-01T16:49:48-06:00",
+ "repo": "3d16f98-dirty",
+ "finished": "2026-10-01T16:57:11-06:00",
+ "status": "PASS",
+ "error": null,
+ "duration_s": 443.0,
+ "triage_version": "1a9f389",
+ "metrics": {
+  "detect_s": 124.7,
+  "fix_to_recover_s": 0.6,
+  "inject_to_recover_s": 137.2
+ },
+ "events": [
+  {
+   "t": 7.9,
+   "at": "2026-10-01T16:49:56-06:00",
+   "kind": "observe",
+   "text": "running job (job 8) running on slurm-c2",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 8.6,
+   "at": "2026-10-01T16:49:57-06:00",
+   "kind": "inject",
+   "text": "slurm-c2 has a different munge key"
+  },
+  {
+   "t": 133.3,
+   "at": "2026-10-01T16:52:02-06:00",
+   "kind": "detect",
+   "text": "slurmctld flags it NOT_RESPONDING",
+   "data": {
+    "waited": 124.7
+   }
+  },
+  {
+   "t": 141.9,
+   "at": "2026-10-01T16:52:10-06:00",
+   "kind": "decide",
+   "text": "not responding: auth: slurm-c2 -> investigate/critical/unreachable (want investigate) OK",
+   "data": {
+    "summary": "slurmd stopped responding; Slurm still lists 1 job(s) as running. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN and kills them."
+   }
+  },
+  {
+   "t": 142.5,
+   "at": "2026-10-01T16:52:11-06:00",
+   "kind": "note",
+   "text": "diagnosis: host reachable, slurmd running",
+   "data": {
+    "slurmd": "active"
+   }
+  },
+  {
+   "t": 143.8,
+   "at": "2026-10-01T16:52:12-06:00",
+   "kind": "note",
+   "text": "diagnosis: munge -n on slurm-ctl | unmunge on node",
+   "data": {
+    "result": "unmunge: Error: Invalid credential"
+   }
+  },
+  {
+   "t": 144.5,
+   "at": "2026-10-01T16:52:13-06:00",
+   "kind": "note",
+   "text": "slurmctld log",
+   "data": {
+    "lines": []
+   }
+  },
+  {
+   "t": 145.2,
+   "at": "2026-10-01T16:52:13-06:00",
+   "kind": "fix",
+   "text": "munge key restored; munge and slurmd restarted"
+  },
+  {
+   "t": 145.8,
+   "at": "2026-10-01T16:52:14-06:00",
+   "kind": "recover",
+   "text": "slurm-c2 back in service",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 147.1,
+   "at": "2026-10-01T16:52:15-06:00",
+   "kind": "check",
+   "text": "PASS munge round-trip works again"
+  },
+  {
+   "t": 435.1,
+   "at": "2026-10-01T16:57:03-06:00",
+   "kind": "observe",
+   "text": "job 8 finished",
+   "data": {
+    "waited": 287.9
+   }
+  },
+  {
+   "t": 435.1,
+   "at": "2026-10-01T16:57:03-06:00",
+   "kind": "check",
+   "text": "PASS job 8 survived the outage",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c2"
+    }
+   }
+  },
+  {
+   "t": 443.0,
+   "at": "2026-10-01T16:57:11-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 6.6
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 147.1,
+   "text": "munge round-trip works again",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "t": 435.1,
+   "text": "job 8 survived the outage",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c2"
+   }
+  }
+ ],
+ "decisions": [
+  {
+   "t": 134.1,
+   "label": "not responding: auth",
+   "node": "slurm-c2",
+   "ok": true,
+   "latency": 0.8,
+   "expected": {
+    "action": [
+     "investigate"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "investigate",
+    "severity": "critical",
+    "category": "unreachable",
+    "summary": "slurmd stopped responding; Slurm still lists 1 job(s) as running. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN and kills them."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "investigate",
+    "category": "unreachable",
+    "cluster": "lab",
+    "commands": [
+     "ping -c3 slurm-c2",
+     "ssh slurm-c2 'sudo systemctl restart slurmd && journalctl -u slurmd -n 20'",
+     "scontrol show config | grep -i SlurmdTimeout"
+    ],
+    "evidence": [
+     "state MIXED+NOT_RESPONDING; CPUs 1/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "job 8 \"drill-munge-survivor\" (labadmin) listed as RUNNING by slurmctld"
+    ],
+    "next_steps": [
+     "Check whether the host is reachable at all.",
+     "If it is, restart slurmd; running jobs survive a slurmd restart.",
+     "If the host is gone, the jobs are already lost. Let the timeout mark it DOWN and follow the down-node path."
+    ],
+    "node": "slurm-c2",
+    "scheduler": "slurm",
+    "severity": "critical",
+    "summary": "slurmd stopped responding; Slurm still lists 1 job(s) as running. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN and kills them."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-164948_munge-key-mismatch_fixtures/not-responding--auth"
+  }
+ ]
+}

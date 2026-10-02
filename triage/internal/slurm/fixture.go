@@ -39,6 +39,11 @@ func (f *FixtureRunner) Run(_ context.Context, name string, args ...string) ([]b
 	if !ok {
 		return nil, fmt.Errorf("fixture runner: no fixture for %q", name)
 	}
+	// <command>.err replays a command that failed when the scenario was
+	// captured (e.g. sacct with slurmdbd down): its content is the error.
+	if msg, err := os.ReadFile(filepath.Join(f.Dir, name+".err")); err == nil {
+		return nil, fmt.Errorf("%s: exit status 1: %s", name, strings.TrimSpace(string(msg)))
+	}
 	return os.ReadFile(filepath.Join(f.Dir, file))
 }
 

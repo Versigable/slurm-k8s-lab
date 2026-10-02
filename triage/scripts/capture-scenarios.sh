@@ -118,7 +118,9 @@ scenario_node_down() {
   capture node-down
   pve_start "$C2_VMID"
   until on "$C2" true 2>/dev/null; do sleep 5; done
-  wait_for_state slurm-c2 'IDLE|MIXED' 300 || true # ReturnToService=1 brings it back
+  # It registers but stays DOWN ("Node unexpectedly rebooted"): ReturnToService=1
+  # only returns nodes that went DOWN for not responding (drills/: node-death).
+  wait_for_state slurm-c2 '^State=DOWN$' 300
   resume_all
 }
 
