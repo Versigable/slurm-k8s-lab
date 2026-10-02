@@ -253,9 +253,14 @@ func (a assessor) assess() Recommendation {
 		}
 		r.Evidence = append(r.Evidence, line)
 	}
-	nodeFails := a.nodeFailJobs()
-	if len(nodeFails) > 0 {
-		r.Evidence = append(r.Evidence, fmt.Sprintf("%d job(s) ended NODE_FAIL on this node recently: %s", len(nodeFails), jobList(nodeFails)))
+	allNodeFails := a.nodeFailJobs()
+	nodeFails := a.unexplained(allNodeFails)
+	if len(allNodeFails) > 0 {
+		line := fmt.Sprintf("%d job(s) ended NODE_FAIL on this node recently: %s", len(allNodeFails), jobList(allNodeFails))
+		if explained := len(allNodeFails) - len(nodeFails); explained > 0 {
+			line += fmt.Sprintf(" (%d of them when the node went DOWN, already counted as an outage)", explained)
+		}
+		r.Evidence = append(r.Evidence, line)
 	}
 	if a.s.AccountingError != "" {
 		r.Evidence = append(r.Evidence, "accounting unavailable, so recent NODE_FAIL jobs and drain/down history weren't checked")
@@ -732,6 +737,28 @@ func (a assessor) waitingJobs() []slurm.Job {
 	var out []slurm.Job
 	for _, j := range a.s.Jobs {
 		if j.WaitingOn(a.n.Name) {
+			out = append(out, j)
+		}
+	}
+	return out
+}
+
+// unexplained drops NODE_FAIL jobs that ended as this node went DOWN: they're
+// that outage's casualties, and the outage already counts as an incident. The
+// NODE_FAIL rule is for a node that keeps killing jobs while it looks healthy.
+// Found by drills/: node-death (two drilled power losses made a recovered node
+// "eating jobs, drain it" as well as chronic).
+func (a assessor) unexplained(jobs []slurm.HistoricalJob) []slurm.HistoricalJob {
+	var out []slurm.HistoricalJob
+	for _, j := range jobs {
+		end := time.Unix(j.Time.End, 0)
+		if !slices.ContainsFunc(a.events(), func(e slurm.Event) bool {
+			until := e.End
+			if until.IsZero() {
+				until = e.Start
+			}
+			return strings.HasPrefix(e.State, "DOWN") && !end.Before(e.Start.Add(-time.Minute)) && !end.After(until.Add(time.Minute))
+		}) {
 			out = append(out, j)
 		}
 	}

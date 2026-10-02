@@ -338,3 +338,41 @@ func TestPassedBurnInPromotes(t *testing.T) {
 		t.Errorf("failed burn-in: got %s", r.Action)
 	}
 }
+
+// drills/: node-death, run twice. Each power loss killed a no-requeue job
+// (NODE_FAIL at the moment the node went DOWN). Once the node was back and
+// healthy, triage said "2 jobs failed on it with NODE_FAIL; drain it": the
+// same two outages counted a second time.
+func TestNodeFailsDuringOutagesDontDrainARecoveredNode(t *testing.T) {
+	r := mustAssess(t, fixtureSnapshot(t, "nodefail-after-outages"), "slurm-c2")
+	if r.Action != ActionNone {
+		t.Fatalf("got %s: %s", r.Action, r.Summary)
+	}
+	if !contains(r.Evidence, "2 of them when the node went DOWN") {
+		t.Errorf("evidence should still show the NODE_FAIL jobs, explained: %v", r.Evidence)
+	}
+}
+
+// drills/: node-death. Power restored, slurmd answering, Slurm holding the node
+// DOWN ("Node unexpectedly rebooted"). Triage used to say "slurmd is
+// unreachable". With slurm-c2's real history that afternoon (a second power
+// loss and a full disk) it's chronic, so escalate; with this outage alone,
+// find out why it rebooted.
+func TestUnexpectedReboot(t *testing.T) {
+	s := fixtureSnapshot(t, "unexpected-reboot")
+	r := mustAssess(t, s, "slurm-c2")
+	if r.Action != ActionEscalateHardware || r.Category != CategoryUnexpectedReboot {
+		t.Fatalf("with its history: got %s/%s: %s", r.Action, r.Category, r.Summary)
+	}
+	var recent []slurm.Event
+	for _, e := range s.Events {
+		if e.Start.After(s.Now.Add(-15 * time.Minute)) {
+			recent = append(recent, e)
+		}
+	}
+	s.Events = recent
+	r = mustAssess(t, s, "slurm-c2")
+	if r.Action != ActionInvestigate || r.Severity != SeverityWarning || !contains(r.Commands, "journalctl -b -1") {
+		t.Errorf("one outage: got %s/%s %v", r.Action, r.Severity, r.Commands)
+	}
+}
