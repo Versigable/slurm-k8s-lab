@@ -351,6 +351,8 @@ def lab_problems(with_triage=True):
             if n["spec"].get("unschedulable"):
                 probs.append(f"kubernetes: {name} is cordoned")
         for p in pods():
+            if p["namespace"] == "gitlab-ci" and p["name"].startswith("runner-"):
+                continue  # CI job pods come and go with pipelines; the runner itself is checked
             if p["phase"] not in ("Running", "Succeeded") or p["terminating"]:
                 probs.append(f"kubernetes: pod {p['namespace']}/{p['name']} {p['phase']}{' terminating' if p['terminating'] else ''}")
         if kubectl("get namespace drill", check=False).rc == 0:

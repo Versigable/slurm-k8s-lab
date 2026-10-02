@@ -421,8 +421,8 @@ def slurmdbd_outage(r):
 # --- Kubernetes and Slinky -------------------------------------------------------------
 
 @drill("slinky-pod-kill", "Slurm worker pod deleted mid-job (vs slurmd killed on a VM)", minutes=6,
-       teaches="On a VM, slurmd can die and the job lives on (slurmstepd is separate). "
-               "In Slinky the pod is the node: lose the pod and you lose the job.")
+       teaches="On a VM, slurmd can die and the job lives on (slurmstepd is separate). In Slinky the pod is the "
+               "node: lose the pod and Slurm requeues the job at once; with ReturnToService=2 the node is back in seconds.")
 def slinky_pod_kill(r):
     """First the classic baseline: slurmd SIGKILLed under a running job. Then the
     Slinky equivalent: the worker pod deleted under a running job."""
@@ -448,15 +448,18 @@ def slinky_pod_kill(r):
     r.wait("Slurm notices", lambda: not lab.in_service(slinky_state("slinky-0")) or not lab.running_on(SLINKY, sjob, "slinky-0"),
            120, every=1, kind="detect")
     r.note("Slinky's view", node=sorted(slinky_state("slinky-0")), job=(lambda j: j and sorted(j["state"]))(lab.job(SLINKY, sjob)))
-    # wait while the replacement registers, resume once it has (it takes seconds)
-    r.decide("slinky-0", ["wait", "resume"], "worker pod gone")
     r.wait("operator recreated the worker pod", lambda: (p := slurm_pod_where("slurm-worker-slinky-0")) and p["ready"] and not p["terminating"], 180)
-    back = r.wait("slinky-0 back in service by itself", lambda: lab.in_service(slinky_state("slinky-0")), 120, every=2, required=False)
-    if not back:
+    # Slinky runs ReturnToService=2 (5-Decisions/2026-10-01_slinky-return-to-service):
+    # the node should return as soon as the new slurmd registers.
+    back = r.wait("slinky-0 back in service by itself", lambda: lab.in_service(slinky_state("slinky-0")), 120, every=1, kind="recover", required=False)
+    if back:
+        r.decide("slinky-0", ["none"], "pod replaced, node back")
+    else:
+        # A Slinky without ReturnToService=2 holds the node DOWN; triage should say resume.
         r.decide("slinky-0", ["resume"], "pod back, node still out")
         SLINKY("scontrol update nodename=slinky-0 state=resume", check=False)
-        r.mark("fix", "slinky-0 resumed by hand (Slinky runs ReturnToService=0)")
-    r.wait("slinky-0 in service", lambda: lab.in_service(slinky_state("slinky-0")), 120, kind="recover")
+        r.mark("fix", "slinky-0 resumed by hand")
+        r.wait("slinky-0 in service", lambda: lab.in_service(slinky_state("slinky-0")), 120, kind="recover")
     j = lab.job(SLINKY, sjob)
     r.note("what happened to the Slinky job", state=j and sorted(j["state"]), restarts=j and j["restarts"], reason=j and j["reason"])
     acct = r.wait(f"classic job {cjob} finished", lambda: (a := lab.accounted(cjob)) and a["state"] not in ("RUNNING", "PENDING") and a, 120, every=5)
@@ -512,6 +515,20 @@ def k8s_pdb_drain(r):
            slinky0=(slurm_pod_where("slurm-worker-slinky-0") or {}).get("node"))
 
 
+def slinky_view_ok(data, W):
+    """Kubernetes node W is flagged, and so is the Slinky side: either slurmrestd
+    is unreachable and traced to W (its pod sits there, or it can't reach a
+    slurmctld that does), or Slinky is readable and its node on W is flagged as
+    sitting on a troubled Kubernetes node."""
+    recs = data["recommendations"]
+    k8s = any(x["node"] == W and x["action"] == "investigate" for x in recs)
+    restd = next((x for x in recs if x["node"] == "slurmrestd"), None)
+    if restd:
+        return k8s and W in restd["summary"], f"{W} flagged: {k8s}; slurmrestd: {restd['summary']}"
+    sl = [x for x in recs if x["cluster"] == "slinky" and W in x["summary"]]
+    return k8s and bool(sl), f"{W} flagged: {k8s}; Slinky nodes flagged on it: {[x['node'] + ' ' + x['category'] for x in sl]}"
+
+
 def kubelet_stop(r, W):
     """Stop the kubelet on worker W (its containers keep running) with half of a
     drill service and a Slinky job on it; follow both schedulers through the
@@ -524,7 +541,6 @@ def kubelet_stop(r, W):
     r.note("web placement", pods=placement("web"))
     slurm_pods = {p["name"]: p["node"] for p in lab.pods(namespace="slurm")}
     r.note("Slinky placement", pods=slurm_pods)
-    hosts_control_plane = any(node == W for name, node in slurm_pods.items() if "controller" in name or "restapi" in name)
     sl_node = next(n for n in ("slinky-0", "slinky-1") if slurm_pods.get(f"slurm-worker-{n}") == W)
     sjob = lab.sbatch(SLINKY, f"-w {sl_node} -t 20 --mem=100M -J drill-slinky-on-{W} --wrap 'sleep 900'")
     wait_running(r, SLINKY, sjob, sl_node, "Slinky job")
@@ -535,25 +551,16 @@ def kubelet_stop(r, W):
     r.decide(W, ["investigate"], "kubelet silent, eviction countdown")
     r.note("Slurm's view at the same moment", node=safe(lambda: sorted(slinky_state(sl_node))),
            job=safe(lambda: sorted(lab.job(SLINKY, sjob)["state"])))
-    if hosts_control_plane:
-        # slurmrestd's pod is marked NotReady and leaves its Service: triage can't
-        # see Slinky at all, so the answer has to come at cluster level.
-        def grade(data):
-            """The kubelet-less node is flagged, and the Slinky outage is traced to it."""
-            recs = {x["node"]: x for x in data["recommendations"]}
-            restd = recs.get("slurmrestd", {})
-            ok = recs.get(W, {}).get("action") == "investigate" and W in restd.get("summary", "")
-            return ok, f"{W}: {recs.get(W, {}).get('action')}; slurmrestd: {restd.get('summary', 'not reported')}"
-        r.decide_cluster("Slinky's control plane on the silent node", grade)
-    else:
-        r.decide(sl_node, ["investigate"], "Slurm node on an unreachable Kubernetes node", category="kubernetes_node")
+    def grade(d):
+        """The silent node is flagged, and so is the Slinky side (an unreachable slurmrestd traced to it, or its Slinky node)."""
+        return slinky_view_ok(d, W)
+    r.decide_cluster("both schedulers' view of the silent node", grade)
     r.wait("pods on the node marked for eviction (300 s toleration)", lambda: "terminating" in placement("web").get(W, []), 420, every=5)
     r.wait(f"replacement web pods running on {other}", lambda: placement("web").get(other, []).count("Running") >= 4, 120, every=3)
     r.note("Slinky after the eviction",
            pods={p["name"]: ("terminating" if p["terminating"] else p["phase"]) + "@" + p["node"] for p in lab.pods(namespace="slurm")},
            node=safe(lambda: sorted(slinky_state(sl_node))), job=safe(lambda: sorted(lab.job(SLINKY, sjob)["state"])))
-    r.decide_cluster("after the eviction", cluster_ok if not hosts_control_plane else lambda d: (
-        any(x["node"] == "slurmrestd" and W in x["summary"] for x in d["recommendations"]), "slurmrestd traced to " + W))
+    r.decide_cluster("after the eviction", grade)
 
     lab.ssh(W, "sudo systemctl start kubelet")
     r.mark("fix", f"kubelet started on {W}")
@@ -569,18 +576,19 @@ def kubelet_stop(r, W):
                "keeps running jobs. Pods on the node drop out of their Services at once, so Slinky's slurmrestd "
                "vanishes with its container still running.")
 def k8s_kubelet_stop(r):
-    """The kubelet stops on k8s-w2, which hosts slurm-controller-0, slurmrestd and
-    slinky-1, plus half of a drill service."""
-    kubelet_stop(r, "k8s-w2")
+    """The kubelet stops on the worker hosting slurm-controller-0 (its state
+    volume pins it there), plus a Slinky worker and half of a drill service."""
+    kubelet_stop(r, (slurm_pod_where("slurm-controller-0") or {}).get("node") or "k8s-w2")
 
 
-@drill("k8s-kubelet-stop-worker", "kubelet dies on a plain Slurm worker node", minutes=11,
+@drill("k8s-kubelet-stop-worker", "kubelet dies on the worker without Slinky's controller", minutes=11,
        teaches="With Slinky's control plane elsewhere, Slurm keeps seeing the worker as fine while Kubernetes "
                "counts down to evicting it: triage has to join the two views.")
 def k8s_kubelet_stop_worker(r):
-    """The kubelet stops on k8s-w1, which hosts slinky-0 (and Prometheus) but not
-    Slinky's control plane."""
-    kubelet_stop(r, "k8s-w1")
+    """The kubelet stops on the worker that doesn't host slurm-controller-0 (its
+    state volume pins it), so Slinky's controller stays reachable."""
+    ctl = (slurm_pod_where("slurm-controller-0") or {}).get("node")
+    kubelet_stop(r, "k8s-w1" if ctl == "k8s-w2" else "k8s-w2")
 
 
 @drill("k8s-cert-renewal", "Renew the control-plane certificates", minutes=5,

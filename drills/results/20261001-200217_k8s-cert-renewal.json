@@ -1,0 +1,162 @@
+{
+ "drill": "k8s-cert-renewal",
+ "title": "Renew the control-plane certificates",
+ "teaches": "kube-apiserver picks up a renewed serving certificate by itself, but the control-plane components only read their kubeconfig client certificates at startup, so they still need a restart: on one control-plane node that's an API outage, so time it.",
+ "started": "2026-10-01T20:02:17-06:00",
+ "repo": "dbbb4fb-dirty",
+ "finished": "2026-10-01T20:04:33-06:00",
+ "status": "PASS",
+ "error": null,
+ "duration_s": 136.0,
+ "triage_version": "dbbb4fb",
+ "metrics": {
+  "detect_s": null,
+  "fix_to_recover_s": 5.1,
+  "inject_to_recover_s": 45.0
+ },
+ "events": [
+  {
+   "t": 24.1,
+   "at": "2026-10-01T20:02:41-06:00",
+   "kind": "note",
+   "text": "apiserver certificate before",
+   "data": {
+    "notAfter": "notAfter=Oct  1 23:48:56 2027 GMT"
+   }
+  },
+  {
+   "t": 30.7,
+   "at": "2026-10-01T20:02:48-06:00",
+   "kind": "inject",
+   "text": "kubeadm certs renew all"
+  },
+  {
+   "t": 34.4,
+   "at": "2026-10-01T20:02:51-06:00",
+   "kind": "check",
+   "text": "PASS certificates renewed on disk",
+   "data": {
+    "detail": {
+     "before": "notAfter=Oct  1 23:48:56 2027 GMT",
+     "after": "notAfter=Oct  2 02:02:47 2027 GMT"
+    }
+   }
+  },
+  {
+   "t": 34.4,
+   "at": "2026-10-01T20:02:51-06:00",
+   "kind": "note",
+   "text": "serving certificate the API presents before any restart",
+   "data": {
+    "served": "notAfter=Oct  2 02:02:47 2027 GMT",
+    "already_renewed": true
+   }
+  },
+  {
+   "t": 69.1,
+   "at": "2026-10-01T20:03:26-06:00",
+   "kind": "observe",
+   "text": "control-plane processes stopped",
+   "data": {
+    "waited": 32.7
+   }
+  },
+  {
+   "t": 70.6,
+   "at": "2026-10-01T20:03:28-06:00",
+   "kind": "fix",
+   "text": "static pod manifests back; kubelet restarts the control plane"
+  },
+  {
+   "t": 75.7,
+   "at": "2026-10-01T20:03:33-06:00",
+   "kind": "recover",
+   "text": "API ready again",
+   "data": {
+    "waited": 5.1
+   }
+  },
+  {
+   "t": 76.5,
+   "at": "2026-10-01T20:03:34-06:00",
+   "kind": "check",
+   "text": "PASS the API serves the renewed certificate",
+   "data": {
+    "detail": "notAfter=Oct  2 02:02:47 2027 GMT"
+   }
+  },
+  {
+   "t": 81.8,
+   "at": "2026-10-01T20:03:39-06:00",
+   "kind": "check",
+   "text": "PASS kubectl works with the renewed admin credentials"
+  },
+  {
+   "t": 101.8,
+   "at": "2026-10-01T20:03:59-06:00",
+   "kind": "note",
+   "text": "API outage seen from k8s-w1",
+   "data": {
+    "seconds_not_200": 21,
+    "window": "12s..48s after probe start"
+   }
+  },
+  {
+   "t": 122.5,
+   "at": "2026-10-01T20:04:20-06:00",
+   "kind": "decide",
+   "text": "after renewal: triage_cluster -> 0 recommendation(s) OK",
+   "data": {
+    "why": "7 nodes triaged"
+   }
+  },
+  {
+   "t": 136.0,
+   "at": "2026-10-01T20:04:33-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 12.9
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 34.4,
+   "text": "certificates renewed on disk",
+   "ok": true,
+   "detail": {
+    "before": "notAfter=Oct  1 23:48:56 2027 GMT",
+    "after": "notAfter=Oct  2 02:02:47 2027 GMT"
+   }
+  },
+  {
+   "t": 76.5,
+   "text": "the API serves the renewed certificate",
+   "ok": true,
+   "detail": "notAfter=Oct  2 02:02:47 2027 GMT"
+  },
+  {
+   "t": 81.8,
+   "text": "kubectl works with the renewed admin credentials",
+   "ok": true,
+   "detail": null
+  }
+ ],
+ "decisions": [
+  {
+   "t": 102.9,
+   "label": "after renewal",
+   "node": "*",
+   "ok": true,
+   "latency": 1.13,
+   "expected": {
+    "note": "No error, every node of every cluster triaged."
+   },
+   "got": [],
+   "error": null,
+   "why": "7 nodes triaged",
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-200217_k8s-cert-renewal_fixtures/after-renewal"
+  }
+ ]
+}

@@ -7,6 +7,12 @@ would. This page is what they found on their first runs (2026-10-01) and what
 changed because of it. The latest numbers are in
 [drills/SCORECARD.md](../drills/SCORECARD.md).
 
+**Final run (2026-10-01, node-triage `dbbb4fb`): 13 of 14 drills PASS.** The
+one GAP, `k8s-kubelet-stop-worker`, was the drill's own grader (see the end of
+this page). node-triage's answers in that run were right, and the fixed grader
+accepts them, checked against the recorded run. Its live re-run was cut short
+when the workstation ran low on memory; it's the next thing to run.
+
 Every finding below was observed on the lab, not reasoned out in advance. Where
 a drill's own expectation turned out to be wrong, that's listed too: being
 wrong about the system is the point of running the drill.
@@ -30,7 +36,13 @@ Measured on the lab: classic Slurm 24.11 (`SlurmdTimeout=300`), Slinky Slurm
 | Kubernetes kubelet stops: until the node is Ready=Unknown | 46 s |
 | ...until its pods are evicted | ~300 s more (default toleration) |
 | Slinky worker pod deleted: until Slurm marks the node DOWN and requeues the job | 0.7 s |
+| ...until the node is back in service (with `ReturnToService=2`) | ~3 s (before: DOWN until someone resumed it) |
+| Control-plane certificate renewal: API unavailable while the static pods restart | 21 s |
+| New compute node: Terraform → configured → burn-in passed → first production job | ~4-7 min (mostly Ansible) |
 | Slinky operator labels a busy worker pod as protected | 25 s after the job starts |
+
+A requeued job, classic or Slinky, waits ~2 minutes before it can start again
+(`BeginTime`), so the cost of a dead node is detection plus that.
 
 The classic/Slinky contrast is the headline: on a VM, slurmctld takes minutes to
 give up on a dead node, so its jobs sit on it; in Slinky, pod termination tells
@@ -169,4 +181,12 @@ now a regression test in `triage/internal/*/testdata/`.
   It also assumed `crictl` was installed.
 - **slinky-pod-kill** expected "wait" right after the pod was deleted. The
   replacement had registered within 7 s, so "resume" was already the right
-  answer.
+  answer. After the `ReturnToService=2` fix, the node was back before triage
+  was even asked, so "healthy" was right; the drill now expects that, and
+  falls back to "resume" on a Slinky without the fix.
+- **k8s-kubelet-stop-worker** assumed slurmrestd stays unreachable after its
+  pod is evicted. It doesn't when slurmctld is on a healthy node: Kubernetes
+  rebuilds the slurmrestd pod elsewhere and Slinky is readable again. Triage
+  answered both moments correctly (outage traced to the silent node, then the
+  Slinky node on it flagged); the drill grades both cases now, and picks its
+  node from where slurmctld actually runs, since slurmrestd moves between runs.

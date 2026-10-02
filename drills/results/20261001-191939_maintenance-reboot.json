@@ -1,0 +1,250 @@
+{
+ "drill": "maintenance-reboot",
+ "title": "Rolling kernel update: drain, reboot, return",
+ "teaches": "scontrol reboot ASAP nextstate=RESUME is a whole maintenance workflow in one command; triage must read REBOOT_* states as planned work, not an outage.",
+ "started": "2026-10-01T19:19:39-06:00",
+ "repo": "dbbb4fb-dirty",
+ "finished": "2026-10-01T19:21:09-06:00",
+ "status": "PASS",
+ "error": null,
+ "duration_s": 90.3,
+ "triage_version": "dbbb4fb",
+ "metrics": {
+  "detect_s": 0.7,
+  "fix_to_recover_s": null,
+  "inject_to_recover_s": 71.3
+ },
+ "events": [
+  {
+   "t": 9.2,
+   "at": "2026-10-01T19:19:48-06:00",
+   "kind": "observe",
+   "text": "running job (job 30) running on slurm-c1",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 9.8,
+   "at": "2026-10-01T19:19:49-06:00",
+   "kind": "inject",
+   "text": "maintenance requested: scontrol reboot ASAP nextstate=RESUME"
+  },
+  {
+   "t": 10.5,
+   "at": "2026-10-01T19:19:50-06:00",
+   "kind": "detect",
+   "text": "draining, reboot pending",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 19.0,
+   "at": "2026-10-01T19:19:58-06:00",
+   "kind": "decide",
+   "text": "reboot pending, job running: slurm-c1 -> wait/info/maintenance (want wait) OK",
+   "data": {
+    "summary": "Reboot requested; draining: 1 job(s) still running; drained by 2026-10-01T19:22:47-06:00 at the latest."
+   }
+  },
+  {
+   "t": 28.3,
+   "at": "2026-10-01T19:20:07-06:00",
+   "kind": "observe",
+   "text": "new job 31 ran",
+   "data": {
+    "waited": 8.6
+   }
+  },
+  {
+   "t": 28.3,
+   "at": "2026-10-01T19:20:07-06:00",
+   "kind": "check",
+   "text": "PASS new work avoided slurm-c1",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c2"
+    }
+   }
+  },
+  {
+   "t": 71.3,
+   "at": "2026-10-01T19:20:50-06:00",
+   "kind": "observe",
+   "text": "job 30 finished normally",
+   "data": {
+    "waited": 43.0
+   }
+  },
+  {
+   "t": 71.3,
+   "at": "2026-10-01T19:20:50-06:00",
+   "kind": "check",
+   "text": "PASS job 30 completed, not killed",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c1"
+    }
+   }
+  },
+  {
+   "t": 71.9,
+   "at": "2026-10-01T19:20:51-06:00",
+   "kind": "observe",
+   "text": "reboot issued",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 80.5,
+   "at": "2026-10-01T19:21:00-06:00",
+   "kind": "decide",
+   "text": "rebooting: slurm-c1 -> wait/info/maintenance (want wait) OK",
+   "data": {
+    "summary": "Rebooting on request (scontrol reboot). It rejoins by itself once slurmd registers; Slurm marks it DOWN if it misses ResumeTimeout."
+   }
+  },
+  {
+   "t": 81.1,
+   "at": "2026-10-01T19:21:00-06:00",
+   "kind": "recover",
+   "text": "slurm-c1 back in service with no human step",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 81.8,
+   "at": "2026-10-01T19:21:01-06:00",
+   "kind": "check",
+   "text": "PASS slurm-c1 really rebooted"
+  },
+  {
+   "t": 90.3,
+   "at": "2026-10-01T19:21:09-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 6.6
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 28.3,
+   "text": "new work avoided slurm-c1",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c2"
+   }
+  },
+  {
+   "t": 71.3,
+   "text": "job 30 completed, not killed",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c1"
+   }
+  },
+  {
+   "t": 81.8,
+   "text": "slurm-c1 really rebooted",
+   "ok": true,
+   "detail": null
+  }
+ ],
+ "decisions": [
+  {
+   "t": 11.3,
+   "label": "reboot pending, job running",
+   "node": "slurm-c1",
+   "ok": true,
+   "latency": 0.82,
+   "expected": {
+    "action": [
+     "wait"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "wait",
+    "severity": "info",
+    "category": "maintenance",
+    "summary": "Reboot requested; draining: 1 job(s) still running; drained by 2026-10-01T19:22:47-06:00 at the latest."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "wait",
+    "category": "maintenance",
+    "cluster": "lab",
+    "commands": [
+     "scontrol cancel_reboot slurm-c1   # only to call the reboot off"
+    ],
+    "evidence": [
+     "state MIXED+DRAIN+REBOOT_REQUESTED; CPUs 1/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "reason \"maint: kernel update CHG-3001\" set 2s ago by root",
+     "job 30 \"drill-maint-running\" (labadmin) ends by 2026-10-01T19:22:47-06:00"
+    ],
+    "next_steps": [
+     "Wait; nothing new will start here. Start the work once the node shows DRAINED.",
+     "Nothing else to do: Slurm drains it, reboots it, and with nextstate=RESUME returns it to service."
+    ],
+    "node": "slurm-c1",
+    "scheduler": "slurm",
+    "severity": "info",
+    "summary": "Reboot requested; draining: 1 job(s) still running; drained by 2026-10-01T19:22:47-06:00 at the latest."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-191939_maintenance-reboot_fixtures/reboot-pending--job-running"
+  },
+  {
+   "t": 72.8,
+   "label": "rebooting",
+   "node": "slurm-c1",
+   "ok": true,
+   "latency": 0.85,
+   "expected": {
+    "action": [
+     "wait"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "wait",
+    "severity": "info",
+    "category": "maintenance",
+    "summary": "Rebooting on request (scontrol reboot). It rejoins by itself once slurmd registers; Slurm marks it DOWN if it misses ResumeTimeout."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "wait",
+    "category": "maintenance",
+    "cluster": "lab",
+    "commands": [
+     "scontrol show node slurm-c1 | grep -E 'State|Reason|BootTime'"
+    ],
+    "evidence": [
+     "state DOWN+DRAIN+REBOOT_ISSUED; CPUs 0/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "reason \"maint: kernel update CHG-3001 : reboot issued\" set 4s ago by slurm"
+    ],
+    "next_steps": [
+     "Wait for the node to come back. Investigate only if it's marked DOWN with \"reboot timed out\"."
+    ],
+    "node": "slurm-c1",
+    "scheduler": "slurm",
+    "severity": "info",
+    "summary": "Rebooting on request (scontrol reboot). It rejoins by itself once slurmd registers; Slurm marks it DOWN if it misses ResumeTimeout."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-191939_maintenance-reboot_fixtures/rebooting"
+  }
+ ]
+}
