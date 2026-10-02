@@ -77,7 +77,8 @@ PY
 
 # 4. Local disk and the shared filesystem: write, flush, read back, compare.
 roundtrip() { # directory
-  local f="$1/burnin-$(hostname -s)-${SLURM_JOB_ID:-x}" rc
+  local f rc
+  f="$1/burnin-$(hostname -s)-${SLURM_JOB_ID:-x}"
   head -c 128M /dev/urandom | tee "$f" | sha256sum >"$f.sum" && sync "$f" &&
     [[ $(sha256sum <"$f") == "$(cat "$f.sum")" ]]
   rc=$?
