@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Burn-in for a new or repaired compute node. Runs as a Slurm job that owns the
+# whole node and every GPU:
+#
+#   sbatch -p burnin -w <node> --gres=gpu:4 --exclusive -J burnin /usr/local/sbin/lab-burnin
+#
+# The job's exit code is the verdict (0 = qualified); node-triage reads it from
+# accounting to decide whether the node can be promoted to production.
+#
+# Real burn-ins run for hours: HPL/dgemm with residual checks, NCCL all-reduce
+# across the fabric, DCGM diag level 3, memory and disk soak. This one keeps the
+# shape and takes about a minute; each check is a cheap stand-in for a real one.
+set -uo pipefail
+
+FAILED=0
+pass() { printf 'PASS  %s\n' "$*"; }
+fail() { printf 'FAIL  %s\n' "$*"; FAILED=1; }
+
+NODE=$(hostname -s)
+echo "burn-in: node $NODE, job ${SLURM_JOB_ID:-none}, $(date -Is)"
+
+# 1. GPUs: every configured GPU was allocated, and the device cgroup lets the job
+#    reach each one. The fake devices have no driver, so a permitted open fails
+#    with ENXIO ("No such device or address"); EPERM would mean the cgroup blocked it.
+configured=$(scontrol show node "$NODE" -o | grep -o 'Gres=[^ ]*' | grep -o '[0-9]*$')
+allocated=${SLURM_JOB_GPUS:-}
+count=$(tr ',' '\n' <<<"$allocated" | grep -c .)
+if [[ -n $configured && $count -eq $configured ]]; then
+  pass "gpu: $count of $configured allocated ($allocated)"
+else
+  fail "gpu: $count allocated, $configured configured; submit with --gres=gpu:$configured"
+fi
+for i in $(tr ',' ' ' <<<"$allocated"); do
+  err=$( { : <"/dev/fakegpu$i"; } 2>&1 )
+  case $err in
+    *"No such device or address"*) pass "gpu$i: reachable" ;;
+    *) fail "gpu$i: ${err:-opened without error, a fake device should not}" ;;
+  esac
+done
+
+# 2. Compute correctness: every CPU hashes the same data over and over; any
+#    disagreement is silent data corruption (what HPL's residual check catches).
+want=$(head -c 64M /dev/zero | sha256sum | cut -d' ' -f1)
+cpus=${SLURM_CPUS_ON_NODE:-$(nproc)}
+bad=$(for ((c = 0; c < cpus; c++)); do
+  ( for _ in 1 2 3 4 5 6 7 8; do head -c 64M /dev/zero | sha256sum | cut -d' ' -f1; done ) &
+done | grep -vc "$want"; wait)
+if [[ $bad -eq 0 ]]; then pass "cpu: $cpus CPUs x 8 rounds, all digests agree"; else fail "cpu: $bad wrong digests"; fi
+
+# 3. Memory: fill half the job's memory with a pattern and read it back.
+mem_mb=${SLURM_MEM_PER_NODE:-512}
+if python3 - "$((mem_mb / 2))" <<'PY'; then pass "memory: $((mem_mb / 2)) MiB pattern written and verified"; else fail "memory: pattern mismatch"; fi
+import sys
+n = int(sys.argv[1]) << 20
+block = bytes(range(256)) * 4096  # 1 MiB
+buf = memoryview(bytearray(n))
+offsets = range(0, n - len(block) + 1, len(block))
+for off in offsets:
+    buf[off:off + len(block)] = block
+sys.exit(0 if all(buf[off:off + len(block)] == block for off in offsets) else 1)
+PY
+
+# 4. Local disk and the shared filesystem: write, flush, read back, compare.
+for target in /var/tmp /shared; do
+  f="$target/burnin-$NODE-${SLURM_JOB_ID:-x}"
+  if head -c 128M /dev/urandom | tee "$f" | sha256sum >"$f.sum" && sync "$f" &&
+     [[ $(sha256sum <"$f") == "$(cat "$f.sum")" ]]; then
+    pass "disk: 128 MiB round trip on $target"
+  else
+    fail "disk: round trip on $target"
+  fi
+  rm -f "$f" "$f.sum"
+done
+
+# 5. Time: munge credentials and job accounting need a synced clock.
+offset=$(chronyc tracking 2>/dev/null | awk '/^System time/ {print $4}')
+if [[ -n $offset ]] && awk -v o="$offset" 'BEGIN {exit !(o < 0.1)}'; then
+  pass "clock: ${offset}s from NTP"
+else
+  fail "clock: offset ${offset:-unknown}"
+fi
+
+if ((FAILED)); then echo "burn-in FAILED on $NODE"; exit 1; fi
+echo "burn-in passed on $NODE"

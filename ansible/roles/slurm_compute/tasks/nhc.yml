@@ -1,0 +1,57 @@
+# LBNL Node Health Check, the health checker most Slurm sites run. slurmd runs
+# it every HealthCheckInterval (slurm.conf). Not packaged for Debian, so it's
+# installed from the checksum-pinned upstream release; it's plain bash.
+- name: NHC build dependency
+  ansible.builtin.apt:
+    name: [make]
+    state: present
+
+- name: Download NHC
+  ansible.builtin.get_url:
+    url: "https://github.com/mej/nhc/releases/download/{{ slurm_compute_nhc_version }}/lbnl-nhc-{{ slurm_compute_nhc_version }}.tar.gz"
+    dest: "/usr/local/src/lbnl-nhc-{{ slurm_compute_nhc_version }}.tar.gz"
+    checksum: "sha256:{{ slurm_compute_nhc_sha256 }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Unpack NHC
+  ansible.builtin.unarchive:
+    src: "/usr/local/src/lbnl-nhc-{{ slurm_compute_nhc_version }}.tar.gz"
+    dest: /usr/local/src
+    remote_src: true
+    creates: "/usr/local/src/lbnl-nhc-{{ slurm_compute_nhc_version }}/configure"
+
+- name: Install NHC
+  ansible.builtin.shell: >-
+    ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/libexec >/dev/null &&
+    make install >/dev/null &&
+    touch /usr/libexec/nhc/installed-{{ slurm_compute_nhc_version }}
+  args:
+    chdir: "/usr/local/src/lbnl-nhc-{{ slurm_compute_nhc_version }}"
+    creates: "/usr/libexec/nhc/installed-{{ slurm_compute_nhc_version }}"
+
+- name: NHC checks for this lab
+  ansible.builtin.template:
+    src: nhc.conf.j2
+    dest: /etc/nhc/nhc.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: NHC check that counts GPUs
+  ansible.builtin.copy:
+    src: lab_gpu.nhc
+    dest: /etc/nhc/scripts/lab_gpu.nhc
+    owner: root
+    group: root
+    mode: "0644"
+
+# The burn-in a new or repaired node must pass before it serves production work.
+- name: Burn-in script
+  ansible.builtin.copy:
+    src: lab-burnin
+    dest: /usr/local/sbin/lab-burnin
+    owner: root
+    group: root
+    mode: "0755"

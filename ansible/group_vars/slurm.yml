@@ -1,5 +1,8 @@
 slurm_cluster_name: lab
 
+# How often slurmd runs NHC. Sites typically use 300 s; 60 s keeps drills short.
+slurm_health_check_interval: 60
+
 # Fake GPUs: char devices on an unused "local/experimental" major, so Slurm can
 # track and cgroup-constrain them like real /dev/nvidiaN nodes. Opening them fails (ENXIO).
 fake_gpu_count: 4

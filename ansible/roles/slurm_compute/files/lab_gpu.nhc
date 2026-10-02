@@ -1,0 +1,17 @@
+# Lab NHC check: count the node's GPUs. The lab's fake GPUs (/dev/fakegpuN)
+# stand in for /dev/nvidiaN; a real site counts GPUs with nvidia-smi or DCGM.
+# The message says "GPU missing" so the drain reason reads as a hardware fault,
+# which triage escalates instead of waiting for NHC to clear it.
+
+function check_gpu_count() {
+    local WANT=$1 HAVE=0 DEV
+
+    for DEV in /dev/fakegpu[0-9]*; do
+        [[ -c "$DEV" ]] && HAVE=$((HAVE + 1))
+    done
+    if (( HAVE < WANT )); then
+        die 1 "$FUNCNAME:  GPU missing: $HAVE of $WANT devices present"
+        return 1
+    fi
+    return 0
+}

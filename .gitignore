@@ -20,3 +20,9 @@ triage/bin/
 
 # ansible-lint cache
 .ansible/
+
+# Drill run logs (terraform/ansible output) and captured fixtures; the JSON results are kept
+drills/results/*.log
+drills/results/*_fixtures/
+drills/results/*.tfvars.json
+drills/__pycache__/
