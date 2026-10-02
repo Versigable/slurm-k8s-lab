@@ -22,14 +22,16 @@
     remote_src: true
     creates: "/usr/local/src/lbnl-nhc-{{ slurm_compute_nhc_version }}/configure"
 
+# On Debian, nhc looks for its drain/resume helpers in /usr/lib/nhc (it
+# hardcodes LIBEXECDIR=/usr/lib when /etc/debian_version exists).
 - name: Install NHC
   ansible.builtin.shell: >-
-    ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/libexec >/dev/null &&
+    ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib >/dev/null &&
     make install >/dev/null &&
-    touch /usr/libexec/nhc/installed-{{ slurm_compute_nhc_version }}
+    touch /usr/lib/nhc/installed-{{ slurm_compute_nhc_version }}
   args:
     chdir: "/usr/local/src/lbnl-nhc-{{ slurm_compute_nhc_version }}"
-    creates: "/usr/libexec/nhc/installed-{{ slurm_compute_nhc_version }}"
+    creates: "/usr/lib/nhc/installed-{{ slurm_compute_nhc_version }}"
 
 - name: NHC checks for this lab
   ansible.builtin.template:

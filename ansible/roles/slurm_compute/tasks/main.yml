@@ -59,6 +59,12 @@
     state: restarted
   when: (slurm_common_config_changed | bool) or slurm_compute_fakegpu_tmpfiles.changed
 
-- name: NHC passes on this node (MARK_OFFLINE=0 keeps this check from touching Slurm)
+# MARK_OFFLINE=0 keeps this check from touching Slurm, which also means it
+# never runs the helpers that drain and resume; check those exist separately.
+- name: NHC passes on this node
   ansible.builtin.command: nhc -t 60 MARK_OFFLINE=0
+  changed_when: false
+
+- name: NHC can drain and resume this node (its helpers are where nhc looks)
+  ansible.builtin.command: test -x /usr/lib/nhc/node-mark-offline -a -x /usr/lib/nhc/node-mark-online
   changed_when: false
