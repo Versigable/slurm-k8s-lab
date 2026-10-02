@@ -1,0 +1,297 @@
+{
+ "drill": "node-bringup",
+ "title": "New compute node: provision, burn in, promote",
+ "teaches": "A node joins in a burn-in stage, outside production. It earns its way into batch by passing burn-in, and promotion is a one-line change in code.",
+ "started": "2026-10-01T18:28:34-06:00",
+ "repo": "34e61a7-dirty",
+ "finished": "2026-10-01T18:34:10-06:00",
+ "status": "GAP",
+ "error": null,
+ "duration_s": 336.0,
+ "triage_version": "1a9f389",
+ "metrics": {
+  "detect_s": 146.6,
+  "fix_to_recover_s": 5.6,
+  "inject_to_recover_s": 235.9
+ },
+ "events": [
+  {
+   "t": 21.1,
+   "at": "2026-10-01T18:28:55-06:00",
+   "kind": "inject",
+   "text": "slurm-c3 added to the node table (stage=burnin); terraform apply done"
+  },
+  {
+   "t": 67.5,
+   "at": "2026-10-01T18:29:41-06:00",
+   "kind": "observe",
+   "text": "slurm-c3 reachable over SSH",
+   "data": {
+    "waited": 46.4
+   }
+  },
+  {
+   "t": 167.0,
+   "at": "2026-10-01T18:31:21-06:00",
+   "kind": "observe",
+   "text": "configured by Ansible (site.yml --limit slurm)",
+   "data": {
+    "recap": [
+     "slurm-c1 : ok=38 changed=4 unreachable=0 failed=0 skipped=2 rescued=0 ignored=0",
+     "slurm-c2 : ok=36 changed=4 unreachable=0 failed=0 skipped=2 rescued=0 ignored=0",
+     "slurm-c3 : ok=40 changed=28 unreachable=0 failed=0 skipped=0 rescued=0 ignored=0",
+     "slurm-ctl : ok=42 changed=6 unreachable=0 failed=0 skipped=4 rescued=0 ignored=0"
+    ]
+   }
+  },
+  {
+   "t": 167.7,
+   "at": "2026-10-01T18:31:22-06:00",
+   "kind": "detect",
+   "text": "slurm-c3 registered, idle, in burnin only",
+   "data": {
+    "waited": 0.7
+   }
+  },
+  {
+   "t": 176.6,
+   "at": "2026-10-01T18:31:31-06:00",
+   "kind": "decide",
+   "text": "new node, not qualified: slurm-c3 -> none/info/none (want burn_in) GAP",
+   "data": {
+    "summary": "Healthy."
+   }
+  },
+  {
+   "t": 177.3,
+   "at": "2026-10-01T18:31:31-06:00",
+   "kind": "check",
+   "text": "PASS production work can't reach slurm-c3",
+   "data": {
+    "detail": "sbatch: error: Batch job submission failed: Requested node configuration is not available"
+   }
+  },
+  {
+   "t": 184.3,
+   "at": "2026-10-01T18:31:38-06:00",
+   "kind": "observe",
+   "text": "burn-in job 22 finished",
+   "data": {
+    "waited": 6.3
+   }
+  },
+  {
+   "t": 185.0,
+   "at": "2026-10-01T18:31:39-06:00",
+   "kind": "note",
+   "text": "burn-in output",
+   "data": {
+    "output": [
+     "burn-in: node slurm-c3, job 22, 2026-10-01T18:31:33-06:00",
+     "PASS  gpu: 4 of 4 allocated (0,1,2,3)",
+     "PASS  gpu0: reachable",
+     "PASS  gpu1: reachable",
+     "PASS  gpu2: reachable",
+     "PASS  gpu3: reachable",
+     "PASS  cpu: 2 CPUs x 8 rounds, all digests agree",
+     "PASS  memory: 859 MiB pattern written and verified",
+     "PASS  disk: 128 MiB round trip on /var/tmp",
+     "PASS  disk: 128 MiB round trip on /shared (as nobody)",
+     "PASS  clock: 0.000001408s from NTP",
+     "burn-in passed on slurm-c3"
+    ]
+   }
+  },
+  {
+   "t": 185.0,
+   "at": "2026-10-01T18:31:39-06:00",
+   "kind": "check",
+   "text": "PASS burn-in passed",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c3"
+    }
+   }
+  },
+  {
+   "t": 193.8,
+   "at": "2026-10-01T18:31:48-06:00",
+   "kind": "decide",
+   "text": "burn-in passed: slurm-c3 -> none/info/none (want promote) GAP",
+   "data": {
+    "summary": "Healthy."
+   }
+  },
+  {
+   "t": 251.4,
+   "at": "2026-10-01T18:32:45-06:00",
+   "kind": "fix",
+   "text": "slurm-c3 promoted in code (stage=production); terraform + Ansible applied",
+   "data": {
+    "recap": [
+     "slurm-c1 : ok=38 changed=2 unreachable=0 failed=0 skipped=2 rescued=0 ignored=0",
+     "slurm-c2 : ok=36 changed=2 unreachable=0 failed=0 skipped=2 rescued=0 ignored=0",
+     "slurm-c3 : ok=36 changed=2 unreachable=0 failed=0 skipped=2 rescued=0 ignored=0",
+     "slurm-ctl : ok=41 changed=2 unreachable=0 failed=0 skipped=4 rescued=0 ignored=0"
+    ]
+   }
+  },
+  {
+   "t": 252.1,
+   "at": "2026-10-01T18:32:46-06:00",
+   "kind": "observe",
+   "text": "slurm-c3 in batch",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 257.0,
+   "at": "2026-10-01T18:32:51-06:00",
+   "kind": "recover",
+   "text": "first production job ran on slurm-c3",
+   "data": {
+    "waited": 4.3
+   }
+  },
+  {
+   "t": 265.9,
+   "at": "2026-10-01T18:33:00-06:00",
+   "kind": "decide",
+   "text": "in production: slurm-c3 -> none/info/none (want none) OK",
+   "data": {
+    "summary": "Healthy."
+   }
+  },
+  {
+   "t": 336.0,
+   "at": "2026-10-01T18:34:10-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 7.3
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 177.3,
+   "text": "production work can't reach slurm-c3",
+   "ok": true,
+   "detail": "sbatch: error: Batch job submission failed: Requested node configuration is not available"
+  },
+  {
+   "t": 185.0,
+   "text": "burn-in passed",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c3"
+   }
+  }
+ ],
+ "decisions": [
+  {
+   "t": 168.6,
+   "label": "new node, not qualified",
+   "node": "slurm-c3",
+   "ok": false,
+   "latency": 0.87,
+   "expected": {
+    "action": [
+     "burn_in"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "none",
+    "severity": "info",
+    "category": "none",
+    "summary": "Healthy."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "none",
+    "category": "none",
+    "cluster": "lab",
+    "evidence": [
+     "state IDLE; CPUs 0/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))"
+    ],
+    "node": "slurm-c3",
+    "scheduler": "slurm",
+    "severity": "info",
+    "summary": "Healthy."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-182834_node-bringup_fixtures/new-node--not-qualified"
+  },
+  {
+   "t": 185.9,
+   "label": "burn-in passed",
+   "node": "slurm-c3",
+   "ok": false,
+   "latency": 0.88,
+   "expected": {
+    "action": [
+     "promote"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "none",
+    "severity": "info",
+    "category": "none",
+    "summary": "Healthy."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "none",
+    "category": "none",
+    "cluster": "lab",
+    "evidence": [
+     "state IDLE; CPUs 0/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))"
+    ],
+    "node": "slurm-c3",
+    "scheduler": "slurm",
+    "severity": "info",
+    "summary": "Healthy."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-182834_node-bringup_fixtures/burn-in-passed"
+  },
+  {
+   "t": 257.9,
+   "label": "in production",
+   "node": "slurm-c3",
+   "ok": true,
+   "latency": 0.85,
+   "expected": {
+    "action": [
+     "none"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "none",
+    "severity": "info",
+    "category": "none",
+    "summary": "Healthy."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "none",
+    "category": "none",
+    "cluster": "lab",
+    "evidence": [
+     "state IDLE; CPUs 0/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))"
+    ],
+    "node": "slurm-c3",
+    "scheduler": "slurm",
+    "severity": "info",
+    "summary": "Healthy."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-182834_node-bringup_fixtures/in-production"
+  }
+ ]
+}

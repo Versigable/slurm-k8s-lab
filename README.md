@@ -33,7 +33,7 @@ scripts/     One-time Proxmox bootstrap (pool, template, scoped API token)
 - [x] **GitOps + CI:** Argo CD (app of apps from `gitops/`, pulled from GitLab over the LAN with a read-only deploy token) owns the add-ons after bootstrap; GitLab CI runs on a Kubernetes-executor runner inside the cluster and `main` requires a green pipeline
 - [x] **2 — kubeadm Kubernetes:** v1.36.5 (pinned to Cilium 1.20's tested range, not the newer 1.37), Cilium as kube-proxy replacement + Hubble, Cilium LB-IPAM with L2 announcements on the LAN (`10.0.5.140–149`) instead of MetalLB, local-path storage, `k8s-verify.yml`. kube-prometheus-stack and node-problem-detector (v1.36.0) run as Argo CD apps
 - [x] **3 — Slinky:** Slurm 26.05 on Kubernetes (slurm-operator 1.2.2 via Argo CD, cert-manager for its webhook). Cordoning a Kubernetes node drains its Slurm node with the node-problem-detector condition as the reason. [Classic vs Slinky comparison](docs/classic-vs-slinky.md)
-- [ ] **4 — Failure drills (ongoing):** node death mid-job, drains, health-check failures, munge/clock faults, cordon + PodDisruptionBudgets, cert expiry
+- [x] **4 — Failure drills:** 14 drills in [`drills/`](drills/README.md) across classic Slurm, Kubernetes and Slinky (node death, NHC disk and GPU faults through repair and burn-in, munge/clock faults, slurmctld/slurmdbd outages, rolling maintenance reboots, drains under PDBs, kubelet loss, cert renewal, new-node bring-up). Each times detection and recovery and grades node-triage's decision: [what they found](docs/drills.md), [scorecard](drills/SCORECARD.md)
 
 ## Usage
 
@@ -95,7 +95,7 @@ The one-time scripts create what never lives in git: Argo CD's read-only deploy 
 | Tool | What it does |
 |---|---|
 | `triage_cluster` | Assess every node; return the ones needing attention, most severe first |
-| `triage_node` | One node: action (`none` / `wait` / `drain` / `resume` / `investigate` / `escalate_hardware`), severity, evidence, preconditions, suggested commands |
+| `triage_node` | One node: action (`none` / `wait` / `drain` / `resume` / `investigate` / `escalate_hardware` / `burn_in` / `promote`), severity, evidence, preconditions, suggested commands |
 | `node_detail` | State, reason and who set it, running jobs, recent job outcomes, drain/down events |
 | `list_nodes` | Every node with state flags, CPU and GPU usage |
 | `drain_node` / `resume_node` | **Only with `-allow-writes`.** Slurm drain/resume or Kubernetes cordon/uncordon. `resume_node` refuses nodes triage flags as hardware faults unless `force=true` |

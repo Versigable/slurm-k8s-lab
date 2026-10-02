@@ -1,0 +1,151 @@
+{
+ "drill": "clock-skew",
+ "title": "A node's clock jumps 10 minutes ahead",
+ "teaches": "munge credentials are only valid within ~5 minutes; clock skew is an auth failure in disguise.",
+ "started": "2026-10-01T16:57:11-06:00",
+ "repo": "360cb89-dirty",
+ "finished": "2026-10-01T16:59:10-06:00",
+ "status": "PASS",
+ "error": null,
+ "duration_s": 118.3,
+ "triage_version": "1a9f389",
+ "metrics": {
+  "detect_s": 80.7,
+  "fix_to_recover_s": 3.2,
+  "inject_to_recover_s": 98.7
+ },
+ "events": [
+  {
+   "t": 7.3,
+   "at": "2026-10-01T16:57:19-06:00",
+   "kind": "inject",
+   "text": "chrony stopped on slurm-c1; clock +10 min"
+  },
+  {
+   "t": 88.0,
+   "at": "2026-10-01T16:58:39-06:00",
+   "kind": "detect",
+   "text": "slurmctld flags it NOT_RESPONDING",
+   "data": {
+    "waited": 80.6
+   }
+  },
+  {
+   "t": 96.4,
+   "at": "2026-10-01T16:58:48-06:00",
+   "kind": "decide",
+   "text": "not responding: clock: slurm-c1 -> investigate/critical/unreachable (want investigate) OK",
+   "data": {
+    "summary": "slurmd stopped responding. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN."
+   }
+  },
+  {
+   "t": 97.8,
+   "at": "2026-10-01T16:58:49-06:00",
+   "kind": "note",
+   "text": "diagnosis: clock offset vs slurm-ctl",
+   "data": {
+    "seconds": 599
+   }
+  },
+  {
+   "t": 99.0,
+   "at": "2026-10-01T16:58:50-06:00",
+   "kind": "note",
+   "text": "diagnosis: munge -n on slurm-ctl | unmunge on node",
+   "data": {
+    "result": "STATUS:          Expired credential (15)"
+   }
+  },
+  {
+   "t": 102.8,
+   "at": "2026-10-01T16:58:54-06:00",
+   "kind": "fix",
+   "text": "chrony started and stepped the clock; slurmd restarted"
+  },
+  {
+   "t": 106.0,
+   "at": "2026-10-01T16:58:57-06:00",
+   "kind": "recover",
+   "text": "slurm-c1 back in service",
+   "data": {
+    "waited": 3.3
+   }
+  },
+  {
+   "t": 107.3,
+   "at": "2026-10-01T16:58:59-06:00",
+   "kind": "check",
+   "text": "PASS clock back in sync",
+   "data": {
+    "detail": {
+     "offset_s": 0
+    }
+   }
+  },
+  {
+   "t": 118.3,
+   "at": "2026-10-01T16:59:10-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 6.6
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 107.3,
+   "text": "clock back in sync",
+   "ok": true,
+   "detail": {
+    "offset_s": 0
+   }
+  }
+ ],
+ "decisions": [
+  {
+   "t": 88.8,
+   "label": "not responding: clock",
+   "node": "slurm-c1",
+   "ok": true,
+   "latency": 0.82,
+   "expected": {
+    "action": [
+     "investigate"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "investigate",
+    "severity": "critical",
+    "category": "unreachable",
+    "summary": "slurmd stopped responding. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "investigate",
+    "category": "unreachable",
+    "cluster": "lab",
+    "commands": [
+     "ping -c3 slurm-c1",
+     "ssh slurm-c1 'sudo systemctl restart slurmd && journalctl -u slurmd -n 20'",
+     "scontrol show config | grep -i SlurmdTimeout"
+    ],
+    "evidence": [
+     "state IDLE+NOT_RESPONDING; CPUs 0/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))"
+    ],
+    "next_steps": [
+     "Check whether the host is reachable at all.",
+     "If it is, restart slurmd; running jobs survive a slurmd restart.",
+     "If the host is gone, the jobs are already lost. Let the timeout mark it DOWN and follow the down-node path."
+    ],
+    "node": "slurm-c1",
+    "scheduler": "slurm",
+    "severity": "critical",
+    "summary": "slurmd stopped responding. If the host is up, restart slurmd before SlurmdTimeout marks the node DOWN."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-165711_clock-skew_fixtures/not-responding--clock"
+  }
+ ]
+}

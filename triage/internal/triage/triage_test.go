@@ -230,10 +230,111 @@ func TestClassify(t *testing.T) {
 		"Not responding":                CategoryUnreachable,
 		"triage: 2 NODE_FAIL jobs":      CategoryTriage,
 		"bob said so":                   CategoryOther,
+		// A health check that found a hardware fault reads as hardware...
+		"NHC: check_gpu_count:  GPU missing: 3 of 4 devices present": CategoryHardware,
+		// ...and keeps reading as hardware when triage takes the drain over.
+		"triage: hardware: GPU missing, RMA-DRILL-1": CategoryHardware,
+		"triage: maint: kernel update CHG-7":         CategoryMaintenance,
 	}
 	for reason, want := range tests {
 		if got := Classify(reason); got != want {
 			t.Errorf("Classify(%q) = %s, want %s", reason, got, want)
 		}
+	}
+}
+
+// drills/: nhc-disk-full. NHC drained slurm-c2 for a full root filesystem, an
+// hour after the node-death drill had powered it off. That one outage logged
+// two events (Not responding, then Node unexpectedly rebooted); counted as
+// events, they plus the current drain made the node "chronic" and triage said
+// escalate_hardware. Counted as incidents, it's two, and the right call is to
+// fix the disk and let NHC resume the node.
+func TestNHCDrainAfterOneOutageIsNotChronic(t *testing.T) {
+	r := mustAssess(t, fixtureSnapshot(t, "nhc-disk-full"), "slurm-c2")
+	if r.Action != ActionInvestigate || r.Category != CategoryHealthCheck {
+		t.Fatalf("got %s/%s: %s", r.Action, r.Category, r.Summary)
+	}
+	if !strings.Contains(r.Summary, "NHC returns the node to service itself") {
+		t.Errorf("summary should say NHC resumes it: %q", r.Summary)
+	}
+}
+
+func TestBackToBackEventsAreOneIncident(t *testing.T) {
+	ev := func(start, end time.Duration, reason string) slurm.Event {
+		return slurm.Event{Node: "n1", Start: now.Add(start), End: now.Add(end), Reason: reason}
+	}
+	s := Snapshot{Now: now, Nodes: []slurm.Node{node("n1", "NHC: check_fs_free", "IDLE", "DRAIN")}}
+	s.Events = []slurm.Event{
+		ev(-5*time.Hour, -5*time.Hour+3*time.Minute, "Not responding"),
+		ev(-5*time.Hour+3*time.Minute, -5*time.Hour+8*time.Minute, "Node unexpectedly rebooted"),
+		ev(-2*time.Hour, -2*time.Hour+time.Minute, "maint: kernel update CHG-9"),
+		ev(-time.Minute, 0, "NHC: check_fs_free"),
+	}
+	if got := (assessor{s: s, p: DefaultPolicy, n: s.Nodes[0]}).incidents(); got != 2 {
+		t.Fatalf("incidents = %d, want 2 (one outage, maintenance excluded, the current drain)", got)
+	}
+}
+
+// drills/: nhc-gpu-lost. NHC drains slurm-c1 for a missing GPU; triage calls it
+// hardware and says to take the drain over (NHC would resume the node the
+// moment its check passes, skipping burn-in).
+func TestNHCFoundGPUMissingIsHardware(t *testing.T) {
+	r := mustAssess(t, fixtureSnapshot(t, "nhc-gpu-missing"), "slurm-c1")
+	if r.Action != ActionEscalateHardware || r.Category != CategoryHardware {
+		t.Fatalf("got %s/%s", r.Action, r.Category)
+	}
+	if !strings.Contains(r.Summary, "health check") || !contains(r.Commands, `reason="triage: hardware: <ticket>"`) {
+		t.Errorf("summary %q, commands %v", r.Summary, r.Commands)
+	}
+}
+
+// After the drain is re-labelled "triage: hardware: ..." and the GPU replaced,
+// the node must still read as a hardware fault until burn-in. Triage used to
+// call its own drain reason "a reason triage doesn't recognize".
+func TestTriageHardwareDrainStaysHardware(t *testing.T) {
+	r := mustAssess(t, fixtureSnapshot(t, "gpu-repaired-triage-drain"), "slurm-c1")
+	if r.Action != ActionEscalateHardware || r.Category != CategoryHardware {
+		t.Fatalf("got %s/%s: %s", r.Action, r.Category, r.Summary)
+	}
+}
+
+// drills/: maintenance-reboot. slurm-c1 rebooting on request (scontrol reboot
+// ASAP nextstate=RESUME). Triage used to read it as DOWN, count the day's drill
+// events as a chronic history, and say "this node keeps failing, escalate".
+func TestPlannedRebootIsMaintenance(t *testing.T) {
+	r := mustAssess(t, fixtureSnapshot(t, "maintenance-rebooting"), "slurm-c1")
+	if r.Action != ActionWait || r.Severity != SeverityInfo || r.Category != CategoryMaintenance {
+		t.Fatalf("got %s/%s/%s: %s", r.Action, r.Severity, r.Category, r.Summary)
+	}
+}
+
+// drills/: node-bringup. slurm-c3 joined in the burnin partition only. Triage
+// used to call it "Healthy." both before and after its burn-in: the decision
+// that matters for a new node (qualify it, then promote it) had no rule.
+func TestNewNodeNeedsBurnIn(t *testing.T) {
+	r := mustAssess(t, fixtureSnapshot(t, "bringup-unqualified"), "slurm-c3")
+	if r.Action != ActionBurnIn || r.Category != CategoryQualification {
+		t.Fatalf("got %s/%s: %s", r.Action, r.Category, r.Summary)
+	}
+	if !contains(r.Commands, "--wrap /usr/local/sbin/lab-burnin") {
+		t.Errorf("commands: %v", r.Commands)
+	}
+}
+
+func TestPassedBurnInPromotes(t *testing.T) {
+	s := fixtureSnapshot(t, "bringup-burned-in")
+	r := mustAssess(t, s, "slurm-c3")
+	if r.Action != ActionPromote || !contains(r.Evidence, "completed with exit 0") {
+		t.Fatalf("got %s: %s %v", r.Action, r.Summary, r.Evidence)
+	}
+	// The same burn-in, failed, means the node stays out.
+	for i, j := range s.History {
+		if j.Name == "burnin" {
+			s.History[i].State.Current = []string{"FAILED"}
+			s.History[i].ExitCode.ReturnCode.Number = 1
+		}
+	}
+	if r := mustAssess(t, s, "slurm-c3"); r.Action != ActionEscalateHardware {
+		t.Errorf("failed burn-in: got %s", r.Action)
 	}
 }

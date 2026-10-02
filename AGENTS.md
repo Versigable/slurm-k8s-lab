@@ -7,6 +7,7 @@ Guidance for coding agents (and humans) working in this repo.
 - `terraform/`: Proxmox VMs. One node map in `main.tf` is the source of truth; it also generates `ansible/inventory/hosts.yml`.
 - `ansible/`: node configuration. `site.yml` converges Slurm and bootstraps Kubernetes (kubeadm, Cilium, Argo CD); `verify.yml` / `k8s-verify.yml` prove they work; `triage.yml` deploys the MCP server.
 - `gitops/`: everything Argo CD owns on the cluster (LB IP pool, local-path, GitLab runner, future add-ons). Change add-ons here, never with kubectl or Ansible: Argo CD `selfHeal` reverts manual edits.
+- `drills/`: failure drills (Python, standard library only). Each breaks one thing, times detection and recovery, grades node-triage's decision over MCP, and leaves the lab green. `drills/README.md` explains how; `drills/SCORECARD.md` is the latest result per drill; `docs/drills.md` is what they found.
 - `triage/`: Go module for the `node-triage` MCP server.
   - `internal/slurm`: CLI JSON parsing (Slurm 24.11, data_parser v0.0.42), fixture runner.
   - `internal/kube`: minimal Kubernetes REST client (ServiceAccount token), fixture source.
@@ -17,6 +18,7 @@ Guidance for coding agents (and humans) working in this repo.
 ## Rules
 
 - **Never hand-write Slurm JSON fixtures.** Add a scenario to `triage/scripts/capture-scenarios.sh`, break the lab on purpose, and capture what Slurm actually reports. Synthetic `Snapshot` values in tests are fine for rules the lab can't reproduce yet; say so in the test.
+- **Rule fixes start from a drill.** When a drill ends GAP (node-triage's decision wasn't the right one), re-run it with `--capture`, turn the captured decision point into a testdata scenario, fix the rule against that test, deploy, and re-run the drill until it passes.
 - **Triage rules stay deterministic.** Same snapshot, same recommendation. No LLM calls, clocks or randomness inside `internal/triage`. `Snapshot.Now` is an input.
 - **Every recommendation carries its evidence.** If a rule can't point at a Slurm fact, it shouldn't fire.
 - **Write tools stay opt-in.** `drain_node`/`resume_node` register only with `-allow-writes`. Don't add a write path that bypasses the hardware-fault guard in `resume_node`.

@@ -1,6 +1,7 @@
 package triage
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Versigable/slurm-k8s-lab/triage/internal/slurm"
@@ -104,5 +105,45 @@ func TestSlinkyMirrorsProblemClassNotKubernetesActions(t *testing.T) {
 	}
 	if r := mustAssess(t, s, "slinky-0"); r.Action != ActionWait {
 		t.Errorf("slinky-0: got %s, want wait (nothing to do in Slurm)", r.Action)
+	}
+}
+
+// drills/: slinky-pod-kill. Deleting a worker pod makes the operator mark the
+// Slurm node DOWN ("slurm-operator: Pod is terminating") and requeue its job.
+// The replacement pod registers within seconds, but Slurm keeps the node DOWN
+// (Slinky runs ReturnToService=0) until someone resumes it.
+func TestSlinkyReplacedPodNeedsResume(t *testing.T) {
+	for _, scenario := range []string{"slinky-pod-replaced-early", "slinky-pod-replaced"} {
+		r := mustAssess(t, slinkyFixture(t, scenario, true), "slinky-0")
+		expect(t, r, ActionResume, SeverityInfo, CategoryPodRestarted)
+		if !contains(r.Evidence, "slurmd restarted") || !contains(r.Commands, "scontrol update nodename=slinky-0 state=resume") {
+			t.Errorf("%s: evidence %v, commands %v", scenario, r.Evidence, r.Commands)
+		}
+	}
+}
+
+func TestSlinkyPodStillTerminatingWaits(t *testing.T) {
+	s := slinkyFixture(t, "slinky-pod-replaced-early", true)
+	for i := range s.Nodes {
+		if s.Nodes[i].Name == "slinky-0" { // the moment before the new slurmd registers
+			s.Nodes[i].SlurmdStartTime.Number = s.Nodes[i].ReasonChangedAt.Number - 60
+		}
+	}
+	expect(t, mustAssess(t, s, "slinky-0"), ActionWait, SeverityInfo, CategoryPodRestarted)
+}
+
+// drills/: k8s-pdb-drain. k8s-w1 cordoned for maintenance, its drain blocked by
+// PDBs (one of them Slinky's own, protecting slinky-0's running job). The
+// Kubernetes node's "investigate" is about the blocked drain, not a fault, so
+// the busy Slurm node should just wait for its job.
+func TestSlinkyBusyNodeOnMaintenanceDrainWaits(t *testing.T) {
+	s := slinkyFixture(t, "slinky-drain-busy", true)
+	if kr := mustAssessKube(t, *s.Kube, "k8s-w1"); kr.Action != ActionInvestigate || kr.Category != CategoryMaintenance {
+		t.Fatalf("precondition: k8s-w1 should be investigate/maintenance (drain blocked), got %s/%s", kr.Action, kr.Category)
+	}
+	r := mustAssess(t, s, "slinky-0")
+	expect(t, r, ActionWait, SeverityInfo, CategoryKubernetesManaged)
+	if !strings.Contains(r.Summary, "1 job(s) running here finish first") {
+		t.Errorf("summary: %q", r.Summary)
 	}
 }

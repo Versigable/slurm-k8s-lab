@@ -28,17 +28,25 @@ You have the `node-triage` MCP server. It covers three clusters: classic Slurm (
 | `drain` | Healthy-looking but eating jobs | Drain with the suggested reason, then investigate |
 | `resume` | Drained for a known, finished reason | Confirm preconditions, then resume |
 | `investigate` | Needs a human look first | Follow `next_steps`; don't resume yet |
-| `escalate_hardware` | Hardware fault or chronic node | Keep it out; hardware ticket; burn-in before return |
+| `escalate_hardware` | Hardware fault, failed burn-in, or chronic node | Keep it out; hardware ticket; burn-in before return |
+| `burn_in` | New or repaired node, not in production yet | Run the suggested burn-in job |
+| `promote` | Burn-in passed since the node last booted | Add it to production (in this lab: its stage in the Terraform node table) |
 
 ## Slurm vs Kubernetes
 
 - `drain_node` on Slurm drains (running jobs finish, nothing new starts). On Kubernetes it **cordons** (running pods stay, nothing new is scheduled). Evicting pods (`kubectl drain`) is left to the engineer: say so, and include the suggested command.
 - A Kubernetes node that is cordoned but whose drain is **blocked by a PodDisruptionBudget** needs a person: capacity elsewhere or an agreed disruption. Never suggest deleting pods to get past a PDB.
 - **Slinky nodes follow their Kubernetes node.** A Slinky node drained with a reason starting `slurm-operator:` was drained because its Kubernetes node is cordoned (category `kubernetes_managed`). Don't resume it in Slurm: the operator re-drains it within seconds, and `resume_node` refuses. Work the Kubernetes node (its name is in the evidence) and uncordon *that* once fixed.
+- **Slinky pod replaced** (category `pod_restarted`): the operator marks a node DOWN while its pod terminates. `wait` until the new slurmd registers, then `resume` is safe (and `resume_node` allows it).
+- **Slinky node on a troubled Kubernetes node** (category `kubernetes_node`): Slurm still sees it as fine, but its pod lives or dies with that Kubernetes node. Work the Kubernetes node first.
 - `ReadonlyFilesystem` and `KernelDeadlock` come from node-problem-detector reading the kernel log. They clear on reboot, or when NPD restarts after the triggering line is older than its 5-minute lookback. Restarting NPD sooner just re-detects the fault.
+
+## When a whole component is unreachable
+
+If triage couldn't read part of a cluster, `triage_cluster` lists it in `unavailable` and ranks a recommendation for it alongside the nodes, named after the component: `slurmctld` or `slurmrestd` (the cluster's node and job state), `slurmdbd` (accounting only: history-based checks are off, node state is still live), or `kube-apiserver`. Everything else in the list was still triaged. Report the outage first; for `slurmrestd`, the evidence says if its pods sit on a troubled Kubernetes node.
 
 ## Don't
 
 - Don't invent causes the evidence doesn't show. "Unreachable" means the controller lost slurmd; it doesn't tell you *why*.
 - Don't run the suggested commands yourself through some other tool. They're for the engineer.
-- Don't treat a quiet `triage_cluster` as proof the cluster is fine beyond what Slurm can see (it doesn't read hardware sensors or GPU telemetry).
+- Don't treat a quiet `triage_cluster` as proof the cluster is fine beyond what Slurm can see (it doesn't read hardware sensors or GPU telemetry), or while `unavailable` isn't empty.

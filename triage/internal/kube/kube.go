@@ -320,6 +320,10 @@ type FixtureSource struct {
 }
 
 func readFixture[T any](dir, file string) ([]T, error) {
+	// <kind>.err replays an API call that failed when the scenario was captured.
+	if msg, err := os.ReadFile(filepath.Join(dir, strings.TrimSuffix(file, ".json")+".err")); err == nil {
+		return nil, fmt.Errorf("%s", strings.TrimSpace(string(msg)))
+	}
 	data, err := os.ReadFile(filepath.Join(dir, file))
 	if err != nil {
 		return nil, err

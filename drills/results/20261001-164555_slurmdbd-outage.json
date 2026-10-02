@@ -1,0 +1,115 @@
+{
+ "drill": "slurmdbd-outage",
+ "title": "Accounting database daemon goes down",
+ "teaches": "Scheduling continues without slurmdbd; slurmctld queues the records and replays them. Anything that reads accounting (sacct, triage evidence) goes blind meanwhile.",
+ "started": "2026-10-01T16:45:55-06:00",
+ "repo": "3d16f98",
+ "finished": "2026-10-01T16:46:53-06:00",
+ "status": "GAP",
+ "error": null,
+ "duration_s": 57.8,
+ "triage_version": "1a9f389",
+ "metrics": {
+  "detect_s": 0.6,
+  "fix_to_recover_s": 22.1,
+  "inject_to_recover_s": 41.6
+ },
+ "events": [
+  {
+   "t": 7.6,
+   "at": "2026-10-01T16:46:03-06:00",
+   "kind": "inject",
+   "text": "slurmdbd stopped"
+  },
+  {
+   "t": 8.2,
+   "at": "2026-10-01T16:46:03-06:00",
+   "kind": "detect",
+   "text": "sacct fails",
+   "data": {
+    "output": "led to open persistent connection to host:slurm-ctl:6819: Connection refused\nsacct: error: Sending PersistInit msg: Connection refused\nsacct: error: Problem talking to the database: Connection refused"
+   }
+  },
+  {
+   "t": 17.4,
+   "at": "2026-10-01T16:46:12-06:00",
+   "kind": "observe",
+   "text": "all three jobs ran (scheduling unaffected)",
+   "data": {
+    "waited": 7.2
+   }
+  },
+  {
+   "t": 18.1,
+   "at": "2026-10-01T16:46:13-06:00",
+   "kind": "note",
+   "text": "slurmctld's queue of unsent records",
+   "data": {
+    "sdiag": [
+     "DBD Agent queue size: 17"
+    ]
+   }
+  },
+  {
+   "t": 26.5,
+   "at": "2026-10-01T16:46:21-06:00",
+   "kind": "decide",
+   "text": "accounting down: triage_cluster -> ERROR slurm lab: sacct --json -a -S now-1440minutes: exit status 1: sacct: error: _open_persist_conn: failed to open persistent connection to host:slurm-ctl:6819: Connection refused\nsacct: error: Sending PersistInit msg: Connection refused\nsacct: error: Problem talking to the database: Connection refused GAP",
+   "data": {
+    "why": "node-triage returned an error instead of a triage"
+   }
+  },
+  {
+   "t": 27.1,
+   "at": "2026-10-01T16:46:22-06:00",
+   "kind": "fix",
+   "text": "slurmdbd started"
+  },
+  {
+   "t": 49.2,
+   "at": "2026-10-01T16:46:44-06:00",
+   "kind": "recover",
+   "text": "queued records replayed into accounting",
+   "data": {
+    "waited": 22.1
+   }
+  },
+  {
+   "t": 49.9,
+   "at": "2026-10-01T16:46:45-06:00",
+   "kind": "note",
+   "text": "queue after replay",
+   "data": {
+    "sdiag": [
+     "DBD Agent queue size: 0"
+    ]
+   }
+  },
+  {
+   "t": 57.8,
+   "at": "2026-10-01T16:46:53-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 6.6
+   }
+  }
+ ],
+ "checks": [],
+ "decisions": [
+  {
+   "t": 18.9,
+   "label": "accounting down",
+   "node": "*",
+   "ok": false,
+   "latency": 0.84,
+   "expected": {
+    "note": "Every node still triaged from slurmctld's live state; accounting reported as unavailable."
+   },
+   "got": null,
+   "error": "slurm lab: sacct --json -a -S now-1440minutes: exit status 1: sacct: error: _open_persist_conn: failed to open persistent connection to host:slurm-ctl:6819: Connection refused\nsacct: error: Sending PersistInit msg: Connection refused\nsacct: error: Problem talking to the database: Connection refused",
+   "why": "node-triage returned an error instead of a triage",
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-164555_slurmdbd-outage_fixtures/accounting-down"
+  }
+ ]
+}

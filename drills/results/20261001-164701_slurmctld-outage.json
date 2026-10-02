@@ -1,0 +1,172 @@
+{
+ "drill": "slurmctld-outage",
+ "title": "The Slurm controller goes down",
+ "teaches": "Running jobs don't need slurmctld; new work and every Slurm query do. Triage has to keep working for the clusters it can still see.",
+ "started": "2026-10-01T16:47:01-06:00",
+ "repo": "3d16f98",
+ "finished": "2026-10-01T16:49:48-06:00",
+ "status": "GAP",
+ "error": null,
+ "duration_s": 167.1,
+ "triage_version": "1a9f389",
+ "metrics": {
+  "detect_s": 9.6,
+  "fix_to_recover_s": 0.7,
+  "inject_to_recover_s": 87.0
+ },
+ "events": [
+  {
+   "t": 8.0,
+   "at": "2026-10-01T16:47:09-06:00",
+   "kind": "observe",
+   "text": "running job (job 7) running on slurm-c1",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 8.7,
+   "at": "2026-10-01T16:47:10-06:00",
+   "kind": "inject",
+   "text": "slurmctld stopped"
+  },
+  {
+   "t": 18.3,
+   "at": "2026-10-01T16:47:20-06:00",
+   "kind": "detect",
+   "text": "squeue fails",
+   "data": {
+    "output": "slurm_load_jobs error: Unable to contact slurm controller (connect failure)"
+   }
+  },
+  {
+   "t": 28.0,
+   "at": "2026-10-01T16:47:29-06:00",
+   "kind": "check",
+   "text": "PASS new work is refused",
+   "data": {
+    "detail": "sbatch: error: Batch job submission failed: Unable to contact slurm controller (connect failure)"
+   }
+  },
+  {
+   "t": 28.7,
+   "at": "2026-10-01T16:47:30-06:00",
+   "kind": "check",
+   "text": "PASS the running job keeps running on its node"
+  },
+  {
+   "t": 64.4,
+   "at": "2026-10-01T16:48:06-06:00",
+   "kind": "decide",
+   "text": "controller down: triage_cluster -> ERROR slurm lab: scontrol show node --json: exit status 1: slurm_load_node error: Unable to contact slurm controller (connect failure) GAP",
+   "data": {
+    "why": "node-triage returned an error instead of a triage"
+   }
+  },
+  {
+   "t": 95.0,
+   "at": "2026-10-01T16:48:36-06:00",
+   "kind": "fix",
+   "text": "slurmctld started"
+  },
+  {
+   "t": 95.7,
+   "at": "2026-10-01T16:48:37-06:00",
+   "kind": "recover",
+   "text": "squeue works again",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 96.3,
+   "at": "2026-10-01T16:48:37-06:00",
+   "kind": "check",
+   "text": "PASS job 7 recovered from saved state, still running",
+   "data": {
+    "detail": [
+     "RUNNING"
+    ]
+   }
+  },
+  {
+   "t": 159.1,
+   "at": "2026-10-01T16:49:40-06:00",
+   "kind": "observe",
+   "text": "job 7 finished",
+   "data": {
+    "waited": 62.8
+   }
+  },
+  {
+   "t": 159.1,
+   "at": "2026-10-01T16:49:40-06:00",
+   "kind": "check",
+   "text": "PASS job 7 completed",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c1"
+    }
+   }
+  },
+  {
+   "t": 167.1,
+   "at": "2026-10-01T16:49:48-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 6.7
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 28.0,
+   "text": "new work is refused",
+   "ok": true,
+   "detail": "sbatch: error: Batch job submission failed: Unable to contact slurm controller (connect failure)"
+  },
+  {
+   "t": 28.7,
+   "text": "the running job keeps running on its node",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "t": 96.3,
+   "text": "job 7 recovered from saved state, still running",
+   "ok": true,
+   "detail": [
+    "RUNNING"
+   ]
+  },
+  {
+   "t": 159.1,
+   "text": "job 7 completed",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c1"
+   }
+  }
+ ],
+ "decisions": [
+  {
+   "t": 38.6,
+   "label": "controller down",
+   "node": "*",
+   "ok": false,
+   "latency": 9.91,
+   "expected": {
+    "note": "The other clusters are still triaged and the lab cluster is reported unavailable."
+   },
+   "got": null,
+   "error": "slurm lab: scontrol show node --json: exit status 1: slurm_load_node error: Unable to contact slurm controller (connect failure)",
+   "why": "node-triage returned an error instead of a triage",
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-164701_slurmctld-outage_fixtures/controller-down"
+  }
+ ]
+}

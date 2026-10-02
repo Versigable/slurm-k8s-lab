@@ -123,12 +123,17 @@ type HistoricalJob struct {
 	ID         int64  `json:"job_id"`
 	Name       string `json:"name"`
 	User       string `json:"user"`
+	Partition  string `json:"partition"`
 	Nodes      string `json:"nodes"`
 	FailedNode string `json:"failed_node"`
 	State      struct {
 		Current []string `json:"current"`
 		Reason  string   `json:"reason"`
 	} `json:"state"`
+	ExitCode struct {
+		Status     []string `json:"status"` // SUCCESS, ERROR, SIGNALED, ...
+		ReturnCode Number   `json:"return_code"`
+	} `json:"exit_code"`
 	Time struct {
 		Start int64 `json:"start"`
 		End   int64 `json:"end"`
@@ -262,6 +267,11 @@ func parseEvents(out []byte, loc *time.Location) ([]Event, error) {
 		}
 	}
 	return events, sc.Err()
+}
+
+// Succeeded reports whether the job completed with exit code 0.
+func (j HistoricalJob) Succeeded() bool {
+	return slices.Contains(j.State.Current, "COMPLETED") && j.ExitCode.ReturnCode.Number == 0
 }
 
 // OnNode reports whether a historical job ran on node.

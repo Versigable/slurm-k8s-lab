@@ -1,0 +1,251 @@
+{
+ "drill": "maintenance-reboot",
+ "title": "Rolling kernel update: drain, reboot, return",
+ "teaches": "scontrol reboot ASAP nextstate=RESUME is a whole maintenance workflow in one command; triage must read REBOOT_* states as planned work, not an outage.",
+ "started": "2026-10-01T18:26:59-06:00",
+ "repo": "34e61a7-dirty",
+ "finished": "2026-10-01T18:28:34-06:00",
+ "status": "GAP",
+ "error": null,
+ "duration_s": 94.6,
+ "triage_version": "1a9f389",
+ "metrics": {
+  "detect_s": 0.6,
+  "fix_to_recover_s": null,
+  "inject_to_recover_s": 74.7
+ },
+ "events": [
+  {
+   "t": 9.4,
+   "at": "2026-10-01T18:27:09-06:00",
+   "kind": "observe",
+   "text": "running job (job 19) running on slurm-c1",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 10.1,
+   "at": "2026-10-01T18:27:09-06:00",
+   "kind": "inject",
+   "text": "maintenance requested: scontrol reboot ASAP nextstate=RESUME"
+  },
+  {
+   "t": 10.7,
+   "at": "2026-10-01T18:27:10-06:00",
+   "kind": "detect",
+   "text": "draining, reboot pending",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 19.3,
+   "at": "2026-10-01T18:27:19-06:00",
+   "kind": "decide",
+   "text": "reboot pending, job running: slurm-c1 -> wait/info/maintenance (want wait) OK",
+   "data": {
+    "summary": "Draining: 1 job(s) still running; drained by 2026-10-01T18:30:08-06:00 at the latest."
+   }
+  },
+  {
+   "t": 25.9,
+   "at": "2026-10-01T18:27:25-06:00",
+   "kind": "observe",
+   "text": "new job 20 ran",
+   "data": {
+    "waited": 5.9
+   }
+  },
+  {
+   "t": 25.9,
+   "at": "2026-10-01T18:27:25-06:00",
+   "kind": "check",
+   "text": "PASS new work avoided slurm-c1",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c2"
+    }
+   }
+  },
+  {
+   "t": 71.7,
+   "at": "2026-10-01T18:28:11-06:00",
+   "kind": "observe",
+   "text": "job 19 finished normally",
+   "data": {
+    "waited": 45.8
+   }
+  },
+  {
+   "t": 71.7,
+   "at": "2026-10-01T18:28:11-06:00",
+   "kind": "check",
+   "text": "PASS job 19 completed, not killed",
+   "data": {
+    "detail": {
+     "state": "COMPLETED",
+     "exit": "0:0",
+     "nodes": "slurm-c1"
+    }
+   }
+  },
+  {
+   "t": 72.3,
+   "at": "2026-10-01T18:28:12-06:00",
+   "kind": "observe",
+   "text": "reboot issued",
+   "data": {
+    "waited": 0.6
+   }
+  },
+  {
+   "t": 81.4,
+   "at": "2026-10-01T18:28:21-06:00",
+   "kind": "decide",
+   "text": "rebooting: slurm-c1 -> escalate_hardware/critical/maintenance (want wait) GAP",
+   "data": {
+    "summary": "Down again; this node keeps failing. Treat it as a hardware/platform problem, not a one-off."
+   }
+  },
+  {
+   "t": 84.8,
+   "at": "2026-10-01T18:28:24-06:00",
+   "kind": "recover",
+   "text": "slurm-c1 back in service with no human step",
+   "data": {
+    "waited": 3.4
+   }
+  },
+  {
+   "t": 85.5,
+   "at": "2026-10-01T18:28:25-06:00",
+   "kind": "check",
+   "text": "PASS slurm-c1 really rebooted"
+  },
+  {
+   "t": 94.6,
+   "at": "2026-10-01T18:28:34-06:00",
+   "kind": "green",
+   "text": "lab back to green",
+   "data": {
+    "waited": 6.8
+   }
+  }
+ ],
+ "checks": [
+  {
+   "t": 25.9,
+   "text": "new work avoided slurm-c1",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c2"
+   }
+  },
+  {
+   "t": 71.7,
+   "text": "job 19 completed, not killed",
+   "ok": true,
+   "detail": {
+    "state": "COMPLETED",
+    "exit": "0:0",
+    "nodes": "slurm-c1"
+   }
+  },
+  {
+   "t": 85.5,
+   "text": "slurm-c1 really rebooted",
+   "ok": true,
+   "detail": null
+  }
+ ],
+ "decisions": [
+  {
+   "t": 11.6,
+   "label": "reboot pending, job running",
+   "node": "slurm-c1",
+   "ok": true,
+   "latency": 0.87,
+   "expected": {
+    "action": [
+     "wait"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "wait",
+    "severity": "info",
+    "category": "maintenance",
+    "summary": "Draining: 1 job(s) still running; drained by 2026-10-01T18:30:08-06:00 at the latest."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "wait",
+    "category": "maintenance",
+    "cluster": "lab",
+    "evidence": [
+     "state MIXED+DRAIN+REBOOT_REQUESTED; CPUs 1/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "reason \"maint: kernel update CHG-3001\" set 2s ago by root",
+     "job 19 \"drill-maint-running\" (labadmin) ends by 2026-10-01T18:30:08-06:00"
+    ],
+    "next_steps": [
+     "Wait; nothing new will start here. Start the work once the node shows DRAINED."
+    ],
+    "node": "slurm-c1",
+    "scheduler": "slurm",
+    "severity": "info",
+    "summary": "Draining: 1 job(s) still running; drained by 2026-10-01T18:30:08-06:00 at the latest."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-182659_maintenance-reboot_fixtures/reboot-pending--job-running"
+  },
+  {
+   "t": 73.2,
+   "label": "rebooting",
+   "node": "slurm-c1",
+   "ok": false,
+   "latency": 0.86,
+   "expected": {
+    "action": [
+     "wait"
+    ],
+    "category": null
+   },
+   "got": {
+    "action": "escalate_hardware",
+    "severity": "critical",
+    "category": "maintenance",
+    "summary": "Down again; this node keeps failing. Treat it as a hardware/platform problem, not a one-off."
+   },
+   "error": null,
+   "recommendation": {
+    "action": "escalate_hardware",
+    "category": "maintenance",
+    "cluster": "lab",
+    "commands": [
+     "ping -c3 slurm-c1",
+     "ssh slurm-c1 'systemctl status slurmd; journalctl -u slurmd -n 50'",
+     "scontrol update nodename=slurm-c1 state=resume   # only if it doesn't rejoin on its own"
+    ],
+    "evidence": [
+     "state DOWN+DRAIN+REBOOT_ISSUED; CPUs 0/2 allocated; GRES gpu:fake:4 (in use: gpu:fake:0(IDX:N/A))",
+     "reason \"maint: kernel update CHG-3001 : reboot issued\" set 4s ago by slurm",
+     "3 drain/down events for this node in the event window (chronic threshold 3)"
+    ],
+    "next_steps": [
+     "Keep it out of service.",
+     "Pull the event history into a hardware ticket.",
+     "Burn-in before return to service."
+    ],
+    "node": "slurm-c1",
+    "scheduler": "slurm",
+    "severity": "critical",
+    "summary": "Down again; this node keeps failing. Treat it as a hardware/platform problem, not a one-off."
+   },
+   "fixture": "/mnt/c/Users/Fox McVersig/Computing/HomeLab/slurm-k8s-lab/drills/results/20261001-182659_maintenance-reboot_fixtures/rebooting"
+  }
+ ]
+}
